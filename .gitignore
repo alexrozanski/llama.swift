@@ -5,22 +5,11 @@
 .vscode/
 .DS_Store
 
-build/
-build-em/
-build-debug/
-build-release/
-build-static/
-build-no-accel/
-build-sanitize-addr/
-build-sanitize-thread/
-
 models/*
-
-/main
-/quantize
 
 arm_neon.h
 compile_commands.json
+
 # Xcode
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore

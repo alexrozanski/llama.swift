@@ -17,6 +17,8 @@ struct gpt_params {
     int32_t n_threads = std::min(4, (int32_t) std::thread::hardware_concurrency());
     int32_t n_predict = 128; // new tokens to predict
     int32_t repeat_last_n = 64;  // last n tokens to penalize
+    int32_t n_ctx = 512; //context size
+    bool memory_f16 = false; // use f16 instead of f32 for memory kv
 
     // sampling parameters
     int32_t top_k = 40;
@@ -26,14 +28,18 @@ struct gpt_params {
 
     int32_t n_batch = 8; // batch size for prompt processing
 
-    std::string model = "models/lamma-7B/ggml-model.bin"; // model path
-    std::string prompt;
+    std::string model      = "";
+    std::string prompt     = "";
+
+    bool random_prompt = false;
 
     bool use_color = false; // use color to distinguish generations and inputs
 
     bool interactive = false; // interactive mode
     bool interactive_start = false; // reverse prompt immediately
-    std::string antiprompt = ""; // string upon seeing which more user input is prompted
+    std::vector<std::string> antiprompt; // string upon seeing which more user input is prompted
+    bool instruct    = false; // instruction mode (used for Alpaca models)
+    bool ignore_eos = false; // do not stop generating after eos
 };
 
 bool gpt_params_parse(int argc, char ** argv, gpt_params & params);
@@ -41,6 +47,14 @@ bool gpt_params_parse(int argc, char ** argv, gpt_params & params);
 void gpt_print_usage(int argc, char ** argv, const gpt_params & params);
 
 std::string gpt_random_prompt(std::mt19937 & rng);
+
+//
+// Model file parsing
+//
+
+#define FILE_MAGIC_UNVERSIONED 0x67676d6c // pre-versioned files
+#define FILE_MAGIC 0x67676d66 // 'ggmf' in hex
+#define FILE_VERSION 1
 
 //
 // Vocab utils
@@ -52,6 +66,7 @@ struct gpt_vocab {
 
     std::map<token, id> token_to_id;
     std::map<id, token> id_to_token;
+    std::map<id, float> score;
 };
 
 void replace(std::string & str, const std::string & needle, const std::string & replacement);
@@ -73,7 +88,7 @@ std::vector<gpt_vocab::id> gpt_tokenize(const gpt_vocab & vocab, const std::stri
 
 // TODO: this is probably wrong, but I cannot figure out how this tokenizer works ..
 // ref: https://github.com/google/sentencepiece
-std::vector<gpt_vocab::id> llama_tokenize(const gpt_vocab & vocab, const std::string & text, bool bos);
+std::vector<gpt_vocab::id> llama_tokenize(const gpt_vocab & vocab, std::string_view text, bool bos);
 
 // load the tokens from encoder.json
 bool gpt_vocab_init(const std::string & fname, gpt_vocab & vocab);

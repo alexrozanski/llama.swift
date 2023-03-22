@@ -39,7 +39,7 @@
   params.n_predict = (int)config.numberOfTokens;
 
   if (config.reversePrompt != nil) {
-    params.antiprompt = [config.reversePrompt cStringUsingEncoding:NSUTF8StringEncoding];
+    params.antiprompt.push_back([config.reversePrompt cStringUsingEncoding:NSUTF8StringEncoding]);
   }
 
   LlamaPredictOperation *operation = [[LlamaPredictOperation alloc] initWithParams:params

@@ -20,6 +20,7 @@
 		82718C6129CBEB8900545C32 /* llama.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82718C5F29CBEB8900545C32 /* llama.hh */; };
 		82718C6329CBED4300545C32 /* LlamaErrorInternal.m in Sources */ = {isa = PBXBuildFile; fileRef = 82718C6229CBED4300545C32 /* LlamaErrorInternal.m */; };
 		82718C6629CBF21D00545C32 /* LlamaErrorInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 82718C6429CBED6500545C32 /* LlamaErrorInternal.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		82718C6929CC67C500545C32 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82718C6829CC67C500545C32 /* Session.swift */; };
 		82819FB229C1DB5400399B7E /* LlamaError.m in Sources */ = {isa = PBXBuildFile; fileRef = 82819F9829C07BC900399B7E /* LlamaError.m */; };
 		82819FB329C1DB5800399B7E /* LlamaEvent.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82819F9329C0526100399B7E /* LlamaEvent.mm */; };
 		82819FB429C1DB5800399B7E /* LlamaRunnerBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82293E5129BDC5DE00C67BD9 /* LlamaRunnerBridge.mm */; };
@@ -77,6 +78,7 @@
 		82718C6229CBED4300545C32 /* LlamaErrorInternal.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaErrorInternal.m; sourceTree = "<group>"; };
 		82718C6429CBED6500545C32 /* LlamaErrorInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaErrorInternal.h; sourceTree = "<group>"; };
 		82718C6729CC677F00545C32 /* llamaTest.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = llamaTest.entitlements; sourceTree = "<group>"; };
+		82718C6829CC67C500545C32 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		82819F7B29BDF61E00399B7E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LlamaTest.xcconfig; sourceTree = "<group>"; };
 		82819F7D29BF2BFC00399B7E /* ggml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ggml.c; path = Sources/llamaObjCxx/cpp/ggml.c; sourceTree = SOURCE_ROOT; };
@@ -159,6 +161,7 @@
 			isa = PBXGroup;
 			children = (
 				82293E6429BDC7E200C67BD9 /* LlamaRunner.swift */,
+				82718C6829CC67C500545C32 /* Session.swift */,
 			);
 			path = llama;
 			sourceTree = "<group>";
@@ -377,6 +380,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				82718C6929CC67C500545C32 /* Session.swift in Sources */,
 				82293E6529BDC7E200C67BD9 /* LlamaRunner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

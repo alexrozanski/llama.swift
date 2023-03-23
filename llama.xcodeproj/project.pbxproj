@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8227D27229C2A844003E3197 /* LlamaEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D26E29C2A844003E3197 /* LlamaEvent.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8227D27229C2A844003E3197 /* LlamaEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D26E29C2A844003E3197 /* LlamaEvent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8227D27329C2A844003E3197 /* LlamaRunnerBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D26F29C2A844003E3197 /* LlamaRunnerBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8227D27429C2A844003E3197 /* LlamaError.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D27029C2A844003E3197 /* LlamaError.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8227D27529C2A844003E3197 /* LlamaRunnerBridgeConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D27129C2A844003E3197 /* LlamaRunnerBridgeConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -19,7 +19,7 @@
 		82718C6029CBEB8900545C32 /* llama.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C5E29CBEB8900545C32 /* llama.mm */; };
 		82718C6129CBEB8900545C32 /* llama.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82718C5F29CBEB8900545C32 /* llama.hh */; };
 		82718C6329CBED4300545C32 /* LlamaErrorInternal.m in Sources */ = {isa = PBXBuildFile; fileRef = 82718C6229CBED4300545C32 /* LlamaErrorInternal.m */; };
-		82718C6629CBF21D00545C32 /* LlamaErrorInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 82718C6429CBED6500545C32 /* LlamaErrorInternal.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		82718C6629CBF21D00545C32 /* LlamaErrorInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 82718C6429CBED6500545C32 /* LlamaErrorInternal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		82819FB229C1DB5400399B7E /* LlamaError.m in Sources */ = {isa = PBXBuildFile; fileRef = 82819F9829C07BC900399B7E /* LlamaError.m */; };
 		82819FB329C1DB5800399B7E /* LlamaEvent.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82819F9329C0526100399B7E /* LlamaEvent.mm */; };
 		82819FB429C1DB5800399B7E /* LlamaRunnerBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82293E5129BDC5DE00C67BD9 /* LlamaRunnerBridge.mm */; };

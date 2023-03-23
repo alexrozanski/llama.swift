@@ -100,7 +100,8 @@ extern "C" {
                       const char * text,
                      llama_token * tokens,
                              int   n_max_tokens,
-                            bool   add_bos);
+                            bool   add_bos,
+                         NSError **outError = nil);
 
     LLAMA_API int llama_n_vocab(struct llama_context * ctx);
     LLAMA_API int llama_n_ctx  (struct llama_context * ctx);

@@ -54,4 +54,8 @@ std::string gpt_random_prompt(std::mt19937 & rng);
 // Vocab utils
 //
 
-std::vector<llama_token> llama_tokenize(struct llama_context * ctx, const std::string & text, bool add_bos);
+std::vector<llama_token> llama_tokenize(struct llama_context * ctx,
+                                        const std::string & text,
+                                        bool add_bos,
+                                        bool *outSuccess,
+                                        NSError **outError = nil);

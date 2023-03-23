@@ -79,7 +79,7 @@
 		82819F7B29BDF61E00399B7E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LlamaTest.xcconfig; sourceTree = "<group>"; };
 		82819F7D29BF2BFC00399B7E /* ggml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ggml.c; path = Sources/llamaObjCxx/cpp/ggml.c; sourceTree = SOURCE_ROOT; };
-		82819F8129BF2BFC00399B7E /* utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = utils.mm; path = Sources/llamaObjCxx/cpp/utils.mm; sourceTree = SOURCE_ROOT; };
+		82819F8129BF2BFC00399B7E /* utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = utils.mm; path = Sources/llamaObjCxx/cpp/utils.mm; sourceTree = SOURCE_ROOT; tabWidth = 4; };
 		82819F8C29BF2F5800399B7E /* LlamaRunnerBridgeConfig.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaRunnerBridgeConfig.m; sourceTree = "<group>"; };
 		82819F8F29BF387400399B7E /* LlamaPredictOperation.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LlamaPredictOperation.hh; sourceTree = "<group>"; };
 		82819F9029BF387400399B7E /* LlamaPredictOperation.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaPredictOperation.mm; sourceTree = "<group>"; };

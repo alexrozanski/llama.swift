@@ -139,15 +139,27 @@
   _params.prompt.insert(0, 1, ' ');
 
   // tokenize the prompt
-  auto embd_inp = ::llama_tokenize(ctx, _params.prompt, true);
+  bool tokenizeSuccess = false;
+  NSError *tokenizeError = nil;
+  auto embd_inp = ::llama_tokenize(ctx, _params.prompt, true, &tokenizeSuccess, &tokenizeError);
+  if (!tokenizeSuccess) {
+    return;
+  }
 
   const int n_ctx = llama_n_ctx(ctx);
 
   _params.n_predict = std::min(_params.n_predict, n_ctx - (int) embd_inp.size());
 
   // prefix & suffix for instruct mode
-  const auto inp_pfx = ::llama_tokenize(ctx, "\n\n### Instruction:\n\n", true);
-  const auto inp_sfx = ::llama_tokenize(ctx, "\n\n### Response:\n\n", false);
+  const auto inp_pfx = ::llama_tokenize(ctx, "\n\n### Instruction:\n\n", true, &tokenizeSuccess, &tokenizeError);
+  if (!tokenizeSuccess) {
+    return;
+  }
+
+  const auto inp_sfx = ::llama_tokenize(ctx, "\n\n### Response:\n\n", false,  &tokenizeSuccess, &tokenizeError);
+  if (!tokenizeSuccess) {
+    return;
+  }
 
   // in instruct mode, we inject a prefix and a suffix to each input by the user
   if (_params.instruct) {
@@ -337,7 +349,10 @@
         // done taking input, reset color
 //        set_console_state(CONSOLE_STATE_DEFAULT);
 
-        auto line_inp = ::llama_tokenize(ctx, buffer, false);
+        auto line_inp = ::llama_tokenize(ctx, buffer, false, &tokenizeSuccess, &tokenizeError);
+        if (!tokenizeSuccess) {
+          return;
+        }
         embd_inp.insert(embd_inp.end(), line_inp.begin(), line_inp.end());
 
         if (params.instruct) {

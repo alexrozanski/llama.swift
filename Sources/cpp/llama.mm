@@ -680,7 +680,9 @@ static bool llama_eval_internal(
         buf_size = buf_size_new;
         buf = realloc(buf, buf_size);
         if (buf == nullptr) {
-            fprintf(stderr, "%s: failed to allocate %zu bytes\n", __func__, buf_size);
+            if (outError) {
+                *outError = makeLlamaError(LlamaErrorCodePredictionFailed, [NSString stringWithFormat:@"failed to allocate %zu bytes", buf_size]);
+            }
             return false;
         }
     }
@@ -1492,11 +1494,14 @@ int llama_tokenize(
                   const char * text,
                  llama_token * tokens,
                          int   n_max_tokens,
-                        bool   add_bos) {
+                        bool   add_bos,
+                     NSError **outError) {
     auto res = llama_tokenize(ctx->vocab, text, add_bos);
 
     if (n_max_tokens < (int) res.size()) {
-        fprintf(stderr, "%s: too many tokens\n", __func__);
+        if (outError) {
+            *outError = makeLlamaError(LlamaErrorCodePredictionFailed, @"too many tokens");
+        }
         return -((int) res.size());
     }
 

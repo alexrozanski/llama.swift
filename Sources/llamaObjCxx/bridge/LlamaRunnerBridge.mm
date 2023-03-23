@@ -37,6 +37,7 @@
 
   params.n_threads = (int)config.numberOfThreads;
   params.n_predict = (int)config.numberOfTokens;
+  params.seed = (int32_t)config.seed;
 
   if (config.reversePrompt != nil) {
     params.antiprompt.push_back([config.reversePrompt cStringUsingEncoding:NSUTF8StringEncoding]);

@@ -13,13 +13,15 @@ public class LlamaRunner {
     public let numThreads: UInt
     public let numTokens: UInt
     public let reversePrompt: String?
+    public let seed: Int32?
 
-    public static let `default` = Config(numThreads: 8, numTokens: 512, reversePrompt: nil)
+    public static let `default` = Config(numThreads: 8, numTokens: 512, reversePrompt: nil, seed: nil)
 
-    public init(numThreads: UInt, numTokens: UInt, reversePrompt: String? = nil) {
+    public init(numThreads: UInt, numTokens: UInt, reversePrompt: String? = nil, seed: Int32? = nil) {
       self.numThreads = numThreads
       self.numTokens = numTokens
       self.reversePrompt = reversePrompt
+      self.seed = seed
     }
 
     fileprivate func toBridgeConfig() -> _LlamaRunnerBridgeConfig {
@@ -27,6 +29,7 @@ public class LlamaRunner {
       _config.numberOfThreads = numThreads
       _config.numberOfTokens = numTokens
       _config.reversePrompt = reversePrompt
+      _config.seed = seed ?? 0
       return _config
     }
   }

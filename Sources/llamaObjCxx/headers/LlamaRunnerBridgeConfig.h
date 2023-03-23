@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) NSUInteger numberOfTokens;
 
 @property (nullable, copy) NSString *reversePrompt;
+@property (nonatomic, assign) int32_t seed;
 
 @end
 

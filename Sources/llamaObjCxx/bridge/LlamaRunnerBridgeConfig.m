@@ -12,5 +12,6 @@
 @synthesize numberOfThreads = _numberOfThreads;
 @synthesize numberOfTokens = _numberOfTokens;
 @synthesize reversePrompt = _reversePrompt;
+@synthesize seed = _seed;
 
 @end

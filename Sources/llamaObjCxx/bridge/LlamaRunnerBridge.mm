@@ -10,7 +10,7 @@
 #import "LlamaRunnerBridgeConfig.h"
 #import "LlamaPredictOperation.hh"
 
-#import "utils.h"
+#import "utils.hh"
 
 @implementation _LlamaRunnerBridge {
   NSOperationQueue *_operationQueue;

@@ -12,10 +12,14 @@
 		8227D27429C2A844003E3197 /* LlamaError.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D27029C2A844003E3197 /* LlamaError.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8227D27529C2A844003E3197 /* LlamaRunnerBridgeConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D27129C2A844003E3197 /* LlamaRunnerBridgeConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8227D27729C2A87E003E3197 /* ggml.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D27629C2A87E003E3197 /* ggml.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8227D27929C2A883003E3197 /* utils.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D27829C2A883003E3197 /* utils.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8227D27929C2A883003E3197 /* utils.hh in Headers */ = {isa = PBXBuildFile; fileRef = 8227D27829C2A883003E3197 /* utils.hh */; settings = {ATTRIBUTES = (Private, ); }; };
 		8227D27D29C4F6F8003E3197 /* llama.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82293E3929BDC4ED00C67BD9 /* llama.framework */; };
 		82293E5B29BDC71700C67BD9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82293E5A29BDC71700C67BD9 /* main.swift */; };
 		82293E6529BDC7E200C67BD9 /* LlamaRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82293E6429BDC7E200C67BD9 /* LlamaRunner.swift */; };
+		82718C6029CBEB8900545C32 /* llama.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C5E29CBEB8900545C32 /* llama.mm */; };
+		82718C6129CBEB8900545C32 /* llama.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82718C5F29CBEB8900545C32 /* llama.hh */; };
+		82718C6329CBED4300545C32 /* LlamaErrorInternal.m in Sources */ = {isa = PBXBuildFile; fileRef = 82718C6229CBED4300545C32 /* LlamaErrorInternal.m */; };
+		82718C6629CBF21D00545C32 /* LlamaErrorInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 82718C6429CBED6500545C32 /* LlamaErrorInternal.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		82819FB229C1DB5400399B7E /* LlamaError.m in Sources */ = {isa = PBXBuildFile; fileRef = 82819F9829C07BC900399B7E /* LlamaError.m */; };
 		82819FB329C1DB5800399B7E /* LlamaEvent.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82819F9329C0526100399B7E /* LlamaEvent.mm */; };
 		82819FB429C1DB5800399B7E /* LlamaRunnerBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82293E5129BDC5DE00C67BD9 /* LlamaRunnerBridge.mm */; };
@@ -23,7 +27,7 @@
 		82819FB629C1DB5800399B7E /* LlamaPredictOperation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82819F9029BF387400399B7E /* LlamaPredictOperation.mm */; };
 		82819FB729C1DB5800399B7E /* LlamaPredictOperation.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82819F8F29BF387400399B7E /* LlamaPredictOperation.hh */; settings = {ATTRIBUTES = (Private, ); }; };
 		82819FB929C1DB5E00399B7E /* ggml.c in Sources */ = {isa = PBXBuildFile; fileRef = 82819F7D29BF2BFC00399B7E /* ggml.c */; };
-		82819FBA29C1DB5E00399B7E /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 82819F8129BF2BFC00399B7E /* utils.cpp */; };
+		82819FBA29C1DB5E00399B7E /* utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82819F8129BF2BFC00399B7E /* utils.mm */; };
 		82819FC529C2585700399B7E /* libllamaObjCxx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 82819FA929C1DB2900399B7E /* libllamaObjCxx.a */; };
 /* End PBXBuildFile section */
 
@@ -62,16 +66,20 @@
 		8227D27029C2A844003E3197 /* LlamaError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LlamaError.h; sourceTree = "<group>"; };
 		8227D27129C2A844003E3197 /* LlamaRunnerBridgeConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LlamaRunnerBridgeConfig.h; sourceTree = "<group>"; };
 		8227D27629C2A87E003E3197 /* ggml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ggml.h; path = Sources/cpp/ggml.h; sourceTree = SOURCE_ROOT; };
-		8227D27829C2A883003E3197 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utils.h; path = Sources/cpp/utils.h; sourceTree = SOURCE_ROOT; };
+		8227D27829C2A883003E3197 /* utils.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = utils.hh; path = Sources/cpp/utils.hh; sourceTree = SOURCE_ROOT; };
 		82293E3929BDC4ED00C67BD9 /* llama.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = llama.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		82293E5129BDC5DE00C67BD9 /* LlamaRunnerBridge.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaRunnerBridge.mm; sourceTree = "<group>"; };
 		82293E5829BDC71700C67BD9 /* llamaTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = llamaTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		82293E5A29BDC71700C67BD9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		82293E6429BDC7E200C67BD9 /* LlamaRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaRunner.swift; sourceTree = "<group>"; };
+		82718C5E29CBEB8900545C32 /* llama.mm */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = llama.mm; path = Sources/cpp/llama.mm; sourceTree = SOURCE_ROOT; tabWidth = 4; };
+		82718C5F29CBEB8900545C32 /* llama.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = llama.hh; path = Sources/cpp/llama.hh; sourceTree = SOURCE_ROOT; };
+		82718C6229CBED4300545C32 /* LlamaErrorInternal.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaErrorInternal.m; sourceTree = "<group>"; };
+		82718C6429CBED6500545C32 /* LlamaErrorInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaErrorInternal.h; sourceTree = "<group>"; };
 		82819F7B29BDF61E00399B7E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LlamaTest.xcconfig; sourceTree = "<group>"; };
 		82819F7D29BF2BFC00399B7E /* ggml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ggml.c; path = Sources/llamaObjCxx/cpp/ggml.c; sourceTree = SOURCE_ROOT; };
-		82819F8129BF2BFC00399B7E /* utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = utils.cpp; path = Sources/llamaObjCxx/cpp/utils.cpp; sourceTree = SOURCE_ROOT; };
+		82819F8129BF2BFC00399B7E /* utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = utils.mm; path = Sources/llamaObjCxx/cpp/utils.mm; sourceTree = SOURCE_ROOT; };
 		82819F8C29BF2F5800399B7E /* LlamaRunnerBridgeConfig.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaRunnerBridgeConfig.m; sourceTree = "<group>"; };
 		82819F8F29BF387400399B7E /* LlamaPredictOperation.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LlamaPredictOperation.hh; sourceTree = "<group>"; };
 		82819F9029BF387400399B7E /* LlamaPredictOperation.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaPredictOperation.mm; sourceTree = "<group>"; };
@@ -158,8 +166,10 @@
 			children = (
 				82819F7D29BF2BFC00399B7E /* ggml.c */,
 				8227D27629C2A87E003E3197 /* ggml.h */,
-				82819F8129BF2BFC00399B7E /* utils.cpp */,
-				8227D27829C2A883003E3197 /* utils.h */,
+				82718C5E29CBEB8900545C32 /* llama.mm */,
+				82718C5F29CBEB8900545C32 /* llama.hh */,
+				82819F8129BF2BFC00399B7E /* utils.mm */,
+				8227D27829C2A883003E3197 /* utils.hh */,
 			);
 			path = cpp;
 			sourceTree = "<group>";
@@ -184,13 +194,22 @@
 		82293E6329BDC75F00C67BD9 /* bridge */ = {
 			isa = PBXGroup;
 			children = (
-				82819F9329C0526100399B7E /* LlamaEvent.mm */,
 				82293E5129BDC5DE00C67BD9 /* LlamaRunnerBridge.mm */,
 				82819F8C29BF2F5800399B7E /* LlamaRunnerBridgeConfig.m */,
 				82819F8F29BF387400399B7E /* LlamaPredictOperation.hh */,
 				82819F9029BF387400399B7E /* LlamaPredictOperation.mm */,
 			);
 			path = bridge;
+			sourceTree = "<group>";
+		};
+		82718C6529CBEDBB00545C32 /* internal */ = {
+			isa = PBXGroup;
+			children = (
+				82718C6229CBED4300545C32 /* LlamaErrorInternal.m */,
+				82718C6429CBED6500545C32 /* LlamaErrorInternal.h */,
+				82819F9329C0526100399B7E /* LlamaEvent.mm */,
+			);
+			path = internal;
 			sourceTree = "<group>";
 		};
 		82819F9E29C1CE2000399B7E /* llamaObjCxx */ = {
@@ -201,6 +220,7 @@
 				82293E6329BDC75F00C67BD9 /* bridge */,
 				82293E4329BDC51A00C67BD9 /* cpp */,
 				8227D26D29C2A825003E3197 /* headers */,
+				82718C6529CBEDBB00545C32 /* internal */,
 			);
 			path = llamaObjCxx;
 			sourceTree = "<group>";
@@ -230,9 +250,11 @@
 			files = (
 				82819FB729C1DB5800399B7E /* LlamaPredictOperation.hh in Headers */,
 				8227D27329C2A844003E3197 /* LlamaRunnerBridge.h in Headers */,
-				8227D27929C2A883003E3197 /* utils.h in Headers */,
+				8227D27929C2A883003E3197 /* utils.hh in Headers */,
 				8227D27229C2A844003E3197 /* LlamaEvent.h in Headers */,
+				82718C6129CBEB8900545C32 /* llama.hh in Headers */,
 				8227D27729C2A87E003E3197 /* ggml.h in Headers */,
+				82718C6629CBF21D00545C32 /* LlamaErrorInternal.h in Headers */,
 				8227D27529C2A844003E3197 /* LlamaRunnerBridgeConfig.h in Headers */,
 				8227D27429C2A844003E3197 /* LlamaError.h in Headers */,
 			);
@@ -370,8 +392,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				82819FB629C1DB5800399B7E /* LlamaPredictOperation.mm in Sources */,
+				82718C6029CBEB8900545C32 /* llama.mm in Sources */,
 				82819FB529C1DB5800399B7E /* LlamaRunnerBridgeConfig.m in Sources */,
-				82819FBA29C1DB5E00399B7E /* utils.cpp in Sources */,
+				82819FBA29C1DB5E00399B7E /* utils.mm in Sources */,
+				82718C6329CBED4300545C32 /* LlamaErrorInternal.m in Sources */,
 				82819FB429C1DB5800399B7E /* LlamaRunnerBridge.mm in Sources */,
 				82819FB329C1DB5800399B7E /* LlamaEvent.mm in Sources */,
 				82819FB929C1DB5E00399B7E /* ggml.c in Sources */,
@@ -653,6 +677,7 @@
 				DEVELOPMENT_TEAM = 44847G58BM;
 				EXECUTABLE_PREFIX = lib;
 				MODULEMAP_FILE = "";
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -665,6 +690,7 @@
 				DEVELOPMENT_TEAM = 44847G58BM;
 				EXECUTABLE_PREFIX = lib;
 				MODULEMAP_FILE = "";
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};

@@ -17,7 +17,7 @@ CXXV := $(shell $(CXX) --version | head -n 1)
 # ref: https://github.com/ggerganov/whisper.cpp/issues/66#issuecomment-1282546789
 ifeq ($(UNAME_S),Darwin)
 	ifneq ($(UNAME_P),arm)
-		SYSCTL_M := $(shell sysctl -n hw.optional.arm64)
+		SYSCTL_M := $(shell sysctl -n hw.optional.arm64 2>/dev/null)
 		ifeq ($(SYSCTL_M),1)
 			# UNAME_P := arm
 			# UNAME_M := arm64
@@ -30,9 +30,10 @@ endif
 # Compile flags
 #
 
+# keep standard at C11 and C++11
 CPP_PATH = ../Sources/cpp
 CFLAGS   = -I. -I../Sources/llamaObjCxx/include/private/ -O3 -DNDEBUG -std=c11   -fPIC
-CXXFLAGS = -I. -I../Sources/llamaObjCxx/include/private/ -O3 -DNDEBUG -std=c++17 -fPIC
+CXXFLAGS = -I. -I../Sources/llamaObjCxx/include/private/ -O3 -DNDEBUG -std=c++11 -fPIC
 LDFLAGS  =
 
 # OS specific
@@ -50,6 +51,10 @@ ifeq ($(UNAME_S),FreeBSD)
 	CXXFLAGS += -pthread
 endif
 ifeq ($(UNAME_S),NetBSD)
+	CFLAGS   += -pthread
+	CXXFLAGS += -pthread
+endif
+ifeq ($(UNAME_S),OpenBSD)
 	CFLAGS   += -pthread
 	CXXFLAGS += -pthread
 endif
@@ -129,28 +134,25 @@ ifeq ($(UNAME_M),$(filter $(UNAME_M),x86_64 i686))
 			CFLAGS += -mavx512pf
 		endif
 	else ifeq ($(UNAME_S),Haiku)
-		AVX1_M := $(shell sysinfo -cpu | grep "AVX ")
-		ifneq (,$(findstring avx,$(AVX1_M)))
+		AVX1_M := $(shell sysinfo -cpu | grep -w "AVX")
+		ifneq (,$(findstring AVX,$(AVX1_M)))
 			CFLAGS += -mavx
 		endif
-		AVX2_M := $(shell sysinfo -cpu | grep "AVX2 ")
-		ifneq (,$(findstring avx2,$(AVX2_M)))
+		AVX2_M := $(shell sysinfo -cpu | grep -w "AVX2")
+		ifneq (,$(findstring AVX2,$(AVX2_M)))
 			CFLAGS += -mavx2
 		endif
-		FMA_M := $(shell sysinfo -cpu | grep "FMA ")
-		ifneq (,$(findstring fma,$(FMA_M)))
+		FMA_M := $(shell sysinfo -cpu | grep -w "FMA")
+		ifneq (,$(findstring FMA,$(FMA_M)))
 			CFLAGS += -mfma
 		endif
-		F16C_M := $(shell sysinfo -cpu | grep "F16C ")
-		ifneq (,$(findstring f16c,$(F16C_M)))
+		F16C_M := $(shell sysinfo -cpu | grep -w "F16C")
+		ifneq (,$(findstring F16C,$(F16C_M)))
 			CFLAGS += -mf16c
 		endif
 	else
 		CFLAGS += -mfma -mf16c -mavx -mavx2
 	endif
-endif
-ifeq ($(UNAME_M),amd64)
-	CFLAGS += -mavx -mavx2 -mfma -mf16c
 endif
 ifneq ($(filter ppc64%,$(UNAME_M)),)
 	POWER9_M := $(shell grep "POWER9" /proc/cpuinfo)
@@ -163,7 +165,8 @@ ifneq ($(filter ppc64%,$(UNAME_M)),)
 	endif
 endif
 ifndef LLAMA_NO_ACCELERATE
-	# Mac M1 - include Accelerate framework
+	# Mac M1 - include Accelerate framework.
+	# `-framework Accelerate` works on Mac Intel as well, with negliable performance boost (as of the predict time).
 	ifeq ($(UNAME_S),Darwin)
 		CFLAGS  += -DGGML_USE_ACCELERATE
 		LDFLAGS += -framework Accelerate
@@ -218,14 +221,31 @@ default: quantize
 ggml.o: $(CPP_PATH)/ggml.c $(CPP_PATH)/ggml.h
 	$(CC)  $(CFLAGS)   -c $(CPP_PATH)/ggml.c -o ggml.o
 
+<<<<<<< HEAD:tools/Makefile
 utils.o: $(CPP_PATH)/utils.cpp $(CPP_PATH)/utils.h
 	$(CXX) $(CXXFLAGS) -c $(CPP_PATH)/utils.cpp -o utils.o
+=======
+llama.o: llama.cpp llama.h
+	$(CXX) $(CXXFLAGS) -c llama.cpp -o llama.o
+
+utils.o: utils.cpp utils.h
+	$(CXX) $(CXXFLAGS) -c utils.cpp -o utils.o
+>>>>>>> llama.cpp/master:Makefile
 
 clean:
 	rm -f *.o quantize
 
+<<<<<<< HEAD:tools/Makefile
 quantize: $(CPP_PATH)/utils.cpp ggml.o utils.o
 	$(CXX) $(CXXFLAGS) $(CPP_PATH)/quantize.cpp ggml.o utils.o -o quantize $(LDFLAGS)
+=======
+main: main.cpp ggml.o llama.o utils.o
+	$(CXX) $(CXXFLAGS) main.cpp ggml.o llama.o utils.o -o main $(LDFLAGS)
+	@echo "\x1b[36mrun ./main -h for help\x1b[0m"
+
+quantize: quantize.cpp ggml.o llama.o utils.o
+	$(CXX) $(CXXFLAGS) quantize.cpp ggml.o llama.o utils.o -o quantize $(LDFLAGS)
+>>>>>>> llama.cpp/master:Makefile
 
 #
 # Tests

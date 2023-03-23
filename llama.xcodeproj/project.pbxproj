@@ -76,6 +76,7 @@
 		82718C5F29CBEB8900545C32 /* llama.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = llama.hh; path = Sources/cpp/llama.hh; sourceTree = SOURCE_ROOT; };
 		82718C6229CBED4300545C32 /* LlamaErrorInternal.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaErrorInternal.m; sourceTree = "<group>"; };
 		82718C6429CBED6500545C32 /* LlamaErrorInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaErrorInternal.h; sourceTree = "<group>"; };
+		82718C6729CC677F00545C32 /* llamaTest.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = llamaTest.entitlements; sourceTree = "<group>"; };
 		82819F7B29BDF61E00399B7E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LlamaTest.xcconfig; sourceTree = "<group>"; };
 		82819F7D29BF2BFC00399B7E /* ggml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ggml.c; path = Sources/llamaObjCxx/cpp/ggml.c; sourceTree = SOURCE_ROOT; };
@@ -178,6 +179,7 @@
 		82293E5929BDC71700C67BD9 /* llamaTest */ = {
 			isa = PBXGroup;
 			children = (
+				82718C6729CC677F00545C32 /* llamaTest.entitlements */,
 				82293E5A29BDC71700C67BD9 /* main.swift */,
 				82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */,
 				82819F7B29BDF61E00399B7E /* Info.plist */,
@@ -545,7 +547,8 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
@@ -589,7 +592,8 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
@@ -632,10 +636,12 @@
 			baseConfigurationReference = 82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = llamaTest/llamaTest.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Manual;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				DEVELOPMENT_TEAM = 44847G58BM;
-				ENABLE_HARDENED_RUNTIME = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_EXPAND_BUILD_SETTINGS = YES;
 				INFOPLIST_FILE = llamaTest/Info.plist;
@@ -647,6 +653,7 @@
 				LLAMA_MODEL_PATH = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
@@ -657,10 +664,12 @@
 			baseConfigurationReference = 82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = llamaTest/llamaTest.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Manual;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				DEVELOPMENT_TEAM = 44847G58BM;
-				ENABLE_HARDENED_RUNTIME = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_EXPAND_BUILD_SETTINGS = YES;
 				INFOPLIST_FILE = llamaTest/Info.plist;
@@ -672,6 +681,7 @@
 				LLAMA_MODEL_PATH = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -685,9 +695,7 @@
 				MODULEMAP_FILE = "";
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator";
 			};
 			name = Debug;
 		};
@@ -700,9 +708,7 @@
 				MODULEMAP_FILE = "";
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "macosx iphoneos iphonesimulator";
 			};
 			name = Release;
 		};

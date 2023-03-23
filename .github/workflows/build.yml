@@ -25,20 +25,38 @@ env:
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
 jobs:
-  macOS-latest-make:
+  swift-build:
     runs-on: macos-latest
-
     steps:
-      - name: Clone
+      - name: Clone repo
         id: checkout
         uses: actions/checkout@v1
-
-      - name: Dependencies
+      - name: Update dependencies
         id: depends
         run: |
           brew update
-
-      - name: Build
+      - name: Swift build
         id: swift_build
         run: |
           swift build
+  xcodebuild:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        platform:
+          - macOS
+          - iOS
+    steps:
+      - name: Clone repo
+        id: checkout
+        uses: actions/checkout@v1
+      - name: Update dependencies
+        id: depends
+        run: |
+          brew update
+      - name: Xcodebuild
+        uses: mxcl/xcodebuild@v1
+        with:
+          platform: ${{ matrix.platform }}
+          action: build
+          configuration: release

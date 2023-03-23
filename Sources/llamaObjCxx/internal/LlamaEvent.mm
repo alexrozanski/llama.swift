@@ -66,7 +66,7 @@ typedef struct LlamaEventData {
 
 + (instancetype)outputTokenWithToken:(nonnull NSString *)token
 {
-  _LlamaEvent *event = [[_LlamaEvent alloc] initWithEventType:LlamaEventTypeOutputToken data:{ .outputToken_token = token }];
+  _LlamaEvent *event = [[_LlamaEvent alloc] initWithEventType:LlamaEventTypeOutputToken data:{ .outputToken_token = [token copy] }];
   return event;
 }
 
@@ -78,7 +78,7 @@ typedef struct LlamaEventData {
 
 + (instancetype)failedWithError:(nonnull NSError *)error
 {
-  _LlamaEvent *event = [[_LlamaEvent alloc] initWithEventType:LlamaEventTypeFailed data:{}];
+  _LlamaEvent *event = [[_LlamaEvent alloc] initWithEventType:LlamaEventTypeFailed data:{ .failed_error = [error copy] }];
   return event;
 }
 

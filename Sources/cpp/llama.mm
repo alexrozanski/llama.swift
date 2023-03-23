@@ -129,8 +129,9 @@ static bool llama_model_load(
         int n_ctx,
         int n_parts,
         ggml_type memory_type,
-        bool vocab_only) {
-    fprintf(stderr, "%s: loading model from '%s' - please wait ...\n", __func__, fname.c_str());
+        bool vocab_only,
+        NSError **outError) {
+//    fprintf(stderr, "%s: loading model from '%s' - please wait ...\n", __func__, fname.c_str());
 
     const int64_t t_start_us = ggml_time_us();
 
@@ -144,7 +145,9 @@ static bool llama_model_load(
     auto fin = std::ifstream(fname, std::ios::binary);
     fin.rdbuf()->pubsetbuf(f_buf.data(), f_buf.size());
     if (!fin) {
-        fprintf(stderr, "%s: failed to open '%s'\n", __func__, fname.c_str());
+        if (outError) {
+            *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"failed to open '%s'", fname.c_str()]);
+        }
         return false;
     }
 
@@ -153,12 +156,16 @@ static bool llama_model_load(
         uint32_t magic;
         fin.read((char *) &magic, sizeof(magic));
         if (magic == LLAMA_FILE_MAGIC_UNVERSIONED) {
-            fprintf(stderr, "%s: invalid model file '%s' (too old, regenerate your model files!)\n",
-                    __func__, fname.c_str());
+            if (outError) {
+                *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (too old, regenerate your model files!)",
+                                                                             fname.c_str()]);
+            }
             return false;
         }
         if (magic != LLAMA_FILE_MAGIC) {
-            fprintf(stderr, "%s: invalid model file '%s' (bad magic)\n", __func__, fname.c_str());
+            if (outError) {
+                *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (bad magic)", fname.c_str()]);
+            }
             return false;
         }
 
@@ -166,8 +173,10 @@ static bool llama_model_load(
         fin.read((char *) &format_version, sizeof(format_version));
 
         if (format_version != LLAMA_FILE_VERSION) {
-            fprintf(stderr, "%s: invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)\n",
-                    __func__, fname.c_str(), format_version, LLAMA_FILE_VERSION);
+            if (outError) {
+                *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)",
+                                                                             fname.c_str(), format_version, LLAMA_FILE_VERSION]);
+            }
             return false;
         }
     }
@@ -197,20 +206,20 @@ static bool llama_model_load(
 
         // temp warning to tell the user to use "--n_parts"
         if (hparams.f16 == 4 && n_parts != 1) {
-            fprintf(stderr, "%s: GPTQ model detected - are you sure n_parts should be %d? we normally expect it to be 1\n", __func__, n_parts);
-            fprintf(stderr, "%s: use '--n_parts 1' if necessary\n", __func__);
+//            fprintf(stderr, "%s: GPTQ model detected - are you sure n_parts should be %d? we normally expect it to be 1\n", __func__, n_parts);
+//            fprintf(stderr, "%s: use '--n_parts 1' if necessary\n", __func__);
         }
 
-        fprintf(stderr, "%s: n_vocab = %d\n", __func__, hparams.n_vocab);
-        fprintf(stderr, "%s: n_ctx   = %d\n", __func__, hparams.n_ctx);
-        fprintf(stderr, "%s: n_embd  = %d\n", __func__, hparams.n_embd);
-        fprintf(stderr, "%s: n_mult  = %d\n", __func__, hparams.n_mult);
-        fprintf(stderr, "%s: n_head  = %d\n", __func__, hparams.n_head);
-        fprintf(stderr, "%s: n_layer = %d\n", __func__, hparams.n_layer);
-        fprintf(stderr, "%s: n_rot   = %d\n", __func__, hparams.n_rot);
-        fprintf(stderr, "%s: f16     = %d\n", __func__, hparams.f16);
-        fprintf(stderr, "%s: n_ff    = %d\n", __func__, n_ff);
-        fprintf(stderr, "%s: n_parts = %d\n", __func__, n_parts);
+//        fprintf(stderr, "%s: n_vocab = %d\n", __func__, hparams.n_vocab);
+//        fprintf(stderr, "%s: n_ctx   = %d\n", __func__, hparams.n_ctx);
+//        fprintf(stderr, "%s: n_embd  = %d\n", __func__, hparams.n_embd);
+//        fprintf(stderr, "%s: n_mult  = %d\n", __func__, hparams.n_mult);
+//        fprintf(stderr, "%s: n_head  = %d\n", __func__, hparams.n_head);
+//        fprintf(stderr, "%s: n_layer = %d\n", __func__, hparams.n_layer);
+//        fprintf(stderr, "%s: n_rot   = %d\n", __func__, hparams.n_rot);
+//        fprintf(stderr, "%s: f16     = %d\n", __func__, hparams.f16);
+//        fprintf(stderr, "%s: n_ff    = %d\n", __func__, n_ff);
+//        fprintf(stderr, "%s: n_parts = %d\n", __func__, n_parts);
     }
 
     // load vocab
@@ -259,8 +268,10 @@ static bool llama_model_load(
         case 4: wtype = GGML_TYPE_Q4_1; vtype = GGML_TYPE_F16; break;
         default:
                 {
-                    fprintf(stderr, "%s: invalid model file '%s' (bad f16 value %d)\n",
-                            __func__, fname.c_str(), model.hparams.f16);
+                    if (outError) {
+                        *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (bad f16 value %d)",
+                                                                                     fname.c_str(), model.hparams.f16]);
+                    }
                     return false;
                 }
     }
@@ -301,7 +312,9 @@ static bool llama_model_load(
 
         ctx_size += (5 + 10*n_layer)*256; // object overhead
 
-        fprintf(stderr, "%s: ggml ctx size = %6.2f MB\n", __func__, ctx_size/(1024.0*1024.0));
+        if (outError) {
+            *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"ggml ctx size = %6.2f MB", ctx_size/(1024.0*1024.0)]);
+        }
     }
 
     // create the ggml context
@@ -313,7 +326,9 @@ static bool llama_model_load(
 
         model.ctx = ggml_init(params);
         if (!model.ctx) {
-            fprintf(stderr, "%s: ggml_init() failed\n", __func__);
+            if (outError) {
+                *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"ggml_init() failed"]);
+            }
             return false;
         }
     }
@@ -387,7 +402,9 @@ static bool llama_model_load(
 
         const size_t memory_size = ggml_nbytes(model.memory_k) + ggml_nbytes(model.memory_v);
 
-        fprintf(stderr, "%s: memory_size = %8.2f MB, n_mem = %d\n", __func__, memory_size/1024.0/1024.0, n_mem);
+        if (outError) {
+            *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"memory_size = %8.2f MB, n_mem = %d", memory_size/1024.0/1024.0, n_mem]);
+        }
     }
 
     const size_t file_offset = fin.tellg();
@@ -405,7 +422,9 @@ static bool llama_model_load(
             fname_part += "." + std::to_string(i);
         }
 
-        fprintf(stderr, "%s: loading model part %d/%d from '%s'\n", __func__, i+1, n_parts, fname_part.c_str());
+        if (outError) {
+            *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"loading model part %d/%d from '%s'", i+1, n_parts, fname_part.c_str()]);
+        }
 
         fin = std::ifstream(fname_part, std::ios::binary);
         fin.rdbuf()->pubsetbuf(f_buf.data(), f_buf.size());
@@ -416,7 +435,7 @@ static bool llama_model_load(
             int n_tensors = 0;
             size_t total_size = 0;
 
-            fprintf(stderr, "%s: ", __func__);
+//            fprintf(stderr, "%s: ", __func__);
 
             while (true) {
                 int32_t n_dims;
@@ -442,7 +461,9 @@ static bool llama_model_load(
                 fin.read(&name[0], length);
 
                 if (model.tensors.find(name.data()) == model.tensors.end()) {
-                    fprintf(stderr, "%s: unknown tensor '%s' in model file\n", __func__, name.data());
+                    if (outError) {
+                        *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"unknown tensor '%s' in model file\n", name.data()]);
+                    }
                     return false;
                 }
 
@@ -482,33 +503,43 @@ static bool llama_model_load(
 
                 if (n_dims == 1) {
                     if (ggml_nelements(tensor) != nelements) {
-                        fprintf(stderr, "%s: tensor '%s' has wrong size in model file\n", __func__, name.data());
+                        if (outError) {
+                            *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"tensor '%s' has wrong size in model file",  name.data()]);
+                        }
                         return false;
                     }
                 } else {
                     if (ggml_nelements(tensor)/n_parts != nelements) {
-                        fprintf(stderr, "%s: tensor '%s' has wrong size in model file\n", __func__, name.data());
+                        if (outError) {
+                            *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"tensor '%s' has wrong size in model file",  name.data()]);
+                        }
                         return false;
                     }
                 }
 
                 if (n_dims == 1) {
                     if (tensor->ne[0] != ne[0] || tensor->ne[1] != ne[1]) {
-                        fprintf(stderr, "%s: tensor '%s' has wrong shape in model file: got [%d, %d], expected [%d, %d]\n",
-                                __func__, name.data(), tensor->ne[0], tensor->ne[1], ne[0], ne[1]);
+                        if (outError) {
+                            *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"tensor '%s' has wrong shape in model file: got [%d, %d], expected [%d, %d]",
+                                                                                         name.data(), tensor->ne[0], tensor->ne[1], ne[0], ne[1]]);
+                        }
                         return false;
                     }
                 } else {
                     if (split_type == 0) {
                         if (tensor->ne[0]/n_parts != ne[0] || tensor->ne[1] != ne[1]) {
-                            fprintf(stderr, "%s: tensor '%s' has wrong shape in model file: got [%d, %d], expected [%d, %d]\n",
-                                    __func__, name.data(), tensor->ne[0]/n_parts, tensor->ne[1], ne[0], ne[1]);
+                            if (outError) {
+                                *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"tensor '%s' has wrong shape in model file: got [%d, %d], expected [%d, %d]",
+                                                                                             name.data(), tensor->ne[0]/n_parts, tensor->ne[1], ne[0], ne[1]]);
+                            }
                             return false;
                         }
                     } else {
                         if (tensor->ne[0] != ne[0] || tensor->ne[1]/n_parts != ne[1]) {
-                            fprintf(stderr, "%s: tensor '%s' has wrong shape in model file: got [%d, %d], expected [%d, %d]\n",
-                                    __func__, name.data(), tensor->ne[0], tensor->ne[1]/n_parts, ne[0], ne[1]);
+                            if (outError) {
+                                *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"tensor '%s' has wrong shape in model file: got [%d, %d], expected [%d, %d]",
+                                                                                             name.data(), tensor->ne[0], tensor->ne[1]/n_parts, ne[0], ne[1]]);
+                            }
                             return false;
                         }
                     }
@@ -516,7 +547,7 @@ static bool llama_model_load(
 
                 if (0) {
                     static const char * ftype_str[] = { "f32", "f16", "q4_0", "q4_1", };
-                    fprintf(stderr, "%24s - [%5d, %5d], type = %6s, split = %d\n", name.data(), ne[0], ne[1], ftype_str[ftype], split_type);
+//                    fprintf(stderr, "%24s - [%5d, %5d], type = %6s, split = %d\n", name.data(), ne[0], ne[1], ftype_str[ftype], split_type);
                 }
 
                 size_t bpe = 0;
@@ -528,15 +559,19 @@ static bool llama_model_load(
                     case 3: bpe = ggml_type_size(GGML_TYPE_Q4_1); assert(ne[0] % 64 == 0); break;
                     default:
                             {
-                                fprintf(stderr, "%s: unknown ftype %d in model file\n", __func__, ftype);
+                                if (outError) {
+                                    *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"unknown ftype %d in model file", ftype]);
+                                }
                                 return false;
                             }
                 };
 
                 if (n_dims == 1 || n_parts == 1) {
                     if ((nelements*bpe)/ggml_blck_size(tensor->type) != ggml_nbytes(tensor)) {
-                        fprintf(stderr, "%s: tensor '%s' has wrong size in model file: got %zu, expected %zu\n",
-                                __func__, name.data(), ggml_nbytes(tensor), nelements*bpe);
+                        if (outError) {
+                            *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"tensor '%s' has wrong size in model file: got %zu, expected %zu",
+                                                                                         name.data(), ggml_nbytes(tensor), nelements*bpe]);
+                        }
                         return false;
                     }
 
@@ -549,8 +584,10 @@ static bool llama_model_load(
                     total_size += ggml_nbytes(tensor);
                 } else {
                     if ((nelements*bpe)/ggml_blck_size(tensor->type) != ggml_nbytes(tensor)/n_parts) {
-                        fprintf(stderr, "%s: tensor '%s' has wrong size in model file: got %zu, expected %zu\n",
-                                __func__, name.data(), ggml_nbytes(tensor)/n_parts, nelements*bpe);
+                        if (outError) {
+                            *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"tensor '%s' has wrong size in model file: got %zu, expected %zu",
+                                                                                         name.data(), ggml_nbytes(tensor)/n_parts, nelements*bpe]);
+                        }
                         return false;
                     }
 
@@ -586,9 +623,9 @@ static bool llama_model_load(
                 }
             }
 
-            fprintf(stderr, " done\n");
+//            fprintf(stderr, " done\n");
 
-            fprintf(stderr, "%s: model size = %8.2f MB / num tensors = %d\n", __func__, total_size/1024.0/1024.0, n_tensors);
+//            fprintf(stderr, "%s: model size = %8.2f MB / num tensors = %d\n", __func__, total_size/1024.0/1024.0, n_tensors);
         }
 
         fin.close();
@@ -1409,10 +1446,7 @@ struct llama_context * llama_init_from_file(const char * path_model, struct llam
 
     ggml_type type_memory = params.f16_kv ? GGML_TYPE_F16 : GGML_TYPE_F32;
 
-    if (!llama_model_load(path_model, *ctx, params.n_ctx, params.n_parts, type_memory, params.vocab_only)) {
-        if (outError != NULL) {
-            makeLlamaError(LlamaErrorCodeFailedToLoadModel, @"failed to load model");
-        }
+    if (!llama_model_load(path_model, *ctx, params.n_ctx, params.n_parts, type_memory, params.vocab_only, outError)) {
         delete ctx;
         return nullptr;
     }

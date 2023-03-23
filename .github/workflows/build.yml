@@ -8,7 +8,13 @@ on:
         required: true
         type: boolean
   push:
-    paths: [".github/workflows/**", "Sources/**/*", "Package.swift"]
+    paths:
+      [
+        ".github/workflows/**",
+        "Sources/**/*",
+        "Package.swift",
+        "llama.xcodeproj/**/*",
+      ]
   pull_request:
     types:
       [
@@ -19,7 +25,7 @@ on:
         review_requested,
         ready_for_review,
       ]
-    paths: ["Sources/**/*", "Package.swift"]
+    paths: ["Sources/**/*", "Package.swift", "llama.xcodeproj/**/*"]
 
 env:
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}

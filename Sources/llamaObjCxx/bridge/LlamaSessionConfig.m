@@ -1,13 +1,13 @@
 //
-//  LlamaRunnerBridgeConfig.m
+//  LlamaSessionConfig.m
 //  llama
 //
 //  Created by Alex Rozanski on 13/03/2023.
 //
 
-#import "LlamaRunnerBridgeConfig.h"
+#import "LlamaSessionConfig.h"
 
-@implementation _LlamaRunnerBridgeConfig
+@implementation _LlamaSessionConfig
 
 @synthesize numberOfThreads = _numberOfThreads;
 @synthesize numberOfTokens = _numberOfTokens;

@@ -7,7 +7,7 @@
 
 #import "LlamaRunnerBridge.h"
 #import "LlamaEvent.h"
-#import "LlamaRunnerBridgeConfig.h"
+#import "LlamaSessionConfig.h"
 #import "LlamaPredictOperation.hh"
 
 #import "utils.hh"
@@ -27,7 +27,7 @@
 }
 
 - (void)runWithPrompt:(nonnull NSString*)prompt
-               config:(nonnull _LlamaRunnerBridgeConfig *)config
+               config:(nonnull _LlamaSessionConfig *)config
          eventHandler:(nonnull _LlamaRunnerBridgeEventHandler)eventHandler
     eventHandlerQueue:(nonnull dispatch_queue_t)eventHandlerQueue
 {

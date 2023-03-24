@@ -24,8 +24,8 @@ public class LlamaRunner {
       self.seed = seed
     }
 
-    fileprivate func toBridgeConfig() -> _LlamaRunnerBridgeConfig {
-      let _config = _LlamaRunnerBridgeConfig()
+    fileprivate func toBridgeConfig() -> _LlamaSessionConfig {
+      let _config = _LlamaSessionConfig()
       _config.numberOfThreads = numThreads
       _config.numberOfTokens = numTokens
       _config.reversePrompt = reversePrompt

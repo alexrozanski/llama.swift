@@ -1,5 +1,5 @@
 //
-//  LlamaRunnerBridgeConfig.h
+//  LlamaSessionConfig.h
 //  llama
 //
 //  Created by Alex Rozanski on 13/03/2023.
@@ -9,7 +9,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface _LlamaRunnerBridgeConfig : NSObject
+@interface _LlamaSessionConfig : NSObject
 
 @property (nonatomic, assign) NSUInteger numberOfThreads;
 @property (nonatomic, assign) NSUInteger numberOfTokens;

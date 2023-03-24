@@ -9,7 +9,7 @@
 
 #import "LlamaError.h"
 #import "LlamaEvent.h"
-#import "LlamaRunnerBridgeConfig.h"
+#import "LlamaSessionConfig.h"
 
 #include "ggml.h"
 

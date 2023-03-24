@@ -32,9 +32,11 @@ endif
 
 # keep standard at C11 and C++11
 CPP_PATH = ../Sources/cpp
-CFLAGS   = -I. -I../Sources/llamaObjCxx/include/private/ -O3 -DNDEBUG -std=c11   -fPIC
-CXXFLAGS = -I. -I../Sources/llamaObjCxx/include/private/ -O3 -DNDEBUG -std=c++11 -fPIC
-LDFLAGS  =
+LLAMAOBJCXX_PATH = ../Sources/llamaObjCxx
+CFLAGS    = -I. -I../Sources/llamaObjCxx/include/private/ -O3 -DNDEBUG -std=c11   -fPIC
+CXXFLAGS  = -I. -I../Sources/llamaObjCxx/include/private/ -I../Sources/llamaObjCxx/headers -O3 -DNDEBUG -std=c++11 -fPIC
+OBJCFLAGS = -I. -I../Sources/llamaObjCxx/include/private/ -I../Sources/llamaObjCxx/headers -O3 -DNDEBUG -fPIC
+LDFLAGS   = -framework Foundation
 
 # OS specific
 # TODO: support Windows
@@ -221,31 +223,23 @@ default: quantize
 ggml.o: $(CPP_PATH)/ggml.c $(CPP_PATH)/ggml.h
 	$(CC)  $(CFLAGS)   -c $(CPP_PATH)/ggml.c -o ggml.o
 
-<<<<<<< HEAD:tools/Makefile
-utils.o: $(CPP_PATH)/utils.cpp $(CPP_PATH)/utils.h
-	$(CXX) $(CXXFLAGS) -c $(CPP_PATH)/utils.cpp -o utils.o
-=======
-llama.o: llama.cpp llama.h
-	$(CXX) $(CXXFLAGS) -c llama.cpp -o llama.o
+llama.o: $(CPP_PATH)/llama.mm $(CPP_PATH)/llama.hh
+	$(CXX) $(CXXFLAGS) -c $(CPP_PATH)/llama.mm -o llama.o
 
-utils.o: utils.cpp utils.h
-	$(CXX) $(CXXFLAGS) -c utils.cpp -o utils.o
->>>>>>> llama.cpp/master:Makefile
+utils.o: $(CPP_PATH)/utils.mm $(CPP_PATH)/utils.hh
+	$(CXX) $(CXXFLAGS) -c $(CPP_PATH)/utils.mm -o utils.o
+
+LlamaError.o: $(LLAMAOBJCXX_PATH)/LlamaError.m $(LLAMAOBJCXX_PATH)/headers/LlamaError.h
+	$(CXX) $(OBJCFLAGS) -c $(LLAMAOBJCXX_PATH)/LlamaError.m -o LlamaError.o
+
+LlamaErrorInternal.o: $(LLAMAOBJCXX_PATH)/internal/LlamaErrorInternal.m $(LLAMAOBJCXX_PATH)/headers/LlamaErrorInternal.h
+	$(CXX) $(OBJCFLAGS) -c $(LLAMAOBJCXX_PATH)/internal/LlamaErrorInternal.m -o LlamaErrorInternal.o
 
 clean:
 	rm -f *.o quantize
 
-<<<<<<< HEAD:tools/Makefile
-quantize: $(CPP_PATH)/utils.cpp ggml.o utils.o
-	$(CXX) $(CXXFLAGS) $(CPP_PATH)/quantize.cpp ggml.o utils.o -o quantize $(LDFLAGS)
-=======
-main: main.cpp ggml.o llama.o utils.o
-	$(CXX) $(CXXFLAGS) main.cpp ggml.o llama.o utils.o -o main $(LDFLAGS)
-	@echo "\x1b[36mrun ./main -h for help\x1b[0m"
-
-quantize: quantize.cpp ggml.o llama.o utils.o
-	$(CXX) $(CXXFLAGS) quantize.cpp ggml.o llama.o utils.o -o quantize $(LDFLAGS)
->>>>>>> llama.cpp/master:Makefile
+quantize: $(CPP_PATH)/quantize.mm ggml.o llama.o utils.o LlamaErrorInternal.o LlamaError.o
+	$(CXX) $(CXXFLAOBJCFLAGSGS) $(CPP_PATH)/quantize.mm ggml.o llama.o utils.o LlamaErrorInternal.o LLamaError.o -o quantize $(LDFLAGS)
 
 #
 # Tests

@@ -1,5 +1,5 @@
 #include "ggml.h"
-#include "llama.h"
+#include "llama.hh"
 
 #include <cstdio>
 #include <string>

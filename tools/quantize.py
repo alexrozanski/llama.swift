@@ -39,7 +39,7 @@ def main():
     )
     parser.add_argument(
         '-m', '--models-path', dest='models_path',
-        default=os.path.join(os.getcwd(), "models"),
+        default=os.path.join(os.getcwd(), "../models"),
         help='Specify the directory where the models are located.'
     )
     parser.add_argument(

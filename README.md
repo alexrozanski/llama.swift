@@ -36,7 +36,7 @@ python3 convert-pth-to-ggml.py ../models/7B/ 1
 
 # quantize the model to 4-bits
 make
-./quantize.sh 7B
+python3 quantize.py 7B
 ```
 
 When running the larger models, make sure you have enough disk space to store all of the intermediate files.

@@ -142,7 +142,6 @@
 			isa = PBXGroup;
 			children = (
 				8227D27029C2A844003E3197 /* LlamaError.h */,
-				82718C6429CBED6500545C32 /* LlamaErrorInternal.h */,
 				8227D26E29C2A844003E3197 /* LlamaEvent.h */,
 				82718C8729CE4C0200545C32 /* LlamaPredictionEvent.h */,
 				8227D27129C2A844003E3197 /* LlamaSessionConfig.h */,
@@ -227,6 +226,7 @@
 		82718C6529CBEDBB00545C32 /* internal */ = {
 			isa = PBXGroup;
 			children = (
+				82718C6429CBED6500545C32 /* LlamaErrorInternal.h */,
 				82718C6229CBED4300545C32 /* LlamaErrorInternal.m */,
 				82718C7F29CD406400545C32 /* LlamaContext.hh */,
 				82718C8029CD406400545C32 /* LlamaContext.mm */,

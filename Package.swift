@@ -25,7 +25,9 @@ let package = Package(
       ],
       publicHeadersPath: "headers",
       cxxSettings: [
-        .headerSearchPath("cpp")
+        .headerSearchPath("cpp"),
+        .headerSearchPath("session/operations"),
+        .headerSearchPath("internal")
       ])
   ],
   cLanguageStandard: .gnu11,

@@ -1,4 +1,5 @@
 module llamaObjCxx {
     umbrella "headers"
     export *
+    module * { export * }
 }

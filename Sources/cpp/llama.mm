@@ -618,8 +618,8 @@ static bool llama_model_load(
 
                 //fprintf(stderr, "%42s - [%5d, %5d], type = %6s, %6.2f MB\n", name.data(), ne[0], ne[1], ftype == 0 ? "float" : "f16", ggml_nbytes(tensor)/1024.0/1024.0);
                 if (++n_tensors % 8 == 0) {
-                    fprintf(stderr, ".");
-                    fflush(stderr);
+//                    fprintf(stderr, ".");
+//                    fflush(stderr);
                 }
             }
 

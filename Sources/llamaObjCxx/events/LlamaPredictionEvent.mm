@@ -9,6 +9,7 @@
 
 typedef NS_ENUM(NSUInteger, LlamaPredictionEventType) {
   LlamaPredictionEventTypeNone = 0,
+  LlamaPredictionEventTypeStarted,
   LlamaPredictionEventTypeOutputToken,
   LlamaPredictionEventTypeCompleted,
   LlamaPredictionEventTypeFailed,
@@ -40,6 +41,12 @@ typedef struct LlamaPredictionEventData {
   return self;
 }
 
++ (instancetype)started
+{
+  return [[_LlamaPredictionEvent alloc] initWithEventType:LlamaPredictionEventTypeStarted
+                                                     data:{}];
+}
+
 + (instancetype)outputTokenWithToken:(nonnull NSString *)token
 {
   return [[_LlamaPredictionEvent alloc] initWithEventType:LlamaPredictionEventTypeOutputToken
@@ -58,12 +65,16 @@ typedef struct LlamaPredictionEventData {
                                                      data:{ .failed_error = [error copy] }];
 }
 
-- (void)matchOutputToken:(void (^)(NSString *token))outputToken
-               completed:(void (^)(void))completed
-                  failed:(void (^)(NSError *error))failed
+- (void)matchStarted:(void (^)(void))started
+         outputToken:(void (^)(NSString *token))outputToken
+           completed:(void (^)(void))completed
+              failed:(void (^)(NSError *error))failed
 {
   switch (_eventType) {
     case LlamaPredictionEventTypeNone:
+      break;
+    case LlamaPredictionEventTypeStarted:
+      started();
       break;
     case LlamaPredictionEventTypeOutputToken:
       outputToken(_data.outputToken_token);

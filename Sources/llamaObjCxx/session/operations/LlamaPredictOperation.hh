@@ -6,7 +6,8 @@
 //
 
 #import <Foundation/NSOperation.h>
-#import "utils.hh"
+
+#import "common.hh"
 
 @class LlamaContext;
 @class _LlamaPredictionEvent;

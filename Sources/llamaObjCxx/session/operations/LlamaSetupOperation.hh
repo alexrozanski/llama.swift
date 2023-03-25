@@ -7,7 +7,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "utils.hh"
+#import "common.hh"
 
 @class _LlamaEvent;
 @class LlamaContext;

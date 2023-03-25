@@ -14,8 +14,6 @@
 
 #include "ggml.h"
 
-#include "utils.hh"
-
 #include <cassert>
 #include <cinttypes>
 #include <cmath>

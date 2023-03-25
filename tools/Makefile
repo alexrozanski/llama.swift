@@ -34,8 +34,8 @@ endif
 CPP_PATH = ../Sources/cpp
 LLAMAOBJCXX_PATH = ../Sources/llamaObjCxx
 CFLAGS    = -I. -I../Sources/llamaObjCxx/include/private/ -O3 -DNDEBUG -std=c11   -fPIC
-CXXFLAGS  = -I. -I../Sources/llamaObjCxx/include/private/ -I../Sources/llamaObjCxx/headers -O3 -DNDEBUG -std=c++11 -fPIC
-OBJCFLAGS = -I. -I../Sources/llamaObjCxx/include/private/ -I../Sources/llamaObjCxx/headers -O3 -DNDEBUG -fPIC
+CXXFLAGS  = -I. -I../Sources/llamaObjCxx/include/private/ -I../Sources/llamaObjCxx/headers -I../Sources/llamaObjCxx/internal -I../Sources/llamaObjCxx/cpp -O3 -DNDEBUG -std=c++11 -fPIC
+OBJCFLAGS = -I. -I../Sources/llamaObjCxx/include/private/ -I../Sources/llamaObjCxx/headers -I../Sources/llamaObjCxx/internal -I../Sources/llamaObjCxx/cpp -O3 -DNDEBUG -fPIC
 LDFLAGS   = -framework Foundation
 
 # OS specific
@@ -227,20 +227,17 @@ ggml.o: $(CPP_PATH)/ggml.c $(CPP_PATH)/ggml.h
 llama.o: $(CPP_PATH)/llama.mm $(CPP_PATH)/llama.hh
 	$(CXX) $(CXXFLAGS) -c $(CPP_PATH)/llama.mm -o llama.o
 
-utils.o: $(CPP_PATH)/utils.mm $(CPP_PATH)/utils.hh
-	$(CXX) $(CXXFLAGS) -c $(CPP_PATH)/utils.mm -o utils.o
-
 LlamaError.o: $(LLAMAOBJCXX_PATH)/LlamaError.m $(LLAMAOBJCXX_PATH)/headers/LlamaError.h
 	$(CXX) $(OBJCFLAGS) -c $(LLAMAOBJCXX_PATH)/LlamaError.m -o LlamaError.o
 
-LlamaErrorInternal.o: $(LLAMAOBJCXX_PATH)/internal/LlamaErrorInternal.m $(LLAMAOBJCXX_PATH)/headers/LlamaErrorInternal.h
+LlamaErrorInternal.o: $(LLAMAOBJCXX_PATH)/internal/LlamaErrorInternal.m $(LLAMAOBJCXX_PATH)/internal/LlamaErrorInternal.h
 	$(CXX) $(OBJCFLAGS) -c $(LLAMAOBJCXX_PATH)/internal/LlamaErrorInternal.m -o LlamaErrorInternal.o
 
 clean:
 	rm -f *.o quantize
 
-quantize: $(CPP_PATH)/quantize.mm ggml.o llama.o utils.o LlamaErrorInternal.o LlamaError.o
-	$(CXX) $(CXXFLAOBJCFLAGSGS) $(CPP_PATH)/quantize.mm ggml.o llama.o utils.o LlamaErrorInternal.o LLamaError.o -o quantize $(LDFLAGS)
+quantize: quantize.mm ggml.o llama.o LlamaErrorInternal.o LlamaError.o
+	$(CXX) $(OBJCFLAGS) quantize.mm ggml.o llama.o LlamaErrorInternal.o LLamaError.o -o quantize $(LDFLAGS)
 
 #
 # Tests

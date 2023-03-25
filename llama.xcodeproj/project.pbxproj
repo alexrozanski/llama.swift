@@ -29,8 +29,8 @@
 		82718C8829CE4C0900545C32 /* LlamaPredictionEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 82718C8729CE4C0200545C32 /* LlamaPredictionEvent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		82718C8B29CF05AB00545C32 /* LlamaPredictionPayload.h in Headers */ = {isa = PBXBuildFile; fileRef = 82718C8929CF05AB00545C32 /* LlamaPredictionPayload.h */; };
 		82718C8C29CF05AB00545C32 /* LlamaPredictionPayload.m in Sources */ = {isa = PBXBuildFile; fileRef = 82718C8A29CF05AB00545C32 /* LlamaPredictionPayload.m */; };
-		82718C8F29CFAED500545C32 /* common.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C8D29CFAED500545C32 /* common.mm */; };
-		82718C9029CFAED500545C32 /* common.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82718C8E29CFAED500545C32 /* common.hh */; };
+		82718C9329CFB10900545C32 /* common.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82718C9129CFB10900545C32 /* common.hh */; };
+		82718C9429CFB10900545C32 /* common.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C9229CFB10900545C32 /* common.mm */; };
 		82819FB229C1DB5400399B7E /* LlamaError.m in Sources */ = {isa = PBXBuildFile; fileRef = 82819F9829C07BC900399B7E /* LlamaError.m */; };
 		82819FB329C1DB5800399B7E /* LlamaEvent.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82819F9329C0526100399B7E /* LlamaEvent.mm */; };
 		82819FB529C1DB5800399B7E /* LlamaSessionConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 82819F8C29BF2F5800399B7E /* LlamaSessionConfig.m */; };
@@ -94,8 +94,8 @@
 		82718C8729CE4C0200545C32 /* LlamaPredictionEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaPredictionEvent.h; sourceTree = "<group>"; };
 		82718C8929CF05AB00545C32 /* LlamaPredictionPayload.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaPredictionPayload.h; sourceTree = "<group>"; };
 		82718C8A29CF05AB00545C32 /* LlamaPredictionPayload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaPredictionPayload.m; sourceTree = "<group>"; };
-		82718C8D29CFAED500545C32 /* common.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = common.mm; path = examples/common.mm; sourceTree = SOURCE_ROOT; };
-		82718C8E29CFAED500545C32 /* common.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = common.hh; path = examples/common.hh; sourceTree = SOURCE_ROOT; };
+		82718C9129CFB10900545C32 /* common.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = common.hh; path = Sources/cpp/common.hh; sourceTree = SOURCE_ROOT; };
+		82718C9229CFB10900545C32 /* common.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = common.mm; path = Sources/cpp/common.mm; sourceTree = SOURCE_ROOT; };
 		82819F7B29BDF61E00399B7E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LlamaTest.xcconfig; sourceTree = "<group>"; };
 		82819F7D29BF2BFC00399B7E /* ggml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ggml.c; path = Sources/llamaObjCxx/cpp/ggml.c; sourceTree = SOURCE_ROOT; };
@@ -185,6 +185,8 @@
 		82293E4329BDC51A00C67BD9 /* cpp */ = {
 			isa = PBXGroup;
 			children = (
+				82718C9129CFB10900545C32 /* common.hh */,
+				82718C9229CFB10900545C32 /* common.mm */,
 				82819F7D29BF2BFC00399B7E /* ggml.c */,
 				8227D27629C2A87E003E3197 /* ggml.h */,
 				82718C5E29CBEB8900545C32 /* llama.mm */,
@@ -259,8 +261,6 @@
 			children = (
 				82819FC729C2939100399B7E /* module.modulemap */,
 				82819F9829C07BC900399B7E /* LlamaError.m */,
-				82718C8E29CFAED500545C32 /* common.hh */,
-				82718C8D29CFAED500545C32 /* common.mm */,
 				82293E4329BDC51A00C67BD9 /* cpp */,
 				82718C8429CE4BC400545C32 /* events */,
 				8227D26D29C2A825003E3197 /* headers */,
@@ -303,7 +303,7 @@
 				82718C6129CBEB8900545C32 /* llama.hh in Headers */,
 				8227D27729C2A87E003E3197 /* ggml.h in Headers */,
 				82718C6629CBF21D00545C32 /* LlamaErrorInternal.h in Headers */,
-				82718C9029CFAED500545C32 /* common.hh in Headers */,
+				82718C9329CFB10900545C32 /* common.hh in Headers */,
 				8227D27529C2A844003E3197 /* LlamaSessionConfig.h in Headers */,
 				8227D27429C2A844003E3197 /* LlamaError.h in Headers */,
 			);
@@ -444,7 +444,7 @@
 			files = (
 				82819FB629C1DB5800399B7E /* LlamaPredictOperation.mm in Sources */,
 				82718C8229CD406400545C32 /* LlamaContext.mm in Sources */,
-				82718C8F29CFAED500545C32 /* common.mm in Sources */,
+				82718C9429CFB10900545C32 /* common.mm in Sources */,
 				82718C6029CBEB8900545C32 /* llama.mm in Sources */,
 				82819FB529C1DB5800399B7E /* LlamaSessionConfig.m in Sources */,
 				82718C8629CE4BE200545C32 /* LlamaPredictionEvent.mm in Sources */,

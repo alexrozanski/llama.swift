@@ -9,6 +9,7 @@
 
 #import "LlamaPredictOperation.hh"
 #import "LlamaPredictionEvent.h"
+#import "LlamaPredictionPayload.h"
 #import "LlamaSetupOperation.hh"
 #import "LlamaSessionConfig.h"
 
@@ -36,43 +37,6 @@ BOOL IsModelLoaded(LlamaSessionState state)
   }
 }
 
-#pragma mark -
-
-@interface Prediction : NSObject
-
-@property (nonatomic, readonly, copy, nonnull) NSString *prompt;
-@property (nonatomic, nullable) void (^tokenHandler)(NSString*);
-@property (nonatomic, nullable) void (^completionHandler)(void);
-@property (nonatomic, nullable) void (^failureHandler)(NSError*);
-
-- (instancetype)initWithPrompt:(NSString *)prompt
-                  tokenHandler:(void(^)(NSString*))tokenHandler
-             completionHandler:(void(^)(void))completionHandler
-                failureHandler:(void(^)(NSError*))failureHandler;
-
-@end
-
-@implementation Prediction
-
-- (instancetype)initWithPrompt:(NSString *)prompt
-                  tokenHandler:(void(^)(NSString*))tokenHandler
-             completionHandler:(void(^)(void))completionHandler
-                failureHandler:(void(^)(NSError*))failureHandler
-{
-  if ((self = [super init])) {
-    _prompt = [prompt copy];
-    _tokenHandler = [tokenHandler copy];
-    _completionHandler = [completionHandler copy];
-    _failureHandler = [failureHandler copy];
-  }
-
-  return self;
-}
-
-@end
-
-#pragma mark -
-
 @interface _LlamaSession () <LlamaSetupOperationDelegate>
 @end
 
@@ -81,7 +45,7 @@ BOOL IsModelLoaded(LlamaSessionState state)
   _LlamaSessionConfig *_config;
   NSOperationQueue *_operationQueue;
 
-  NSMutableArray<Prediction *> *_queuedPredictions;
+  NSMutableArray<LlamaPredictionPayload *> *_queuedPredictions;
 
   LlamaSessionState _state;
   LlamaContext *_context;
@@ -176,42 +140,42 @@ BOOL IsModelLoaded(LlamaSessionState state)
               completionHandler:(void(^)(void))completionHandler
                  failureHandler:(void(^)(NSError*))failureHandler
 {
-  Prediction *prediction = [[Prediction alloc] initWithPrompt:prompt
-                                                 tokenHandler:tokenHandler
-                                            completionHandler:completionHandler
-                                               failureHandler:failureHandler];
+  LlamaPredictionPayload *payload = [[LlamaPredictionPayload alloc] initWithPrompt:prompt
+                                                                      tokenHandler:tokenHandler
+                                                                 completionHandler:completionHandler
+                                                                    failureHandler:failureHandler];
 
   if (!IsModelLoaded(_state)) {
-    [_queuedPredictions addObject:prediction];
+    [_queuedPredictions addObject:payload];
     [self loadModelIfNeeded];
   } else {
-    [self _runPrediction:prediction];
+    [self _runPredictionWithPayload:payload];
   }
 }
 
-- (void)_runPrediction:(Prediction *)prediction
+- (void)_runPredictionWithPayload:(LlamaPredictionPayload *)payload
 {
   if (_context == nil) {
     return;
   }
 
-  gpt_params params = [self _makeParamsForPrompt:prediction.prompt];
+  gpt_params params = [self _makeParamsForPrompt:payload.prompt];
 
   LlamaPredictOperationEventHandler operationEventHandler = ^(_LlamaPredictionEvent *event) {
     [event matchStarted:^{
       self->_state = LlamaSessionStatePredicting;
       [self->_delegate didStartPredictingInSession:self];
     } outputToken:^(NSString *_Nonnull token) {
-      if (prediction.tokenHandler != NULL) {
-        prediction.tokenHandler(token);
+      if (payload.tokenHandler != NULL) {
+        payload.tokenHandler(token);
       }
     } completed:^{
-      if (prediction.completionHandler != NULL) {
-        prediction.completionHandler();
+      if (payload.completionHandler != NULL) {
+        payload.completionHandler();
       }
     } failed:^(NSError * _Nonnull error) {
-      if (prediction.failureHandler != NULL) {
-        prediction.failureHandler(error);
+      if (payload.failureHandler != NULL) {
+        payload.failureHandler(error);
       }
     }];
   };
@@ -242,8 +206,8 @@ BOOL IsModelLoaded(LlamaSessionState state)
   _state = LlamaSessionStateReadyToPredict;
   [_delegate didLoadModelInSession:self];
 
-  for (Prediction *queuedPrediction in _queuedPredictions) {
-    [self _runPrediction:queuedPrediction];
+  for (LlamaPredictionPayload *payload in _queuedPredictions) {
+    [self _runPredictionWithPayload:payload];
   }
   [_queuedPredictions removeAllObjects];
 }

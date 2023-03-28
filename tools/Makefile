@@ -234,10 +234,13 @@ LlamaErrorInternal.o: $(LLAMAOBJCXX_PATH)/internal/LlamaErrorInternal.m $(LLAMAO
 	$(CXX) $(OBJCFLAGS) -c $(LLAMAOBJCXX_PATH)/internal/LlamaErrorInternal.m -o LlamaErrorInternal.o
 
 clean:
-	rm -f *.o quantize
+	rm -vf *.o quantize
 
 quantize: quantize.mm ggml.o llama.o LlamaErrorInternal.o LlamaError.o
 	$(CXX) $(OBJCFLAGS) quantize.mm ggml.o llama.o LlamaErrorInternal.o LLamaError.o -o quantize $(LDFLAGS)
+
+embedding: examples/embedding/embedding.cpp ggml.o llama.o common.o
+	$(CXX) $(CXXFLAGS) examples/embedding/embedding.cpp ggml.o llama.o common.o -o embedding $(LDFLAGS)
 
 #
 # Tests

@@ -11,8 +11,6 @@
 		8227D27429C2A844003E3197 /* LlamaError.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D27029C2A844003E3197 /* LlamaError.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8227D27529C2A844003E3197 /* LlamaSessionConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D27129C2A844003E3197 /* LlamaSessionConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8227D27729C2A87E003E3197 /* ggml.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D27629C2A87E003E3197 /* ggml.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8227D27D29C4F6F8003E3197 /* llama.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82293E3929BDC4ED00C67BD9 /* llama.framework */; };
-		82293E5B29BDC71700C67BD9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82293E5A29BDC71700C67BD9 /* main.swift */; };
 		82718C6029CBEB8900545C32 /* llama.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C5E29CBEB8900545C32 /* llama.mm */; };
 		82718C6129CBEB8900545C32 /* llama.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82718C5F29CBEB8900545C32 /* llama.hh */; };
 		82718C6329CBED4300545C32 /* LlamaErrorInternal.m in Sources */ = {isa = PBXBuildFile; fileRef = 82718C6229CBED4300545C32 /* LlamaErrorInternal.m */; };
@@ -42,13 +40,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		82293E5F29BDC72B00C67BD9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 82293E3029BDC4ED00C67BD9 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 82293E3829BDC4ED00C67BD9;
-			remoteInfo = llama;
-		};
 		82819FC129C1DB8B00399B7E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 82293E3029BDC4ED00C67BD9 /* Project object */;
@@ -58,31 +49,16 @@
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		82293E5629BDC71700C67BD9 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		8227D26E29C2A844003E3197 /* LlamaEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LlamaEvent.h; sourceTree = "<group>"; };
 		8227D27029C2A844003E3197 /* LlamaError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LlamaError.h; sourceTree = "<group>"; };
 		8227D27129C2A844003E3197 /* LlamaSessionConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LlamaSessionConfig.h; sourceTree = "<group>"; };
 		8227D27629C2A87E003E3197 /* ggml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ggml.h; path = Sources/cpp/ggml.h; sourceTree = SOURCE_ROOT; };
 		82293E3929BDC4ED00C67BD9 /* llama.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = llama.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		82293E5829BDC71700C67BD9 /* llamaTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = llamaTest; sourceTree = BUILT_PRODUCTS_DIR; };
-		82293E5A29BDC71700C67BD9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		82718C5E29CBEB8900545C32 /* llama.mm */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = llama.mm; path = Sources/cpp/llama.mm; sourceTree = SOURCE_ROOT; tabWidth = 4; };
 		82718C5F29CBEB8900545C32 /* llama.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = llama.hh; path = Sources/cpp/llama.hh; sourceTree = SOURCE_ROOT; };
 		82718C6229CBED4300545C32 /* LlamaErrorInternal.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaErrorInternal.m; sourceTree = "<group>"; };
 		82718C6429CBED6500545C32 /* LlamaErrorInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaErrorInternal.h; sourceTree = "<group>"; };
-		82718C6729CC677F00545C32 /* llamaTest.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = llamaTest.entitlements; sourceTree = "<group>"; };
 		82718C6829CC67C500545C32 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		82718C6F29CC6BA600545C32 /* LlamaSetupOperation.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LlamaSetupOperation.hh; sourceTree = "<group>"; };
 		82718C7029CC6BA600545C32 /* LlamaSetupOperation.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaSetupOperation.mm; sourceTree = "<group>"; };
@@ -98,8 +74,6 @@
 		82718C9129CFB10900545C32 /* common.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = common.hh; path = Sources/cpp/common.hh; sourceTree = SOURCE_ROOT; };
 		82718C9229CFB10900545C32 /* common.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = common.mm; path = Sources/cpp/common.mm; sourceTree = SOURCE_ROOT; };
 		82718CC529D2F7BD00545C32 /* LlamaRunState.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaRunState.h; sourceTree = "<group>"; };
-		82819F7B29BDF61E00399B7E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LlamaTest.xcconfig; sourceTree = "<group>"; };
 		82819F7D29BF2BFC00399B7E /* ggml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ggml.c; path = Sources/llamaObjCxx/cpp/ggml.c; sourceTree = SOURCE_ROOT; };
 		82819F8C29BF2F5800399B7E /* LlamaSessionConfig.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaSessionConfig.m; sourceTree = "<group>"; };
 		82819F8F29BF387400399B7E /* LlamaPredictOperation.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LlamaPredictOperation.hh; sourceTree = "<group>"; };
@@ -119,14 +93,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				82819FC529C2585700399B7E /* libllamaObjCxx.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		82293E5529BDC71700C67BD9 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				8227D27D29C4F6F8003E3197 /* llama.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -159,7 +125,6 @@
 				82819F9C29C0897900399B7E /* LICENSE */,
 				82819F9D29C1CCA300399B7E /* Package.swift */,
 				82819FC629C289B400399B7E /* Sources */,
-				82293E5929BDC71700C67BD9 /* llamaTest */,
 				82293E3A29BDC4ED00C67BD9 /* Products */,
 				82293E6129BDC73100C67BD9 /* Frameworks */,
 			);
@@ -169,7 +134,6 @@
 			isa = PBXGroup;
 			children = (
 				82293E3929BDC4ED00C67BD9 /* llama.framework */,
-				82293E5829BDC71700C67BD9 /* llamaTest */,
 				82819FA929C1DB2900399B7E /* libllamaObjCxx.a */,
 			);
 			name = Products;
@@ -195,17 +159,6 @@
 				82718C5F29CBEB8900545C32 /* llama.hh */,
 			);
 			path = cpp;
-			sourceTree = "<group>";
-		};
-		82293E5929BDC71700C67BD9 /* llamaTest */ = {
-			isa = PBXGroup;
-			children = (
-				82718C6729CC677F00545C32 /* llamaTest.entitlements */,
-				82293E5A29BDC71700C67BD9 /* main.swift */,
-				82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */,
-				82819F7B29BDF61E00399B7E /* Info.plist */,
-			);
-			path = llamaTest;
 			sourceTree = "<group>";
 		};
 		82293E6129BDC73100C67BD9 /* Frameworks */ = {
@@ -335,24 +288,6 @@
 			productReference = 82293E3929BDC4ED00C67BD9 /* llama.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		82293E5729BDC71700C67BD9 /* llamaTest */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 82293E5C29BDC71700C67BD9 /* Build configuration list for PBXNativeTarget "llamaTest" */;
-			buildPhases = (
-				82293E5429BDC71700C67BD9 /* Sources */,
-				82293E5529BDC71700C67BD9 /* Frameworks */,
-				82293E5629BDC71700C67BD9 /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				82293E6029BDC72B00C67BD9 /* PBXTargetDependency */,
-			);
-			name = llamaTest;
-			productName = llamaTest;
-			productReference = 82293E5829BDC71700C67BD9 /* llamaTest */;
-			productType = "com.apple.product-type.tool";
-		};
 		82819FA829C1DB2900399B7E /* llamaObjCxx */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 82819FAF29C1DB2900399B7E /* Build configuration list for PBXNativeTarget "llamaObjCxx" */;
@@ -384,10 +319,6 @@
 						CreatedOnToolsVersion = 14.1;
 						LastSwiftMigration = 1410;
 					};
-					82293E5729BDC71700C67BD9 = {
-						CreatedOnToolsVersion = 14.1;
-						LastSwiftMigration = 1410;
-					};
 					82819FA829C1DB2900399B7E = {
 						CreatedOnToolsVersion = 14.1;
 						LastSwiftMigration = 1410;
@@ -409,7 +340,6 @@
 			targets = (
 				82293E3829BDC4ED00C67BD9 /* llama */,
 				82819FA829C1DB2900399B7E /* llamaObjCxx */,
-				82293E5729BDC71700C67BD9 /* llamaTest */,
 			);
 		};
 /* End PBXProject section */
@@ -431,14 +361,6 @@
 			files = (
 				82718C7329CD33B900545C32 /* Session.swift in Sources */,
 				82718C7D29CD3AF800545C32 /* LlamaInference.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		82293E5429BDC71700C67BD9 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				82293E5B29BDC71700C67BD9 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -465,11 +387,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		82293E6029BDC72B00C67BD9 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 82293E3829BDC4ED00C67BD9 /* llama */;
-			targetProxy = 82293E5F29BDC72B00C67BD9 /* PBXContainerItemProxy */;
-		};
 		82819FC229C1DB8B00399B7E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 82819FA829C1DB2900399B7E /* llamaObjCxx */;
@@ -688,61 +605,6 @@
 			};
 			name = Release;
 		};
-		82293E5D29BDC71700C67BD9 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = llamaTest/llamaTest.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Manual;
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_EXPAND_BUILD_SETTINGS = YES;
-				INFOPLIST_FILE = llamaTest/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				LLAMA_MODEL_PATH = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		82293E5E29BDC71700C67BD9 /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 82819F7C29BDF7CB00399B7E /* LlamaTest.xcconfig */;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = llamaTest/llamaTest.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Manual;
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_EXPAND_BUILD_SETTINGS = YES;
-				INFOPLIST_FILE = llamaTest/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				LLAMA_MODEL_PATH = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
 		82819FB029C1DB2900399B7E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -803,15 +665,6 @@
 			buildConfigurations = (
 				82293E4129BDC4ED00C67BD9 /* Debug */,
 				82293E4229BDC4ED00C67BD9 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		82293E5C29BDC71700C67BD9 /* Build configuration list for PBXNativeTarget "llamaTest" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				82293E5D29BDC71700C67BD9 /* Debug */,
-				82293E5E29BDC71700C67BD9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

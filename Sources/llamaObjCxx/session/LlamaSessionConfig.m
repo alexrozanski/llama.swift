@@ -9,9 +9,19 @@
 
 @implementation _LlamaSessionConfig
 
+@synthesize mode = _mode;
 @synthesize numberOfThreads = _numberOfThreads;
 @synthesize numberOfTokens = _numberOfTokens;
 @synthesize reversePrompt = _reversePrompt;
 @synthesize seed = _seed;
+
+- (instancetype)initWithMode:(_LlamaSessionMode)mode
+{
+  if ((self = [super init])) {
+    _mode = mode;
+  }
+
+  return self;
+}
 
 @end

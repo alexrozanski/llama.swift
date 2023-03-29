@@ -41,7 +41,6 @@ BOOL IsModelLoaded(LlamaSessionState state)
 @end
 
 @implementation _LlamaSession {
-  LlamaSessionMode _mode;
   _LlamaSessionConfig *_config;
   NSOperationQueue *_operationQueue;
 
@@ -55,13 +54,11 @@ BOOL IsModelLoaded(LlamaSessionState state)
 @synthesize delegate = _delegate;
 
 - (instancetype)initWithModelPath:(NSString *)modelPath
-                             mode:(LlamaSessionMode)mode
                            config:(_LlamaSessionConfig *)config
                          delegate:(id<_LlamaSessionDelegate>)delegate
 {
   if ((self = [super init])) {
     _modelPath = [modelPath copy];
-    _mode = mode;
     _config = config;
     _delegate = delegate;
 
@@ -85,7 +82,7 @@ BOOL IsModelLoaded(LlamaSessionState state)
   params.n_predict = (int)_config.numberOfTokens;
   params.seed = (int32_t)_config.seed;
 
-  if (_mode == LlamaSessionModeInstructional) {
+  if (_config.mode == _LlamaSessionModeInstructional) {
     params.instruct = true;
   }
 

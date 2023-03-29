@@ -11,11 +11,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, LlamaSessionMode) {
-  LlamaSessionModeRegular = 0,
-  LlamaSessionModeInstructional
-};
-
 @class _LlamaSession;
 
 @protocol _LlamaSessionDelegate <NSObject>
@@ -37,7 +32,6 @@ typedef NS_ENUM(NSUInteger, LlamaSessionMode) {
 - (instancetype)init NS_UNAVAILABLE;
 
 - (instancetype)initWithModelPath:(NSString *)modelPath
-                             mode:(LlamaSessionMode)mode
                            config:(_LlamaSessionConfig *)config
                          delegate:(id<_LlamaSessionDelegate>)delegate;
 

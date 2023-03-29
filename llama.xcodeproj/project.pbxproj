@@ -17,10 +17,9 @@
 		82718C6629CBF21D00545C32 /* LlamaErrorInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 82718C6429CBED6500545C32 /* LlamaErrorInternal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		82718C7129CC6BA600545C32 /* LlamaSetupOperation.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82718C6F29CC6BA600545C32 /* LlamaSetupOperation.hh */; };
 		82718C7229CC6BA600545C32 /* LlamaSetupOperation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C7029CC6BA600545C32 /* LlamaSetupOperation.mm */; };
-		82718C7329CD33B900545C32 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82718C6829CC67C500545C32 /* Session.swift */; };
 		82718C7A29CD376700545C32 /* LlamaSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 82718C7829CD376700545C32 /* LlamaSession.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		82718C7B29CD376700545C32 /* LlamaSession.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C7929CD376700545C32 /* LlamaSession.mm */; };
-		82718C7D29CD3AF800545C32 /* LlamaInference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82718C7C29CD3AF800545C32 /* LlamaInference.swift */; };
+		82718C7D29CD3AF800545C32 /* Inference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82718C7C29CD3AF800545C32 /* Inference.swift */; };
 		82718C8129CD406400545C32 /* LlamaContext.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82718C7F29CD406400545C32 /* LlamaContext.hh */; };
 		82718C8229CD406400545C32 /* LlamaContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C8029CD406400545C32 /* LlamaContext.mm */; };
 		82718C8629CE4BE200545C32 /* LlamaPredictionEvent.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C8529CE4BE200545C32 /* LlamaPredictionEvent.mm */; };
@@ -37,6 +36,11 @@
 		82819FB729C1DB5800399B7E /* LlamaPredictOperation.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82819F8F29BF387400399B7E /* LlamaPredictOperation.hh */; settings = {ATTRIBUTES = (Private, ); }; };
 		82819FB929C1DB5E00399B7E /* ggml.c in Sources */ = {isa = PBXBuildFile; fileRef = 82819F7D29BF2BFC00399B7E /* ggml.c */; };
 		82819FC529C2585700399B7E /* libllamaObjCxx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 82819FA929C1DB2900399B7E /* libllamaObjCxx.a */; };
+		82EDD1BA29D466E8004D3A76 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1B929D466E8004D3A76 /* Session.swift */; };
+		82EDD1BC29D46754004D3A76 /* BridgedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1BB29D46754004D3A76 /* BridgedSession.swift */; };
+		82EDD1BE29D467D3004D3A76 /* SessionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1BD29D467D3004D3A76 /* SessionConfig.swift */; };
+		82EDD1C529D4866C004D3A76 /* RegularSessionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1C429D4866C004D3A76 /* RegularSessionConfig.swift */; };
+		82EDD1C729D487C3004D3A76 /* AlpacaSessionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1C629D487C3004D3A76 /* AlpacaSessionConfig.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,12 +63,11 @@
 		82718C5F29CBEB8900545C32 /* llama.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = llama.hh; path = Sources/cpp/llama.hh; sourceTree = SOURCE_ROOT; };
 		82718C6229CBED4300545C32 /* LlamaErrorInternal.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaErrorInternal.m; sourceTree = "<group>"; };
 		82718C6429CBED6500545C32 /* LlamaErrorInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaErrorInternal.h; sourceTree = "<group>"; };
-		82718C6829CC67C500545C32 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		82718C6F29CC6BA600545C32 /* LlamaSetupOperation.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LlamaSetupOperation.hh; sourceTree = "<group>"; };
 		82718C7029CC6BA600545C32 /* LlamaSetupOperation.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaSetupOperation.mm; sourceTree = "<group>"; };
 		82718C7829CD376700545C32 /* LlamaSession.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaSession.h; sourceTree = "<group>"; };
 		82718C7929CD376700545C32 /* LlamaSession.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaSession.mm; sourceTree = "<group>"; };
-		82718C7C29CD3AF800545C32 /* LlamaInference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaInference.swift; sourceTree = "<group>"; };
+		82718C7C29CD3AF800545C32 /* Inference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inference.swift; sourceTree = "<group>"; };
 		82718C7F29CD406400545C32 /* LlamaContext.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LlamaContext.hh; sourceTree = "<group>"; };
 		82718C8029CD406400545C32 /* LlamaContext.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaContext.mm; sourceTree = "<group>"; };
 		82718C8529CE4BE200545C32 /* LlamaPredictionEvent.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaPredictionEvent.mm; sourceTree = "<group>"; };
@@ -85,6 +88,11 @@
 		82819F9D29C1CCA300399B7E /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		82819FA929C1DB2900399B7E /* libllamaObjCxx.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libllamaObjCxx.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		82819FC729C2939100399B7E /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
+		82EDD1B929D466E8004D3A76 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		82EDD1BB29D46754004D3A76 /* BridgedSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgedSession.swift; sourceTree = "<group>"; };
+		82EDD1BD29D467D3004D3A76 /* SessionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionConfig.swift; sourceTree = "<group>"; };
+		82EDD1C429D4866C004D3A76 /* RegularSessionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegularSessionConfig.swift; sourceTree = "<group>"; };
+		82EDD1C629D487C3004D3A76 /* AlpacaSessionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlpacaSessionConfig.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -142,8 +150,9 @@
 		82293E3B29BDC4ED00C67BD9 /* llama */ = {
 			isa = PBXGroup;
 			children = (
-				82718C7C29CD3AF800545C32 /* LlamaInference.swift */,
-				82718C6829CC67C500545C32 /* Session.swift */,
+				82718C7C29CD3AF800545C32 /* Inference.swift */,
+				82EDD1C329D48517004D3A76 /* config */,
+				82EDD1B829D4664C004D3A76 /* session */,
 			);
 			path = llama;
 			sourceTree = "<group>";
@@ -233,6 +242,25 @@
 				82819F9E29C1CE2000399B7E /* llamaObjCxx */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		82EDD1B829D4664C004D3A76 /* session */ = {
+			isa = PBXGroup;
+			children = (
+				82EDD1B929D466E8004D3A76 /* Session.swift */,
+				82EDD1BB29D46754004D3A76 /* BridgedSession.swift */,
+			);
+			path = session;
+			sourceTree = "<group>";
+		};
+		82EDD1C329D48517004D3A76 /* config */ = {
+			isa = PBXGroup;
+			children = (
+				82EDD1BD29D467D3004D3A76 /* SessionConfig.swift */,
+				82EDD1C629D487C3004D3A76 /* AlpacaSessionConfig.swift */,
+				82EDD1C429D4866C004D3A76 /* RegularSessionConfig.swift */,
+			);
+			path = config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -359,8 +387,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				82718C7329CD33B900545C32 /* Session.swift in Sources */,
-				82718C7D29CD3AF800545C32 /* LlamaInference.swift in Sources */,
+				82EDD1BE29D467D3004D3A76 /* SessionConfig.swift in Sources */,
+				82EDD1C529D4866C004D3A76 /* RegularSessionConfig.swift in Sources */,
+				82EDD1BC29D46754004D3A76 /* BridgedSession.swift in Sources */,
+				82EDD1C729D487C3004D3A76 /* AlpacaSessionConfig.swift in Sources */,
+				82718C7D29CD3AF800545C32 /* Inference.swift in Sources */,
+				82EDD1BA29D466E8004D3A76 /* Session.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

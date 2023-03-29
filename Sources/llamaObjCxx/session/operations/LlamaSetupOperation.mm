@@ -54,33 +54,12 @@
 
 - (void)main
 {
-  // has to be called once at the start of the program to init ggml stuff
-  ggml_time_init();
-
   gpt_params params(_params);
-//  params.model = "models/llama-7B/ggml-model.bin";
 
-//  if (gpt_params_parse(argc, argv, params) == false) {
-//    return 1;
-//  }
-
-  if (_params.n_ctx > 2048) {
+  if (params.n_ctx > 2048) {
     NSLog(@"warning: model does not support context sizes greater than 2048 tokens (%d specified);"
-          "expect poor results\n", _params.n_ctx);
+          "expect poor results\n", params.n_ctx);
   }
-
-  if (_params.seed <= 0) {
-    _params.seed = time(NULL);
-  }
-
-  std::mt19937 rng(_params.seed);
-  if (_params.random_prompt) {
-    _params.prompt = gpt_random_prompt(rng);
-  }
-
-  // save choice to use color for later
-  // (note for later: this is a slightly awkward choice)
-//      con_use_color = params.use_color;
 
   llama_context * ctx;
 
@@ -105,16 +84,8 @@
     }
   }
 
-  // print system information
-//  {
-//    fprintf(stderr, "\n");
-//    fprintf(stderr, "system_info: n_threads = %d / %d | %s\n",
-//            params.n_threads, std::thread::hardware_concurrency(), llama_print_system_info());
-//  }
-
-  LlamaContext *context = [[LlamaContext alloc] initWithContext:ctx];
-
   dispatch_async(dispatch_get_main_queue(), ^{
+    LlamaContext *context = [[LlamaContext alloc] initWithParams:params context:ctx];
     [self->_delegate setupOperation:self didSucceedWithContext:context];
   });
 }

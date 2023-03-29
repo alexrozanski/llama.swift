@@ -76,11 +76,10 @@ BOOL IsModelLoaded(LlamaSessionState state)
 
 #pragma mark - Params
 
-- (gpt_params)_makeParamsForPrompt:(NSString *)prompt
+- (gpt_params)_makeParams
 {
   gpt_params params;
   params.model = [_modelPath cStringUsingEncoding:NSUTF8StringEncoding];
-  params.prompt = prompt ? [prompt cStringUsingEncoding:NSUTF8StringEncoding] : "";
 
   params.n_threads = (int)_config.numberOfThreads;
   params.n_predict = (int)_config.numberOfTokens;
@@ -119,8 +118,6 @@ BOOL IsModelLoaded(LlamaSessionState state)
 
 - (void)loadModelIfNeeded
 {
-  NSAssert([NSThread isMainThread], @"Call -loadModelIfNeeded on main thread.");
-
   if (![self _needsModelLoad]) {
     return;
   }
@@ -128,7 +125,7 @@ BOOL IsModelLoaded(LlamaSessionState state)
   _state = LlamaSessionStateLoadingModel;
   [_delegate didStartLoadingModelInSession:self];
 
-  gpt_params params = [self _makeParamsForPrompt:nil];
+  gpt_params params = [self _makeParams];
   LlamaSetupOperation *setupOperation = [[LlamaSetupOperation alloc] initWithParams:params delegate:self];
   [_operationQueue addOperation:setupOperation];
 }
@@ -159,8 +156,6 @@ BOOL IsModelLoaded(LlamaSessionState state)
     return;
   }
 
-  gpt_params params = [self _makeParamsForPrompt:payload.prompt];
-
   LlamaPredictOperationEventHandler operationEventHandler = ^(_LlamaPredictionEvent *event) {
     [event matchStarted:^{
       self->_state = LlamaSessionStatePredicting;
@@ -181,7 +176,7 @@ BOOL IsModelLoaded(LlamaSessionState state)
   };
 
   LlamaPredictOperation *predictOperation = [[LlamaPredictOperation alloc] initWithContext:_context
-                                                                                    params:params
+                                                                                    prompt:payload.prompt
                                                                               eventHandler:operationEventHandler
                                                                          eventHandlerQueue:dispatch_get_main_queue()];
 
@@ -192,16 +187,12 @@ BOOL IsModelLoaded(LlamaSessionState state)
 
 - (void)setupOperation:(nonnull LlamaSetupOperation *)operation didFailWithError:(nonnull NSError *)error
 {
-  NSAssert([NSThread isMainThread], @"Data synchronization should happen on main thread.");
-
   _state = LlamaSessionStateFailed;
   [_delegate session:self didMoveToErrorStateWithError:error];
 }
 
 - (void)setupOperation:(nonnull LlamaSetupOperation *)operation didSucceedWithContext:(nonnull LlamaContext *)context
 {
-  NSAssert([NSThread isMainThread], @"Data synchronization should happen on main thread.");
-
   _context = context;
   _state = LlamaSessionStateReadyToPredict;
   [_delegate didLoadModelInSession:self];

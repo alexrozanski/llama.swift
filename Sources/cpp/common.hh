@@ -38,7 +38,9 @@ struct gpt_params {
     bool memory_f16        = true;  // use f16 instead of f32 for memory kv
     bool random_prompt     = false; // do not randomize prompt if none provided
     bool use_color         = false; // use color to distinguish generations and inputs
-    bool interactive       = false; // interactive mode
+
+    // we always want to be in interactive mode.
+    // bool interactive       = false; // interactive mode
 
     bool embedding         = false; // get only sentence embedding
     bool interactive_start = false; // wait for user input immediately

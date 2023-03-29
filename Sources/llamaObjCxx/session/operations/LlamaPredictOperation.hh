@@ -19,7 +19,7 @@ typedef void (^LlamaPredictOperationEventHandler)(_LlamaPredictionEvent *event);
 @interface LlamaPredictOperation : NSOperation
 
 - (instancetype)initWithContext:(LlamaContext *)context
-                         params:(gpt_params)params
+                         prompt:(NSString *)prompt
                    eventHandler:(LlamaPredictOperationEventHandler)eventHandler
               eventHandlerQueue:(dispatch_queue_t)eventHandlerQueue;
 

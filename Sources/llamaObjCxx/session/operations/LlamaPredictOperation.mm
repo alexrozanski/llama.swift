@@ -26,18 +26,11 @@
 #include <string>
 #include <vector>
 
-#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
-#include <signal.h>
-#include <unistd.h>
-#endif
-
 @interface LlamaPredictOperation () {
   LlamaContext *_context;
   NSString *_prompt;
   LlamaPredictOperationEventHandler _eventHandler;
   dispatch_queue_t _eventHandlerQueue;
-
-  bool _isInteracting;
 }
 
 @end

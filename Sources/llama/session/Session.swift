@@ -17,10 +17,10 @@ public enum SessionState {
 
 public protocol Session {
   typealias StateChangeHandler = (SessionState) -> Void
-  
+
   var state: SessionState { get }
   var stateChangeHandler: StateChangeHandler? { get }
 
   // Run prediction to generate tokens.
-//  func predict(with prompt: String) -> AsyncThrowingStream<String, Error>
+  func predict(with prompt: String) -> AsyncThrowingStream<String, Error>
 }

@@ -15,7 +15,14 @@ public class Inference {
       self.numThreads = numThreads
     }
 
-    public static let `default` = Config(numThreads: UInt(ProcessInfo().activeProcessorCount))
+    public static let `default`: Config = {
+      let processorCount = UInt(ProcessInfo().activeProcessorCount)
+      // Account for main thread and worker thread. Specifying all active processors seems to introduce a lot of contention.
+      let maxAvailableProcessors = processorCount - 2
+      // Experimentally 6 also seems like a pretty good number.
+      let numThreads = min(maxAvailableProcessors, 6)
+      return Config(numThreads: numThreads)
+    }()
   }
 
   public let config: Config

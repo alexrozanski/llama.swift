@@ -15,7 +15,11 @@ protocol ObjCxxParamsBuilder {
 class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
   let paramsBuilder: ObjCxxParamsBuilder
 
-  private(set) var state: SessionState = .notStarted
+  private(set) var state: SessionState = .notStarted {
+    didSet {
+      stateChangeHandler?(state)
+    }
+  }
 
   let stateChangeHandler: StateChangeHandler?
 

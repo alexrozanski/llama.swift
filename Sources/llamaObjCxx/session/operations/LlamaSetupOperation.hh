@@ -7,8 +7,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "common.hh"
-
+@class _LlamaSessionParams;
 @class _LlamaEvent;
 @class LlamaContext;
 @class LlamaSetupOperation;
@@ -26,7 +25,7 @@ typedef void (^LlamaSetupOperationEventHandler)(_LlamaEvent *event);
 
 @property (nonatomic, weak) id<LlamaSetupOperationDelegate> delegate;
 
-- (instancetype)initWithParams:(gpt_params)params delegate:(id<LlamaSetupOperationDelegate>)delegate;
+- (instancetype)initWithParams:(_LlamaSessionParams *)params delegate:(id<LlamaSetupOperationDelegate>)delegate;
 
 @end
 

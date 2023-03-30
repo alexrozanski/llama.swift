@@ -8,18 +8,17 @@
 #import <Foundation/Foundation.h>
 #include <vector>
 
-#import "common.hh"
 #import "llama.hh"
 #import "LlamaRunState.h"
 
+@class _LlamaSessionParams;
 @class LlamaContext;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface LlamaContext : NSObject
 
-// Holds the gpt_params which are set from the first prompt and for the lifetime of the session.
-@property (nonatomic, readonly, assign, nullable) gpt_params *params;
+@property (nonatomic, readonly) _LlamaSessionParams *params;
 
 // Context from Llama internal implementation.
 @property (nonatomic, readonly, assign, nullable) llama_context *ctx;
@@ -29,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, getter=hasInitialized) BOOL initialized;
 
-- (instancetype)initWithParams:(gpt_params)params context:(llama_context *)ctx;
+- (instancetype)initWithParams:(_LlamaSessionParams *)params context:(llama_context *)ctx;
 
 - (BOOL)initializeWithInitializationBlock:(NS_NOESCAPE BOOL (^)(LlamaContext *, NSError **))initializationBlock
                                 outError:(NSError **)outError;

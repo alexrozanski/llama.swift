@@ -16,20 +16,54 @@ typedef NS_ENUM(NSUInteger, _LlamaSessionMode) {
 
 @interface _LlamaSessionParams : NSObject
 
+// model in gpt_params
+@property (nonatomic, readonly, copy) NSString *modelPath;
+
+// replaces instruct in gpt_params
 @property (nonatomic, readonly, assign) _LlamaSessionMode mode;
 
+// seed in gpt_params
+@property (nonatomic, assign) int32_t seed;
+// n_threads in gpt_params
+@property (nonatomic, assign) int32_t numberOfThreads;
+// n_predict in gpt_params
+@property (nonatomic, assign) int32_t numberOfTokens;
+// repeat_last_n in gpt_params
+@property (nonatomic, assign) int32_t numberOfTokensToPenalize;
+// n_parts in gpt_params
+@property (nonatomic, assign) int32_t numberOfParts;
+// n_ctx in gpt_params
+@property (nonatomic, assign) int32_t contextSize;
+// n_batch in gpt_params
+@property (nonatomic, assign) int32_t batchSize;
+// n_keep in gpt_params
+@property (nonatomic, assign) int32_t numberOfTokensToKeepFromInitialPrompt;
+
+// top_k in gpt_params
+@property (nonatomic, assign) int32_t topK;
+// top_p in gpt_params
+@property (nonatomic, assign) float topP;
+// temp in gpt_params
+@property (nonatomic, assign) float temp;
+// repeat_penalty in gpt_params
+@property (nonatomic, assign) float repeatPenalty;
+
+@property (nullable, copy) NSArray<NSString *> *antiprompts;
+
+// memory_f16 in gpt_params
+@property (nonatomic, assign) BOOL useF16Memory;
+
+// Support for other model types
 @property (nonatomic, nullable, copy) NSString *initialPrompt;
 @property (nonatomic, nullable, copy) NSString *promptPrefix;
 @property (nonatomic, nullable, copy) NSString *promptSuffix;
 
-@property (nonatomic, assign) NSUInteger numberOfThreads;
-@property (nonatomic, assign) NSUInteger numberOfTokens;
-
-@property (nullable, copy) NSArray<NSString *> *antiprompts;
-@property (nonatomic, assign) int32_t seed;
+// Convenience properties
+@property (nonatomic, readonly) BOOL isInstructional;
 
 - (instancetype)init NS_UNAVAILABLE;
-- (instancetype)initWithMode:(_LlamaSessionMode)mode;
+
++ (instancetype)defaultParamsWithModelPath:(NSString *)modelPath mode:(_LlamaSessionMode)mode;
 
 @end
 

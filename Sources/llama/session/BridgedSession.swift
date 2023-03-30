@@ -13,7 +13,6 @@ protocol ObjCxxParamsBuilder {
 }
 
 class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
-  let modelURL: URL
   let paramsBuilder: ObjCxxParamsBuilder
 
   private(set) var state: SessionState = .notStarted
@@ -21,17 +20,14 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
   let stateChangeHandler: StateChangeHandler?
 
   private lazy var _session = _LlamaSession(
-    modelPath: modelURL.path,
     params: paramsBuilder.build(),
     delegate: self
   )
 
   init(
-    modelURL: URL,
     paramsBuilder: ObjCxxParamsBuilder,
     stateChangeHandler: StateChangeHandler?
   ) {
-    self.modelURL = modelURL
     self.paramsBuilder = paramsBuilder
     self.stateChangeHandler = stateChangeHandler
   }

@@ -26,14 +26,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface _LlamaSession : NSObject
 
-@property (nonnull, readonly, copy) NSString *modelPath;
 @property (nullable, weak, readonly) id<_LlamaSessionDelegate> delegate;
 
 - (instancetype)init NS_UNAVAILABLE;
 
-- (instancetype)initWithModelPath:(NSString *)modelPath
-                           params:(_LlamaSessionParams *)params
-                         delegate:(id<_LlamaSessionDelegate>)delegate;
+- (instancetype)initWithParams:(_LlamaSessionParams *)params delegate:(id<_LlamaSessionDelegate>)delegate;
 
 - (void)loadModelIfNeeded;
 

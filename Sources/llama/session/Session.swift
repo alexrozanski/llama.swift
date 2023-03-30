@@ -17,8 +17,7 @@ public enum SessionState {
 
 public protocol Session {
   typealias StateChangeHandler = (SessionState) -> Void
-
-  var modelURL: URL { get }
+  
   var state: SessionState { get }
   var stateChangeHandler: StateChangeHandler? { get }
 

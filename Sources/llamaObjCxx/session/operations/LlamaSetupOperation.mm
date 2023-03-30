@@ -31,7 +31,7 @@
 #endif
 
 @interface LlamaSetupOperation () {
-  gpt_params _params;
+  _LlamaSessionParams *_params;
   LlamaSetupOperationEventHandler _eventHandler;
   dispatch_queue_t _eventHandlerQueue;
 }
@@ -42,7 +42,7 @@
 
 @synthesize delegate = _delegate;
 
-- (instancetype)initWithParams:(gpt_params)params delegate:(id<LlamaSetupOperationDelegate>)delegate
+- (instancetype)initWithParams:(_LlamaSessionParams *)params delegate:(id<LlamaSetupOperationDelegate>)delegate
 {
   if ((self = [super init])) {
     _params = params;
@@ -54,11 +54,9 @@
 
 - (void)main
 {
-  gpt_params params(_params);
-
-  if (params.n_ctx > 2048) {
+  if (_params.contextSize > 2048) {
     NSLog(@"warning: model does not support context sizes greater than 2048 tokens (%d specified);"
-          "expect poor results\n", params.n_ctx);
+          "expect poor results\n", _params.contextSize);
   }
 
   llama_context * ctx;
@@ -67,14 +65,17 @@
   {
     auto lparams = llama_context_default_params();
 
-    lparams.n_ctx      = _params.n_ctx;
-    lparams.n_parts    = _params.n_parts;
+    lparams.n_ctx      = _params.contextSize;
+    lparams.n_parts    = _params.numberOfParts;
     lparams.seed       = _params.seed;
-    lparams.f16_kv     = _params.memory_f16;
-    lparams.logits_all = _params.perplexity;
+    lparams.f16_kv     = _params.useF16Memory;
+
+    // Expose perplexity on params?
+    lparams.logits_all = false; // _params.perplexity;
 
     NSError *loadError = nil;
-    ctx = llama_init_from_file(_params.model.c_str(), lparams, &loadError);
+    const char *modelPath = [_params.modelPath cStringUsingEncoding:NSUTF8StringEncoding];
+    ctx = llama_init_from_file(modelPath, lparams, &loadError);
 
     if (ctx == NULL) {
       dispatch_async(dispatch_get_main_queue(), ^{
@@ -85,7 +86,7 @@
   }
 
   dispatch_async(dispatch_get_main_queue(), ^{
-    LlamaContext *context = [[LlamaContext alloc] initWithParams:params context:ctx];
+    LlamaContext *context = [[LlamaContext alloc] initWithParams:self->_params context:ctx];
     [self->_delegate setupOperation:self didSucceedWithContext:context];
   });
 }

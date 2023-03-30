@@ -50,15 +50,10 @@ BOOL IsModelLoaded(LlamaSessionState state)
   LlamaContext *_context;
 }
 
-@synthesize modelPath = _modelPath;
-@synthesize delegate = _delegate;
-
-- (instancetype)initWithModelPath:(NSString *)modelPath
-                           params:(_LlamaSessionParams *)params
-                         delegate:(id<_LlamaSessionDelegate>)delegate
+- (instancetype)initWithParams:(_LlamaSessionParams *)params
+                      delegate:(id<_LlamaSessionDelegate>)delegate
 {
   if ((self = [super init])) {
-    _modelPath = [modelPath copy];
     _params = params;
     _delegate = delegate;
 
@@ -69,28 +64,6 @@ BOOL IsModelLoaded(LlamaSessionState state)
     _queuedPredictions = [[NSMutableArray alloc] init];
   }
   return self;
-}
-
-#pragma mark - Params
-
-- (gpt_params)_makeParams
-{
-  gpt_params params;
-  params.model = [_modelPath cStringUsingEncoding:NSUTF8StringEncoding];
-
-  params.n_threads = (int)_params.numberOfThreads;
-  params.n_predict = (int)_params.numberOfTokens;
-  params.seed = (int32_t)_params.seed;
-
-  if (_params.mode == _LlamaSessionModeInstructional) {
-    params.instruct = true;
-  }
-
-  for (NSString *antiprompt in _params.antiprompts) {
-    params.antiprompt.push_back([antiprompt cStringUsingEncoding:NSUTF8StringEncoding]);
-  }
-
-  return params;
 }
 
 #pragma mark - Loading
@@ -122,8 +95,7 @@ BOOL IsModelLoaded(LlamaSessionState state)
   _state = LlamaSessionStateLoadingModel;
   [_delegate didStartLoadingModelInSession:self];
 
-  gpt_params params = [self _makeParams];
-  LlamaSetupOperation *setupOperation = [[LlamaSetupOperation alloc] initWithParams:params delegate:self];
+  LlamaSetupOperation *setupOperation = [[LlamaSetupOperation alloc] initWithParams:_params delegate:self];
   [_operationQueue addOperation:setupOperation];
 }
 

@@ -104,15 +104,15 @@
       // - take the n_keep first tokens from the original prompt (via n_past)
       // - take half of the last (n_ctx - n_keep) tokens and recompute the logits in a batch
       if (_context.runState->n_past + (int)_context.runState->embd.size() > n_ctx) {
-        const int n_left = _context.runState->n_past - _context.params->n_keep;
+        const int n_left = _context.runState->n_past - _context.params.numberOfTokensToKeepFromInitialPrompt;
 
-        _context.runState->n_past = _context.params->n_keep;
+        _context.runState->n_past = _context.params.numberOfTokensToKeepFromInitialPrompt;
 
         // insert n_left/2 tokens at the start of embd from last_n_tokens
         _context.runState->embd.insert(_context.runState->embd.begin(), _context.runState->last_n_tokens.begin() + n_ctx - n_left / 2 - _context.runState->embd.size(), _context.runState->last_n_tokens.end() - _context.runState->embd.size());
       }
 
-      if (llama_eval(_context.ctx, _context.runState->embd.data(), (int)_context.runState->embd.size(), _context.runState->n_past, _context.params->n_threads)) {
+      if (llama_eval(_context.ctx, _context.runState->embd.data(), (int)_context.runState->embd.size(), _context.runState->n_past, _context.params.numberOfThreads)) {
         [self _postEvent:[_LlamaPredictionEvent failedWithError:makeLlamaError(LlamaErrorCodePredictionFailed, @"failed to eval")]];
         return NO;
       }
@@ -123,35 +123,32 @@
 
     if ((int)_context.runState->embd_inp.size() <= _context.runState->n_consumed && !isInteracting) {
       // out of user input, sample next token
-      const float top_k = _context.params->top_k;
-      const float top_p = _context.params->top_p;
-      const float temp = _context.params->temp;
-      const float repeat_penalty = _context.params->repeat_penalty;
+      const float top_k = _context.params.topK;
+      const float top_p = _context.params.topP;
+      const float temp = _context.params.temp;
+      const float repeat_penalty = _context.params.repeatPenalty;
 
       llama_token id = 0;
 
       {
         auto logits = llama_get_logits(_context.ctx);
 
-        if (_context.params->ignore_eos) {
-          logits[llama_token_eos()] = 0;
-        }
-
         id = llama_sample_top_p_top_k(_context.ctx,
-                                      _context.runState->last_n_tokens.data() + n_ctx - _context.params->repeat_last_n,
-                                      _context.params->repeat_last_n, top_k, top_p, temp, repeat_penalty);
+                                      _context.runState->last_n_tokens.data() + n_ctx - _context.params.numberOfTokensToPenalize,
+                                      _context.params.numberOfTokensToPenalize, top_k, top_p, temp, repeat_penalty);
 
         _context.runState->last_n_tokens.erase(_context.runState->last_n_tokens.begin());
         _context.runState->last_n_tokens.push_back(id);
       }
 
       // replace end of text token with newline token when in interactive mode
-      if (id == llama_token_eos() && !_context.params->instruct) {
+      if (id == llama_token_eos() && !_context.params.isInstructional) {
         id = llama_token_newline.front();
-        if (_context.params->antiprompt.size() != 0) {
+        NSString *firstAntiprompt = _context.params.antiprompts.firstObject;
+        if (firstAntiprompt != nil) {
           // tokenize and inject first reverse prompt
           std::vector<llama_token> first_antiprompt;
-          if (![self _tokenizeString:_context.params->antiprompt.front() into:first_antiprompt addBeginningOfSequence:false outError:&tokenizeError]) {
+          if (![self _tokenizeString:[firstAntiprompt cStringUsingEncoding:NSUTF8StringEncoding] into:first_antiprompt addBeginningOfSequence:false outError:&tokenizeError]) {
             [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
             return NO;
           }
@@ -171,7 +168,7 @@
         _context.runState->last_n_tokens.erase(_context.runState->last_n_tokens.begin());
         _context.runState->last_n_tokens.push_back(_context.runState->embd_inp[_context.runState->n_consumed]);
         ++_context.runState->n_consumed;
-        if ((int)_context.runState->embd.size() >= _context.params->n_batch) {
+        if ((int)_context.runState->embd.size() >= _context.params.batchSize) {
           break;
         }
       }
@@ -192,8 +189,10 @@
       }
 
       // Check if each of the reverse prompts appears at the end of the output.
-      for (std::string & antiprompt : _context.params->antiprompt) {
-        if (last_output.find(antiprompt.c_str(), last_output.length() - antiprompt.length(), antiprompt.length()) != std::string::npos) {
+      for (NSString *antiprompt in _context.params.antiprompts) {
+        const char *cString = [antiprompt cStringUsingEncoding:NSUTF8StringEncoding];
+        NSUInteger length = [antiprompt lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+        if (last_output.find(cString, last_output.length() - length, length) != std::string::npos) {
           return YES;
         }
       }
@@ -205,8 +204,8 @@
     }
 
     // In interactive mode, respect the maximum number of tokens and drop back to user input when reached.
-    if (_context.runState->n_remain <= 0 && _context.params->n_predict != -1) {
-      _context.runState->n_remain = _context.params->n_predict;
+    if (_context.runState->n_remain <= 0 && _context.params.numberOfTokens != -1) {
+      _context.runState->n_remain = _context.params.numberOfTokens;
       return YES;
     }
   }
@@ -219,27 +218,25 @@
 
 - (BOOL)_initializeContextIfNeededWithError:(NSError **)outError
 {
-  NSString *prompt = _prompt;
   return [_context initializeWithInitializationBlock:^(LlamaContext *context, NSError **outError) {
-    // Set up the initial params.
-    context.params->prompt = [prompt cStringUsingEncoding:NSUTF8StringEncoding];
+    std::string prompt([self->_prompt cStringUsingEncoding:NSUTF8StringEncoding]);
 
     // Add a space in front of the first character to match OG llama tokenizer behavior
-    context.params->prompt.insert(0, 1, ' ');
+    prompt.insert(0, 1, ' ');
 
     // Initialize the run state.
     const int n_ctx = llama_n_ctx(context.ctx);
     auto runState = context.runState;
 
     runState->n_past = 0;
-    runState->n_remain = context.params->n_predict;
+    runState->n_remain = context.params.numberOfTokens;
     runState->n_consumed = 0;
 
     runState->last_n_tokens.resize(n_ctx);
     runState->last_n_tokens.assign(n_ctx, 0);
 
     // tokenize the initial prompt
-    if (![self _tokenizeString:context.params->prompt into:context.runState->embd_inp addBeginningOfSequence:true outError:outError]) {
+    if (![self _tokenizeString:prompt into:context.runState->embd_inp addBeginningOfSequence:true outError:outError]) {
       return NO;
     }
 
@@ -251,25 +248,27 @@
       return NO;
     }
 
-    context.params->n_keep = std::min(context.params->n_keep, (int)context.runState->embd_inp.size());
-
-    // in instruct mode, we inject a prefix and a suffix to each input by the user
-    if (context.params->instruct) {
-      context.params->antiprompt.push_back("### Instruction:\n\n");
-    }
+    context.params.numberOfTokensToKeepFromInitialPrompt = std::min(context.params.numberOfTokensToKeepFromInitialPrompt, (int)context.runState->embd_inp.size());
 
     return YES;
   } outError: outError];
 }
 
+// adapted from llama_tokenize() from common.h
 - (BOOL)_tokenizeString:(const std::string &)string
                    into:(std::vector<llama_token> &)tokens
  addBeginningOfSequence:(bool)addBeginningOfSequence
                outError:(NSError **)outError
 {
-  bool tokenizeSuccess = false;
-  tokens = ::llama_tokenize(_context.ctx, string, addBeginningOfSequence, &tokenizeSuccess, outError);
-  return tokenizeSuccess;
+  // initialize to prompt numer of chars, since n_tokens <= n_prompt_chars
+  std::vector<llama_token> res(string.size() + (int)addBeginningOfSequence);
+  int n = llama_tokenize(_context.ctx, string.c_str(), res.data(), (int)res.size(), addBeginningOfSequence, outError);
+  if (n < 0) {
+    return NO;
+  }
+  res.resize(n);
+  tokens = res;
+  return YES;
 }
 
 - (void)_postEvent:(_LlamaPredictionEvent *)event

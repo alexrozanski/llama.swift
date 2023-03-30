@@ -7,18 +7,21 @@
 
 #import "LlamaContext.hh"
 
+#import "LlamaSessionParams.h"
+
 @implementation LlamaContext
 
+@synthesize params = _params;
 @synthesize ctx = _ctx;
 @synthesize runState = _runState;
 @synthesize initialized = _initialized;
 
-- (instancetype)initWithParams:(gpt_params)params context:(llama_context *)ctx
+- (instancetype)initWithParams:(_LlamaSessionParams *)params context:(llama_context *)ctx
 {
   if ((self = [super init])) {
+    _params = params;
     _ctx = ctx;
     _runState = new llama_swift_run_state;
-    _params = new gpt_params(params);
   }
   return self;
 }
@@ -30,9 +33,6 @@
 
   delete _runState;
   _runState = nullptr;
-
-  delete _params;
-  _params = nullptr;
 }
 
 - (BOOL)initializeWithInitializationBlock:(NS_NOESCAPE BOOL (^)(LlamaContext *, NSError **))initializationBlock

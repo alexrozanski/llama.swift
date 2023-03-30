@@ -11,7 +11,7 @@
 #import "LlamaError.h"
 #import "LlamaErrorInternal.h"
 #import "LlamaPredictionEvent.h"
-#import "LlamaSessionConfig.h"
+#import "LlamaSessionParams.h"
 
 #include "ggml.h"
 

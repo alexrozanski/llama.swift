@@ -7,7 +7,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class _LlamaSessionConfig;
+@class _LlamaSessionParams;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init NS_UNAVAILABLE;
 
 - (instancetype)initWithModelPath:(NSString *)modelPath
-                           config:(_LlamaSessionConfig *)config
+                           params:(_LlamaSessionParams *)params
                          delegate:(id<_LlamaSessionDelegate>)delegate;
 
 - (void)loadModelIfNeeded;

@@ -8,13 +8,13 @@
 import Foundation
 import llamaObjCxx
 
-protocol ObjCxxConfigBuilder {
-  func build() -> _LlamaSessionConfig
+protocol ObjCxxParamsBuilder {
+  func build() -> _LlamaSessionParams
 }
 
 class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
   let modelURL: URL
-  let configBuilder: ObjCxxConfigBuilder
+  let paramsBuilder: ObjCxxParamsBuilder
 
   private(set) var state: SessionState = .notStarted
 
@@ -22,17 +22,17 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
 
   private lazy var _session = _LlamaSession(
     modelPath: modelURL.path,
-    config: configBuilder.build(),
+    params: paramsBuilder.build(),
     delegate: self
   )
 
   init(
     modelURL: URL,
-    configBuilder: ObjCxxConfigBuilder,
+    paramsBuilder: ObjCxxParamsBuilder,
     stateChangeHandler: StateChangeHandler?
   ) {
     self.modelURL = modelURL
-    self.configBuilder = configBuilder
+    self.paramsBuilder = paramsBuilder
     self.stateChangeHandler = stateChangeHandler
   }
 

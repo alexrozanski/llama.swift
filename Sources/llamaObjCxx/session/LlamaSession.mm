@@ -11,7 +11,7 @@
 #import "LlamaPredictionEvent.h"
 #import "LlamaPredictionPayload.h"
 #import "LlamaSetupOperation.hh"
-#import "LlamaSessionConfig.h"
+#import "LlamaSessionParams.h"
 
 typedef NS_ENUM(NSUInteger, LlamaSessionState) {
   LlamaSessionStateNone = 0,
@@ -41,7 +41,7 @@ BOOL IsModelLoaded(LlamaSessionState state)
 @end
 
 @implementation _LlamaSession {
-  _LlamaSessionConfig *_config;
+  _LlamaSessionParams *_params;
   NSOperationQueue *_operationQueue;
 
   NSMutableArray<LlamaPredictionPayload *> *_queuedPredictions;
@@ -54,12 +54,12 @@ BOOL IsModelLoaded(LlamaSessionState state)
 @synthesize delegate = _delegate;
 
 - (instancetype)initWithModelPath:(NSString *)modelPath
-                           config:(_LlamaSessionConfig *)config
+                           params:(_LlamaSessionParams *)params
                          delegate:(id<_LlamaSessionDelegate>)delegate
 {
   if ((self = [super init])) {
     _modelPath = [modelPath copy];
-    _config = config;
+    _params = params;
     _delegate = delegate;
 
     _operationQueue = [[NSOperationQueue alloc] init];
@@ -78,16 +78,16 @@ BOOL IsModelLoaded(LlamaSessionState state)
   gpt_params params;
   params.model = [_modelPath cStringUsingEncoding:NSUTF8StringEncoding];
 
-  params.n_threads = (int)_config.numberOfThreads;
-  params.n_predict = (int)_config.numberOfTokens;
-  params.seed = (int32_t)_config.seed;
+  params.n_threads = (int)_params.numberOfThreads;
+  params.n_predict = (int)_params.numberOfTokens;
+  params.seed = (int32_t)_params.seed;
 
-  if (_config.mode == _LlamaSessionModeInstructional) {
+  if (_params.mode == _LlamaSessionModeInstructional) {
     params.instruct = true;
   }
 
-  if (_config.reversePrompt != nil) {
-    params.antiprompt.push_back([_config.reversePrompt cStringUsingEncoding:NSUTF8StringEncoding]);
+  for (NSString *antiprompt in _params.antiprompts) {
+    params.antiprompt.push_back([antiprompt cStringUsingEncoding:NSUTF8StringEncoding]);
   }
 
   return params;

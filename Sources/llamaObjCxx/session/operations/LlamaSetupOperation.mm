@@ -10,7 +10,7 @@
 #import "LlamaContext.hh"
 #import "LlamaError.h"
 #import "LlamaEvent.h"
-#import "LlamaSessionConfig.h"
+#import "LlamaSessionParams.h"
 
 #include "ggml.h"
 

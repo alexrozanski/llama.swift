@@ -32,7 +32,7 @@ public class Inference {
   ) -> Session {
     return BridgedSession(
       modelURL: modelURL,
-      configBuilder: LlamaSessionConfigBuilder(sessionConfig: config, inferenceConfig: self.config),
+      paramsBuilder: LlamaSessionParamsBuilder(sessionConfig: config, inferenceConfig: self.config),
       stateChangeHandler: stateChangeHandler
     )
   }
@@ -44,7 +44,7 @@ public class Inference {
   ) -> Session {
     return BridgedSession(
       modelURL: modelURL,
-      configBuilder: AlpacaSessionConfigBuilder(sessionConfig: config, inferenceConfig: self.config),
+      paramsBuilder: AlpacaSessionParamsBuilder(sessionConfig: config, inferenceConfig: self.config),
       stateChangeHandler: stateChangeHandler
     )
   }

@@ -6,7 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "LLamaSessionPredictionHandle.h"
+#import "LlamaSessionPredictionHandle.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

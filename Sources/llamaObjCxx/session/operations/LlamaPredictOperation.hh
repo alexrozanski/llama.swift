@@ -16,10 +16,13 @@ typedef void (^LlamaPredictOperationEventHandler)(_LlamaPredictionEvent *event);
 
 @interface LlamaPredictOperation : NSOperation
 
-- (instancetype)initWithContext:(LlamaContext *)context
-                         prompt:(NSString *)prompt
-                   eventHandler:(LlamaPredictOperationEventHandler)eventHandler
-              eventHandlerQueue:(dispatch_queue_t)eventHandlerQueue;
+@property (nonatomic, readonly, copy) NSString *identifier;
+
+- (instancetype)initWithIdentifier:(NSString *)identifier
+                           context:(LlamaContext *)context
+                            prompt:(NSString *)prompt
+                      eventHandler:(LlamaPredictOperationEventHandler)eventHandler
+                 eventHandlerQueue:(dispatch_queue_t)eventHandlerQueue;
 
 @end
 

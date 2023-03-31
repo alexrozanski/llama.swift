@@ -11,6 +11,7 @@
 #import "LlamaPredictionEvent.h"
 #import "LlamaPredictionPayload.h"
 #import "LlamaSetupOperation.hh"
+#import "LlamaSessionConcretePredictionHandle.h"
 #import "LlamaSessionParams.h"
 
 typedef NS_ENUM(NSUInteger, LlamaSessionState) {
@@ -45,6 +46,7 @@ BOOL IsModelLoaded(LlamaSessionState state)
   NSOperationQueue *_operationQueue;
 
   NSMutableArray<LlamaPredictionPayload *> *_queuedPredictions;
+  NSMutableArray<_LlamaSessionConcretePredictionHandle *> *_predictionHandles;
 
   LlamaSessionState _state;
   LlamaContext *_context;
@@ -59,6 +61,8 @@ BOOL IsModelLoaded(LlamaSessionState state)
 
     _operationQueue = [[NSOperationQueue alloc] init];
     _operationQueue.qualityOfService = NSQualityOfServiceUserInitiated;
+
+    _predictionHandles = [[NSMutableArray alloc] init];
 
     _state = LlamaSessionStateNone;
     _queuedPredictions = [[NSMutableArray alloc] init];
@@ -101,15 +105,19 @@ BOOL IsModelLoaded(LlamaSessionState state)
 
 #pragma mark - Predicting
 
-- (void)runPredictionWithPrompt:(NSString*)prompt
-                   tokenHandler:(void(^)(NSString*))tokenHandler
-              completionHandler:(void(^)(void))completionHandler
-                 failureHandler:(void(^)(NSError*))failureHandler
+- (id<_LlamaSessionPredictionHandle>)runPredictionWithPrompt:(NSString*)prompt
+                                                tokenHandler:(void(^)(NSString*))tokenHandler
+                                           completionHandler:(void(^)(void))completionHandler
+                                              failureHandler:(void(^)(NSError*))failureHandler
+                                                handlerQueue:(dispatch_queue_t)handlerQueue
 {
-  LlamaPredictionPayload *payload = [[LlamaPredictionPayload alloc] initWithPrompt:prompt
-                                                                      tokenHandler:tokenHandler
-                                                                 completionHandler:completionHandler
-                                                                    failureHandler:failureHandler];
+  NSString *identifier = [[NSUUID UUID] UUIDString];
+  LlamaPredictionPayload *payload = [[LlamaPredictionPayload alloc] initWithIdentifier:identifier
+                                                                                prompt:prompt
+                                                                          tokenHandler:tokenHandler
+                                                                     completionHandler:completionHandler
+                                                                        failureHandler:failureHandler
+                                                                          handlerQueue:handlerQueue];
 
   if (!IsModelLoaded(_state)) {
     [_queuedPredictions addObject:payload];
@@ -117,6 +125,13 @@ BOOL IsModelLoaded(LlamaSessionState state)
   } else {
     [self _runPredictionWithPayload:payload];
   }
+
+  return [[_LlamaSessionConcretePredictionHandle alloc] initWithCancelHandler:^{
+    // ensure to coordinate state on the main thread.
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self _cancelPredictionWithIdentifier:identifier];
+    });
+  }];
 }
 
 - (void)_runPredictionWithPayload:(LlamaPredictionPayload *)payload
@@ -134,22 +149,73 @@ BOOL IsModelLoaded(LlamaSessionState state)
         payload.tokenHandler(token);
       }
     } completed:^{
+      self->_state = LlamaSessionStateReadyToPredict;
       if (payload.completionHandler != NULL) {
-        payload.completionHandler();
+        dispatch_async(payload.handlerQueue, ^{
+          payload.completionHandler();
+        });
       }
     } failed:^(NSError * _Nonnull error) {
+      self->_state = LlamaSessionStateFailed;
       if (payload.failureHandler != NULL) {
-        payload.failureHandler(error);
+        dispatch_async(payload.handlerQueue, ^{
+          payload.failureHandler(error);
+        });
       }
     }];
   };
 
-  LlamaPredictOperation *predictOperation = [[LlamaPredictOperation alloc] initWithContext:_context
-                                                                                    prompt:payload.prompt
-                                                                              eventHandler:operationEventHandler
-                                                                         eventHandlerQueue:dispatch_get_main_queue()];
+  LlamaPredictOperation *predictOperation = [[LlamaPredictOperation alloc] initWithIdentifier:payload.identifier
+                                                                                      context:_context
+                                                                                       prompt:payload.prompt
+                                                                                 eventHandler:operationEventHandler
+                                                                            eventHandlerQueue:dispatch_get_main_queue()];
 
   [_operationQueue addOperation:predictOperation];
+}
+
+#pragma mark - Cancellation
+
+- (void)_cancelPredictionWithIdentifier:(NSString *)identifier
+{
+  NSAssert([NSThread isMainThread], @"Cancellation should be coordinated on the main thread");
+
+  if ([self _cancelQueuedPredictionWithIdentifier:identifier]) {
+    return;
+  }
+
+  // Check to see if it's in-flight
+  for (NSOperation *operation in _operationQueue.operations) {
+    if (![operation isKindOfClass:[LlamaPredictOperation class]]) {
+      continue;
+    }
+
+    LlamaPredictOperation *predictOperation = (LlamaPredictOperation *)operation;
+    if ([predictOperation.identifier isEqualToString:identifier] && predictOperation.isExecuting) {
+      [predictOperation cancel];
+      break;
+    }
+  }
+}
+
+- (BOOL)_cancelQueuedPredictionWithIdentifier:(NSString *)identifier
+{
+
+  // Check to see if it's queued
+  LlamaPredictionPayload *payloadToRemove = nil;
+  for (LlamaPredictionPayload *payload in _queuedPredictions) {
+    if ([payload.identifier isEqualToString:identifier]) {
+      payloadToRemove = payload;
+      break;
+    }
+  }
+
+  if (!payloadToRemove) {
+    return NO;
+  }
+
+  [_queuedPredictions removeObject:payloadToRemove];
+  return YES;
 }
 
 #pragma mark - LlamaSetupOperationDelegate

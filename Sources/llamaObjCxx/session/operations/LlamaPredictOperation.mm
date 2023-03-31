@@ -37,12 +37,14 @@
 
 @implementation LlamaPredictOperation
 
-- (instancetype)initWithContext:(LlamaContext *)context
-                         prompt:(NSString *)prompt
-                   eventHandler:(LlamaPredictOperationEventHandler)eventHandler
-              eventHandlerQueue:(dispatch_queue_t)eventHandlerQueue;
+- (instancetype)initWithIdentifier:(NSString *)identifier
+                           context:(LlamaContext *)context
+                            prompt:(NSString *)prompt
+                      eventHandler:(LlamaPredictOperationEventHandler)eventHandler
+                 eventHandlerQueue:(dispatch_queue_t)eventHandlerQueue
 {
   if ((self = [super init])) {
+    _identifier = [identifier copy];
     _context = context;
     _prompt = [prompt copy];
     _eventHandler = [eventHandler copy];
@@ -93,10 +95,13 @@
     return NO;
   }
 
-  BOOL isInteracting = NO;
-
   // run in interactive mode always so run the loop until we are finished.
   while (true) {
+    if (self.isCancelled) {
+      // even though we're cancelling this is still successful.
+      return YES;
+    }
+
     // predict
     if (_context.runState->embd.size() > 0) {
       // infinite text generation via context swapping
@@ -121,7 +126,7 @@
     _context.runState->n_past += _context.runState->embd.size();
     _context.runState->embd.clear();
 
-    if ((int)_context.runState->embd_inp.size() <= _context.runState->n_consumed && !isInteracting) {
+    if ((int)_context.runState->embd_inp.size() <= _context.runState->n_consumed) {
       // out of user input, sample next token
       const float top_k = _context.params.topK;
       const float top_p = _context.params.topP;
@@ -175,9 +180,11 @@
     }
 
     // return text results
-    for (auto id : _context.runState->embd) {
-      NSString *token = [NSString stringWithCString:llama_token_to_str(_context.ctx, id) encoding:NSUTF8StringEncoding];
-      [self _postEvent:[_LlamaPredictionEvent outputTokenWithToken:token]];
+    if (!self.isCancelled) {
+      for (auto id : _context.runState->embd) {
+        NSString *token = [NSString stringWithCString:llama_token_to_str(_context.ctx, id) encoding:NSUTF8StringEncoding];
+        [self _postEvent:[_LlamaPredictionEvent outputTokenWithToken:token]];
+      }
     }
 
     // if not currently processing queued inputs check if we should prompt the user for more

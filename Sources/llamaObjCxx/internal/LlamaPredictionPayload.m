@@ -9,16 +9,20 @@
 
 @implementation LlamaPredictionPayload
 
-- (instancetype)initWithPrompt:(NSString *)prompt
-                  tokenHandler:(void(^)(NSString*))tokenHandler
-             completionHandler:(void(^)(void))completionHandler
-                failureHandler:(void(^)(NSError*))failureHandler
+- (instancetype)initWithIdentifier:(NSString *)identifier
+                            prompt:(NSString *)prompt
+                      tokenHandler:(void(^)(NSString*))tokenHandler
+                 completionHandler:(void(^)(void))completionHandler
+                    failureHandler:(void(^)(NSError*))failureHandler
+                      handlerQueue:(dispatch_queue_t)handlerQueue
 {
   if ((self = [super init])) {
+    _identifier = [identifier copy];
     _prompt = [prompt copy];
     _tokenHandler = [tokenHandler copy];
     _completionHandler = [completionHandler copy];
     _failureHandler = [failureHandler copy];
+    _handlerQueue = handlerQueue;
   }
 
   return self;

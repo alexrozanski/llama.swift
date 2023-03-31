@@ -34,6 +34,8 @@
 		82819FB729C1DB5800399B7E /* LlamaPredictOperation.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82819F8F29BF387400399B7E /* LlamaPredictOperation.hh */; settings = {ATTRIBUTES = (Private, ); }; };
 		82819FB929C1DB5E00399B7E /* ggml.c in Sources */ = {isa = PBXBuildFile; fileRef = 82819F7D29BF2BFC00399B7E /* ggml.c */; };
 		82819FC529C2585700399B7E /* libllamaObjCxx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 82819FA929C1DB2900399B7E /* libllamaObjCxx.a */; };
+		82914CD329D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.h in Headers */ = {isa = PBXBuildFile; fileRef = 82914CD129D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.h */; };
+		82914CD429D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 82914CD229D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.m */; };
 		82EDD1BA29D466E8004D3A76 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1B929D466E8004D3A76 /* Session.swift */; };
 		82EDD1BC29D46754004D3A76 /* BridgedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1BB29D46754004D3A76 /* BridgedSession.swift */; };
 		82EDD1BE29D467D3004D3A76 /* SessionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1BD29D467D3004D3A76 /* SessionConfig.swift */; };
@@ -86,6 +88,9 @@
 		82819F9D29C1CCA300399B7E /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		82819FA929C1DB2900399B7E /* libllamaObjCxx.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libllamaObjCxx.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		82819FC729C2939100399B7E /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
+		82914CD129D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaSessionConcretePredictionHandle.h; sourceTree = "<group>"; };
+		82914CD229D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaSessionConcretePredictionHandle.m; sourceTree = "<group>"; };
+		82914CD529D7802100858B2C /* LlamaSessionPredictionHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaSessionPredictionHandle.h; sourceTree = "<group>"; };
 		82EDD1B929D466E8004D3A76 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		82EDD1BB29D46754004D3A76 /* BridgedSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgedSession.swift; sourceTree = "<group>"; };
 		82EDD1BD29D467D3004D3A76 /* SessionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionConfig.swift; sourceTree = "<group>"; };
@@ -122,6 +127,7 @@
 				82718C8729CE4C0200545C32 /* LlamaPredictionEvent.h */,
 				8227D27129C2A844003E3197 /* LlamaSessionParams.h */,
 				82718C7829CD376700545C32 /* LlamaSession.h */,
+				82914CD529D7802100858B2C /* LlamaSessionPredictionHandle.h */,
 			);
 			path = headers;
 			sourceTree = "<group>";
@@ -196,6 +202,8 @@
 				82718C8929CF05AB00545C32 /* LlamaPredictionPayload.h */,
 				82718C8A29CF05AB00545C32 /* LlamaPredictionPayload.m */,
 				82718CC529D2F7BD00545C32 /* LlamaRunState.h */,
+				82914CD129D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.h */,
+				82914CD229D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.m */,
 			);
 			path = internal;
 			sourceTree = "<group>";
@@ -292,6 +300,7 @@
 				82718C8829CE4C0900545C32 /* LlamaPredictionEvent.h in Headers */,
 				82718C7A29CD376700545C32 /* LlamaSession.h in Headers */,
 				82718C7129CC6BA600545C32 /* LlamaSetupOperation.hh in Headers */,
+				82914CD329D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.h in Headers */,
 				8227D27229C2A844003E3197 /* LlamaEvent.h in Headers */,
 				82718C6129CBEB8900545C32 /* llama.hh in Headers */,
 				8227D27729C2A87E003E3197 /* ggml.h in Headers */,
@@ -414,6 +423,7 @@
 				82718C6029CBEB8900545C32 /* llama.mm in Sources */,
 				82819FB529C1DB5800399B7E /* LlamaSessionParams.mm in Sources */,
 				82718C8629CE4BE200545C32 /* LlamaPredictionEvent.mm in Sources */,
+				82914CD429D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.m in Sources */,
 				82718C6329CBED4300545C32 /* LlamaErrorInternal.m in Sources */,
 				82718C7229CC6BA600545C32 /* LlamaSetupOperation.mm in Sources */,
 				82819FB329C1DB5800399B7E /* LlamaEvent.mm in Sources */,

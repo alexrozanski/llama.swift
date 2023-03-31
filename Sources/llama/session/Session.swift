@@ -15,6 +15,10 @@ public enum SessionState {
   case error(Error)
 }
 
+public protocol PredictionCancellable {
+  func cancel()
+}
+
 public protocol Session {
   typealias StateChangeHandler = (SessionState) -> Void
 
@@ -22,5 +26,12 @@ public protocol Session {
   var stateChangeHandler: StateChangeHandler? { get }
 
   // Run prediction to generate tokens.
-  func predict(with prompt: String) -> AsyncThrowingStream<String, Error>
+  func predict(with prompt: String) -> AsyncStream<String>
+
+  // Supports cancellation of prediction.
+  func predict(
+    with prompt: String,
+    receiveToken: @escaping (String) -> Void,
+    on receiveQueue: DispatchQueue?
+  ) -> PredictionCancellable
 }

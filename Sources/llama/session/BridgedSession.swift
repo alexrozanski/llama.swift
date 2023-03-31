@@ -12,6 +12,18 @@ protocol ObjCxxParamsBuilder {
   func build() -> _LlamaSessionParams
 }
 
+class BridgedPredictionCancellable: PredictionCancellable {
+  let objCxxHandle: _LlamaSessionPredictionHandle
+
+  init(objCxxHandle: _LlamaSessionPredictionHandle) {
+    self.objCxxHandle = objCxxHandle
+  }
+
+  func cancel() {
+    objCxxHandle.cancel()
+  }
+}
+
 class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
   let paramsBuilder: ObjCxxParamsBuilder
 
@@ -36,8 +48,8 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
     self.stateChangeHandler = stateChangeHandler
   }
 
-  func predict(with prompt: String) -> AsyncThrowingStream<String, Error> {
-    return AsyncThrowingStream<String, Error> { continuation in
+  func predict(with prompt: String) -> AsyncStream<String> {
+    return AsyncStream<String> { continuation in
       _session.runPrediction(
         withPrompt: prompt,
         tokenHandler: { token in
@@ -49,10 +61,30 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
         },
         failureHandler: { error in
           self.state = .error(error)
-          continuation.finish(throwing: error)
-        }
+        },
+        handlerQueue: .main
       )
     }
+  }
+
+  @MainActor func predict(with prompt: String, receiveToken: @escaping (String) -> Void, on receiveQueue: DispatchQueue?) -> PredictionCancellable {
+    let objCxxHandle = _session.runPrediction(
+      withPrompt: prompt,
+      tokenHandler: { token in
+        (receiveQueue ?? .main).async {
+          receiveToken(token)
+        }
+      },
+      completionHandler: {
+        self.state = .readyToPredict
+      },
+      failureHandler: { error in
+        self.state = .error(error)
+      },
+      handlerQueue: .main
+    )
+
+    return BridgedPredictionCancellable(objCxxHandle: objCxxHandle)
   }
 
   // MARK: - _LlamaSessionDelegate

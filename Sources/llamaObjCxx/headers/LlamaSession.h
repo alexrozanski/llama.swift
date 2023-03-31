@@ -6,6 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "LlamaSessionPredictionHandle.h"
 
 @class _LlamaSessionParams;
 
@@ -34,10 +35,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)loadModelIfNeeded;
 
-- (void)runPredictionWithPrompt:(NSString*)prompt
-                   tokenHandler:(void(^)(NSString*))tokenHandler
-              completionHandler:(void(^)(void))completionHandler
-                 failureHandler:(void(^)(NSError*))errorHandler;
+- (id<_LlamaSessionPredictionHandle>)runPredictionWithPrompt:(NSString*)prompt
+                                                tokenHandler:(void(^)(NSString*))tokenHandler
+                                           completionHandler:(void(^)(void))completionHandler
+                                              failureHandler:(void(^)(NSError*))errorHandler
+                                                handlerQueue:(dispatch_queue_t)handlerQueue;
 
 @end
 

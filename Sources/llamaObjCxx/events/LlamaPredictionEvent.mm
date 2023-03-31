@@ -12,6 +12,7 @@ typedef NS_ENUM(NSUInteger, LlamaPredictionEventType) {
   LlamaPredictionEventTypeStarted,
   LlamaPredictionEventTypeOutputToken,
   LlamaPredictionEventTypeCompleted,
+  LlamaPredictionEventTypeCancelled,
   LlamaPredictionEventTypeFailed,
 };
 
@@ -59,6 +60,12 @@ typedef struct LlamaPredictionEventData {
                                                      data:{}];
 }
 
++ (instancetype)cancelled
+{
+  return [[_LlamaPredictionEvent alloc] initWithEventType:LlamaPredictionEventTypeCancelled
+                                                     data:{}];
+}
+
 + (instancetype)failedWithError:(nonnull NSError *)error
 {
   return [[_LlamaPredictionEvent alloc] initWithEventType:LlamaPredictionEventTypeFailed
@@ -68,6 +75,7 @@ typedef struct LlamaPredictionEventData {
 - (void)matchStarted:(void (^)(void))started
          outputToken:(void (^)(NSString *token))outputToken
            completed:(void (^)(void))completed
+           cancelled:(void (^)(void))cancelled
               failed:(void (^)(NSError *error))failed
 {
   switch (_eventType) {
@@ -81,6 +89,9 @@ typedef struct LlamaPredictionEventData {
       break;
     case LlamaPredictionEventTypeCompleted:
       completed();
+      break;
+    case LlamaPredictionEventTypeCancelled:
+      cancelled();
       break;
     case LlamaPredictionEventTypeFailed:
       failed(_data.failed_error);

@@ -14,11 +14,13 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)started;
 + (instancetype)outputTokenWithToken:(nonnull NSString *)token;
 + (instancetype)completed;
++ (instancetype)cancelled;
 + (instancetype)failedWithError:(nonnull NSError *)error;
 
 - (void)matchStarted:(void (^)(void))started
          outputToken:(void (^)(NSString *token))outputToken
            completed:(void (^)(void))completed
+           cancelled:(void (^)(void))cancelled
               failed:(void (^)(NSError *error))failed;
 
 @end

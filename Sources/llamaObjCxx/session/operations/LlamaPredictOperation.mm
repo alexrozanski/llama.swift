@@ -65,7 +65,7 @@
   }
 
   if ([self _runPrediction]) {
-    [self _postEvent:[_LlamaPredictionEvent completed]];
+    [self _postEvent:self.isCancelled ? [_LlamaPredictionEvent cancelled] : [_LlamaPredictionEvent completed]];
   }
 }
 

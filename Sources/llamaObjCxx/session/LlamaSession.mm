@@ -106,16 +106,20 @@ BOOL IsModelLoaded(LlamaSessionState state)
 #pragma mark - Predicting
 
 - (id<_LlamaSessionPredictionHandle>)runPredictionWithPrompt:(NSString*)prompt
+                                                startHandler:(void(^)(void))startHandler
                                                 tokenHandler:(void(^)(NSString*))tokenHandler
                                            completionHandler:(void(^)(void))completionHandler
+                                               cancelHandler:(void(^)(void))cancelHandler
                                               failureHandler:(void(^)(NSError*))failureHandler
                                                 handlerQueue:(dispatch_queue_t)handlerQueue
 {
   NSString *identifier = [[NSUUID UUID] UUIDString];
   LlamaPredictionPayload *payload = [[LlamaPredictionPayload alloc] initWithIdentifier:identifier
                                                                                 prompt:prompt
+                                                                          startHandler:startHandler
                                                                           tokenHandler:tokenHandler
                                                                      completionHandler:completionHandler
+                                                                         cancelHandler:cancelHandler
                                                                         failureHandler:failureHandler
                                                                           handlerQueue:handlerQueue];
 
@@ -144,15 +148,29 @@ BOOL IsModelLoaded(LlamaSessionState state)
     [event matchStarted:^{
       self->_state = LlamaSessionStatePredicting;
       [self->_delegate didStartPredictingInSession:self];
+      if (payload.startHandler != NULL) {
+        dispatch_async(payload.handlerQueue, ^{
+          payload.startHandler();
+        });
+      }
     } outputToken:^(NSString *_Nonnull token) {
       if (payload.tokenHandler != NULL) {
-        payload.tokenHandler(token);
+        dispatch_async(payload.handlerQueue, ^{
+          payload.tokenHandler(token);
+        });
       }
     } completed:^{
       self->_state = LlamaSessionStateReadyToPredict;
       if (payload.completionHandler != NULL) {
         dispatch_async(payload.handlerQueue, ^{
           payload.completionHandler();
+        });
+      }
+    } cancelled:^{
+      self->_state = LlamaSessionStateReadyToPredict;
+      if (payload.cancelHandler != NULL) {
+        dispatch_async(payload.handlerQueue, ^{
+          payload.cancelHandler();
         });
       }
     } failed:^(NSError * _Nonnull error) {

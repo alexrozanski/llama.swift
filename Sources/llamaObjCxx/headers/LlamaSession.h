@@ -36,8 +36,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)loadModelIfNeeded;
 
 - (id<_LlamaSessionPredictionHandle>)runPredictionWithPrompt:(NSString*)prompt
+                                                startHandler:(void(^)(void))startHandler
                                                 tokenHandler:(void(^)(NSString*))tokenHandler
                                            completionHandler:(void(^)(void))completionHandler
+                                               cancelHandler:(void(^)(void))cancelHandler
                                               failureHandler:(void(^)(NSError*))errorHandler
                                                 handlerQueue:(dispatch_queue_t)handlerQueue;
 

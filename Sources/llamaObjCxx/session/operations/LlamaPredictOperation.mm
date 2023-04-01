@@ -226,7 +226,24 @@
 - (BOOL)_initializeContextIfNeededWithError:(NSError **)outError
 {
   return [_context initializeWithInitializationBlock:^(LlamaContext *context, NSError **outError) {
-    std::string prompt([self->_prompt cStringUsingEncoding:NSUTF8StringEncoding]);
+    NSMutableString *initialPromptString = [[NSMutableString alloc] init];
+    if (context.params.initialPrompt) {
+      [initialPromptString appendString:context.params.initialPrompt];
+    }
+
+    if (context.params.promptPrefix) {
+      [initialPromptString appendString:context.params.promptPrefix];
+    }
+
+    [initialPromptString appendString:self->_prompt];
+
+    if (context.params.promptSuffix) {
+      [initialPromptString appendString:context.params.promptSuffix];
+    }
+
+    NSLog(@"Initial prompt: '%@'", initialPromptString);
+
+    std::string prompt([initialPromptString cStringUsingEncoding:NSUTF8StringEncoding]);
 
     // Add a space in front of the first character to match OG llama tokenizer behavior
     prompt.insert(0, 1, ' ');

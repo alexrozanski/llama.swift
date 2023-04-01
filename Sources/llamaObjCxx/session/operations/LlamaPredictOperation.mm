@@ -68,6 +68,8 @@
 {
   const int n_ctx = llama_n_ctx(_context.ctx);
 
+  BOOL needsToInjectPrompt = YES;
+
   NSError *tokenizeError = nil;
 
   // prefix & suffix for instruct mode
@@ -121,7 +123,7 @@
     _context.runState->n_past += _context.runState->embd.size();
     _context.runState->embd.clear();
 
-    if ((int)_context.runState->embd_inp.size() <= _context.runState->n_consumed) {
+    if ((int)_context.runState->embd_inp.size() <= _context.runState->n_consumed && !needsToInjectPrompt) {
       // out of user input, sample next token
       const float top_k = _context.params.topK;
       const float top_p = _context.params.topP;
@@ -182,7 +184,7 @@
       }
     }
 
-    // if not currently processing queued inputs check if we should prompt the user for more
+    // if not currently processing queued inputs check if we should inject the prompt.
     if ((int)_context.runState->embd_inp.size() <= _context.runState->n_consumed) {
       // check for reverse prompt
       std::string last_output;
@@ -197,6 +199,31 @@
         if (last_output.find(cString, last_output.length() - length, length) != std::string::npos) {
           return YES;
         }
+      }
+
+      if (_context.runState->n_past > 0 && needsToInjectPrompt) {
+        _context.runState->n_consumed = (int)_context.runState->embd_inp.size();
+
+        // inject the prompt prefix.
+        _context.runState->embd_inp.insert(_context.runState->embd_inp.end(), inp_pfx.begin(), inp_pfx.end());
+
+        std::string prompt([_prompt cStringUsingEncoding:NSUTF8StringEncoding]);
+        std::vector<llama_token> prompt_inp;
+        if (![LlamaOperationUtils tokenizeString:prompt with:_context into:prompt_inp addBeginningOfSequence:false outError:&tokenizeError]) {
+          [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
+          return NO;
+        }
+
+        _context.runState->embd_inp.insert(_context.runState->embd_inp.end(), prompt_inp.begin(), prompt_inp.end());
+
+        // inject the prompt suffix.
+        _context.runState->embd_inp.insert(_context.runState->embd_inp.end(), inp_sfx.begin(), inp_sfx.end());
+
+        _context.runState->n_remain -= prompt_inp.size();
+      }
+
+      if (_context.runState->n_past > 0) {
+        needsToInjectPrompt = NO;
       }
     }
 

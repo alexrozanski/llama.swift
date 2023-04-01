@@ -23,7 +23,7 @@ class AlpacaSessionParamsBuilder: ObjCxxParamsBuilder {
     let params = _LlamaSessionParams.defaultParams(withModelPath: modelURL.path, mode: .instructional)
     params.numberOfThreads = Int32(inferenceConfig.numThreads)
 
-    params.initialPrompt = "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n"
+    params.initialPrompt = "Below is an instruction that describes a task. Write a response that appropriately completes the request."
     params.promptPrefix = "\n\n### Instruction:\n\n"
     params.promptSuffix = "\n\n### Response:\n\n"
     params.antiprompts = ["\n\n### Response:\n\n", sessionConfig.reversePrompt].compactMap { $0 }

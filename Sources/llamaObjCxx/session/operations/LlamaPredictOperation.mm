@@ -71,7 +71,8 @@
   BOOL needsToInjectPrompt = YES;
 
   // maps to ignore_noecho in llama.cpp
-  BOOL ignoreOutputtedTokens = NO;
+  // set to YES by default because of any initial prompts we inject.
+  BOOL ignoreOutputtedTokens = YES;
 
   NSError *tokenizeError = nil;
 

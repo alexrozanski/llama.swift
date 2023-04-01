@@ -26,7 +26,7 @@ class AlpacaSessionParamsBuilder: ObjCxxParamsBuilder {
     params.initialPrompt = "Below is an instruction that describes a task. Write a response that appropriately completes the request."
     params.promptPrefix = "\n\n### Instruction:\n\n"
     params.promptSuffix = "\n\n### Response:\n\n"
-    params.antiprompts = ["\n\n### Response:\n\n", sessionConfig.reversePrompt].compactMap { $0 }
+    params.antiprompts = ["### Instruction:\n\n", sessionConfig.reversePrompt].compactMap { $0 }
 
     params.numberOfTokens = Int32(sessionConfig.numTokens)
     params.seed = sessionConfig.seed ?? 0

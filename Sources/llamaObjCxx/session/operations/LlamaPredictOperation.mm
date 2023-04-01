@@ -70,6 +70,9 @@
 
   BOOL needsToInjectPrompt = YES;
 
+  // maps to ignore_noecho in llama.cpp
+  BOOL ignoreOutputtedTokens = NO;
+
   NSError *tokenizeError = nil;
 
   // prefix & suffix for instruct mode
@@ -161,6 +164,9 @@
       // add it to the context
       _context.runState->embd.push_back(id);
 
+      // echo this to console
+      ignoreOutputtedTokens = NO;
+
       // decrement remaining sampling budget
       --_context.runState->n_remain;
     } else {
@@ -177,7 +183,7 @@
     }
 
     // return text results
-    if (!self.isCancelled) {
+    if (!self.isCancelled && !ignoreOutputtedTokens) {
       for (auto id : _context.runState->embd) {
         NSString *token = [NSString stringWithCString:llama_token_to_str(_context.ctx, id) encoding:NSUTF8StringEncoding];
         [self _postEvent:[_LlamaPredictionEvent outputTokenWithToken:token]];
@@ -202,24 +208,31 @@
       }
 
       if (_context.runState->n_past > 0 && needsToInjectPrompt) {
-        _context.runState->n_consumed = (int)_context.runState->embd_inp.size();
+        if (_context.params.isInstructional) {
+          _context.runState->n_consumed = (int)_context.runState->embd_inp.size();
 
-        // inject the prompt prefix.
-        _context.runState->embd_inp.insert(_context.runState->embd_inp.end(), inp_pfx.begin(), inp_pfx.end());
+          // inject the prompt prefix.
+          _context.runState->embd_inp.insert(_context.runState->embd_inp.end(), inp_pfx.begin(), inp_pfx.end());
+        }
 
+        // inject the prompt.
         std::string prompt([_prompt cStringUsingEncoding:NSUTF8StringEncoding]);
         std::vector<llama_token> prompt_inp;
         if (![LlamaOperationUtils tokenizeString:prompt with:_context into:prompt_inp addBeginningOfSequence:false outError:&tokenizeError]) {
           [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
           return NO;
         }
-
         _context.runState->embd_inp.insert(_context.runState->embd_inp.end(), prompt_inp.begin(), prompt_inp.end());
 
-        // inject the prompt suffix.
-        _context.runState->embd_inp.insert(_context.runState->embd_inp.end(), inp_sfx.begin(), inp_sfx.end());
+        if (_context.params.isInstructional) {
+          // inject the prompt suffix.
+          _context.runState->embd_inp.insert(_context.runState->embd_inp.end(), inp_sfx.begin(), inp_sfx.end());
+        }
 
         _context.runState->n_remain -= prompt_inp.size();
+
+        // do not output this again
+        ignoreOutputtedTokens = YES;
       }
 
       if (_context.runState->n_past > 0) {

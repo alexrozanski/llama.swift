@@ -110,21 +110,13 @@
   // Add a space in front of the first character to match OG llama tokenizer behavior
   prompt.insert(0, 1, ' ');
 
-  // Initialize the run state.
-  const int n_ctx = llama_n_ctx(context.ctx);
-  auto runState = context.runState;
-
-  runState->n_past = 0;
-  runState->n_remain = context.params.numberOfTokens;
-  runState->n_consumed = 0;
-
-  runState->last_n_tokens.resize(n_ctx);
-  runState->last_n_tokens.assign(n_ctx, 0);
-
   // tokenize the initial prompt
   if (![LlamaOperationUtils tokenizeString:prompt with:context into:context.runState->embd_inp addBeginningOfSequence:true outError:outError]) {
     return NO;
   }
+
+  // Initialize the run state.
+  const int n_ctx = llama_n_ctx(context.ctx);
 
   // Remaining setup.
   if ((int)context.runState->embd_inp.size() > n_ctx - 4) {
@@ -134,7 +126,17 @@
     return NO;
   }
 
+  auto runState = context.runState;
+
   context.params.numberOfTokensToKeepFromInitialPrompt = std::min(context.params.numberOfTokensToKeepFromInitialPrompt, (int)context.runState->embd_inp.size());
+
+  // TODO: replace with ring-buffer
+  context.runState->last_n_tokens.resize(n_ctx);
+  std::fill(context.runState->last_n_tokens.begin(), context.runState->last_n_tokens.end(), 0);
+
+  runState->n_past = 0;
+  runState->n_remain = context.params.numberOfTokens;
+  runState->n_consumed = 0;
 
   if (outContext != NULL) {
     *outContext = context;

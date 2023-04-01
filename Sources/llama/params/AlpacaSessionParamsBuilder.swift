@@ -31,6 +31,12 @@ class AlpacaSessionParamsBuilder: ObjCxxParamsBuilder {
     params.numberOfTokens = Int32(sessionConfig.numTokens)
     params.seed = sessionConfig.seed ?? 0
 
+    // matches config in https://github.com/ggerganov/llama.cpp/blob/a717cba8440b380f43cd3e2510862fc1ea3de9a2/examples/alpaca.sh#L10
+    params.batchSize = 256
+    params.topK = 10000
+    params.temp = 0.2
+    params.repeatPenalty = 1
+
     return params
   }
 }

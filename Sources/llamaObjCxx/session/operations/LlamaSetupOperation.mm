@@ -136,6 +136,10 @@
 
   context.params.numberOfTokensToKeepFromInitialPrompt = std::min(context.params.numberOfTokensToKeepFromInitialPrompt, (int)context.runState->embd_inp.size());
 
+  if (outContext != NULL) {
+    *outContext = context;
+  }
+
   return YES;
 }
 

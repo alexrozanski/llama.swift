@@ -10,6 +10,7 @@
 #import "LlamaContext.hh"
 #import "LlamaError.h"
 #import "LlamaErrorInternal.h"
+#import "LlamaOperationUtils.hh"
 #import "LlamaPredictionEvent.h"
 #import "LlamaSessionParams.h"
 
@@ -57,13 +58,7 @@
 - (void)main
 {
   [self _postEvent:[_LlamaPredictionEvent started]];
-
-  NSError *initializationError = nil;
-  if (![self _initializeContextIfNeededWithError:&initializationError]) {
-    [self _postEvent:[_LlamaPredictionEvent failedWithError:initializationError]];
-    return;
-  }
-
+  
   if ([self _runPrediction]) {
     [self _postEvent:self.isCancelled ? [_LlamaPredictionEvent cancelled] : [_LlamaPredictionEvent completed]];
   }
@@ -77,20 +72,20 @@
 
   // prefix & suffix for instruct mode
   std::vector<llama_token> inp_pfx;
-  if (![self _tokenizeString:"\n\n### Instruction:\n\n" into:inp_pfx addBeginningOfSequence:true outError:&tokenizeError]) {
+  if (![LlamaOperationUtils tokenizeString:"\n\n### Instruction:\n\n" with:_context into:inp_pfx addBeginningOfSequence:true outError:&tokenizeError]) {
     [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
     return NO;
   }
 
   std::vector<llama_token> inp_sfx;
-  if (![self _tokenizeString:"\n\n### Response:\n\n" into:inp_sfx addBeginningOfSequence:false outError:&tokenizeError]) {
+  if (![LlamaOperationUtils tokenizeString:"\n\n### Response:\n\n" with:_context into:inp_sfx addBeginningOfSequence:false outError:&tokenizeError]) {
     [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
     return NO;
   }
 
   // determine newline token
   std::vector<llama_token> llama_token_newline;
-  if (![self _tokenizeString:"\n" into:llama_token_newline addBeginningOfSequence:false outError:&tokenizeError]) {
+  if (![LlamaOperationUtils tokenizeString:"\n" with:_context into:llama_token_newline addBeginningOfSequence:false outError:&tokenizeError]) {
     [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
     return NO;
   }
@@ -153,7 +148,7 @@
         if (firstAntiprompt != nil) {
           // tokenize and inject first reverse prompt
           std::vector<llama_token> first_antiprompt;
-          if (![self _tokenizeString:[firstAntiprompt cStringUsingEncoding:NSUTF8StringEncoding] into:first_antiprompt addBeginningOfSequence:false outError:&tokenizeError]) {
+          if (![LlamaOperationUtils tokenizeString:[firstAntiprompt cStringUsingEncoding:NSUTF8StringEncoding] with:_context into:first_antiprompt addBeginningOfSequence:false outError:&tokenizeError]) {
             [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
             return NO;
           }
@@ -222,78 +217,6 @@
 }
 
 #pragma mark - Private
-
-- (BOOL)_initializeContextIfNeededWithError:(NSError **)outError
-{
-  return [_context initializeWithInitializationBlock:^(LlamaContext *context, NSError **outError) {
-    NSMutableString *initialPromptString = [[NSMutableString alloc] init];
-    if (context.params.initialPrompt) {
-      [initialPromptString appendString:context.params.initialPrompt];
-    }
-
-    if (context.params.promptPrefix) {
-      [initialPromptString appendString:context.params.promptPrefix];
-    }
-
-    [initialPromptString appendString:self->_prompt];
-
-    if (context.params.promptSuffix) {
-      [initialPromptString appendString:context.params.promptSuffix];
-    }
-
-    NSLog(@"Initial prompt: '%@'", initialPromptString);
-
-    std::string prompt([initialPromptString cStringUsingEncoding:NSUTF8StringEncoding]);
-
-    // Add a space in front of the first character to match OG llama tokenizer behavior
-    prompt.insert(0, 1, ' ');
-
-    // Initialize the run state.
-    const int n_ctx = llama_n_ctx(context.ctx);
-    auto runState = context.runState;
-
-    runState->n_past = 0;
-    runState->n_remain = context.params.numberOfTokens;
-    runState->n_consumed = 0;
-
-    runState->last_n_tokens.resize(n_ctx);
-    runState->last_n_tokens.assign(n_ctx, 0);
-
-    // tokenize the initial prompt
-    if (![self _tokenizeString:prompt into:context.runState->embd_inp addBeginningOfSequence:true outError:outError]) {
-      return NO;
-    }
-
-    // Remaining setup.
-    if ((int)context.runState->embd_inp.size() > n_ctx - 4) {
-      if (outError) {
-        *outError = makeLlamaError(LlamaErrorCodePredictionFailed, [NSString stringWithFormat:@"prompt is too long (%d tokens, max %d)\n", (int)_context.runState->embd_inp.size(), n_ctx - 4]);
-      }
-      return NO;
-    }
-
-    context.params.numberOfTokensToKeepFromInitialPrompt = std::min(context.params.numberOfTokensToKeepFromInitialPrompt, (int)context.runState->embd_inp.size());
-
-    return YES;
-  } outError: outError];
-}
-
-// adapted from llama_tokenize() from common.h
-- (BOOL)_tokenizeString:(const std::string &)string
-                   into:(std::vector<llama_token> &)tokens
- addBeginningOfSequence:(bool)addBeginningOfSequence
-               outError:(NSError **)outError
-{
-  // initialize to prompt numer of chars, since n_tokens <= n_prompt_chars
-  std::vector<llama_token> res(string.size() + (int)addBeginningOfSequence);
-  int n = llama_tokenize(_context.ctx, string.c_str(), res.data(), (int)res.size(), addBeginningOfSequence, outError);
-  if (n < 0) {
-    return NO;
-  }
-  res.resize(n);
-  tokens = res;
-  return YES;
-}
 
 - (void)_postEvent:(_LlamaPredictionEvent *)event
 {

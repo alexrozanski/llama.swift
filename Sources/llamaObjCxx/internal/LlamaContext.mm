@@ -14,7 +14,6 @@
 @synthesize params = _params;
 @synthesize ctx = _ctx;
 @synthesize runState = _runState;
-@synthesize initialized = _initialized;
 
 - (instancetype)initWithParams:(_LlamaSessionParams *)params context:(llama_context *)ctx
 {
@@ -33,19 +32,6 @@
 
   delete _runState;
   _runState = nullptr;
-}
-
-- (BOOL)initializeWithInitializationBlock:(NS_NOESCAPE BOOL (^)(LlamaContext *, NSError **))initializationBlock
-                                 outError:(NSError **)outError
-{
-  if (_initialized) {
-    return YES;
-  }
-
-  // TODO: reset state and set to NO on failure?
-  _initialized = initializationBlock(self, outError);
-
-  return _initialized;
 }
 
 @end

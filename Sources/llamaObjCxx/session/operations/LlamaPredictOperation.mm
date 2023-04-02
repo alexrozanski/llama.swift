@@ -42,14 +42,12 @@
                            context:(LlamaContext *)context
                             prompt:(NSString *)prompt
                       eventHandler:(LlamaPredictOperationEventHandler)eventHandler
-                 eventHandlerQueue:(dispatch_queue_t)eventHandlerQueue
 {
   if ((self = [super init])) {
     _identifier = [identifier copy];
     _context = context;
     _prompt = [prompt copy];
     _eventHandler = [eventHandler copy];
-    _eventHandlerQueue = eventHandlerQueue;
   }
 
   return self;
@@ -261,11 +259,9 @@
 
 - (void)_postEvent:(_LlamaPredictionEvent *)event
 {
-  dispatch_async(_eventHandlerQueue, ^() {
-    if (self->_eventHandler != NULL) {
-      self->_eventHandler(event);
-    }
-  });
+  if (_eventHandler != NULL) {
+    _eventHandler(event);
+  }
 }
 
 @end

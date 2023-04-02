@@ -28,14 +28,28 @@ BOOL IsModelLoaded(LlamaSessionState state)
   switch (state) {
     case LlamaSessionStateNone:
     case LlamaSessionStateLoadingModel:
-      return false;
+      return NO;
     case LlamaSessionStateReadyToPredict:
     case LlamaSessionStatePredicting:
-      return true;
+      return YES;
     case LlamaSessionStateFailed:
-      return false;
+      return NO;
     default:
-      return false;
+      return NO;
+  }
+}
+
+BOOL NeedsModelLoad(LlamaSessionState state)
+{
+  switch (state) {
+    case LlamaSessionStateNone:
+      return YES;
+    case LlamaSessionStateLoadingModel:
+    case LlamaSessionStateReadyToPredict:
+    case LlamaSessionStateFailed:
+      return NO;
+    default:
+      return NO;
   }
 }
 
@@ -49,7 +63,11 @@ BOOL IsModelLoaded(LlamaSessionState state)
   NSMutableArray<LlamaPredictionPayload *> *_queuedPredictions;
   NSMutableArray<_LlamaSessionConcretePredictionHandle *> *_predictionHandles;
 
+  // Use this to lock _state and _context.
+  NSLock *_stateLock;
   LlamaSessionState _state;
+
+  // Only access properties of _context on operations posted to _operationQueue.
   LlamaContext *_context;
 }
 
@@ -61,11 +79,14 @@ BOOL IsModelLoaded(LlamaSessionState state)
     _delegate = delegate;
 
     _operationQueue = [[NSOperationQueue alloc] init];
+    _operationQueue.maxConcurrentOperationCount = 1;
     _operationQueue.qualityOfService = NSQualityOfServiceUserInitiated;
 
     _predictionHandles = [[NSMutableArray alloc] init];
 
     _state = LlamaSessionStateNone;
+    _stateLock = [[NSLock alloc] init];
+
     _queuedPredictions = [[NSMutableArray alloc] init];
   }
   return self;
@@ -73,32 +94,26 @@ BOOL IsModelLoaded(LlamaSessionState state)
 
 #pragma mark - Loading
 
-- (BOOL)_needsModelLoad
-{
-  if (_context != nil) {
-    return false;
-  }
-
-  switch (_state) {
-    case LlamaSessionStateNone:
-      return true;
-    case LlamaSessionStateLoadingModel:
-    case LlamaSessionStateReadyToPredict:
-    case LlamaSessionStateFailed:
-      return false;
-    default:
-      return false;
-  }
-}
-
 - (void)loadModelIfNeeded
 {
-  if (![self _needsModelLoad]) {
+  BOOL needsModelLoad = NO;
+
+  // Lock around the state check and state update to ensure multiple calls to -loadModelIfNeeded
+  // are not in contention.
+  [_stateLock lock];
+  if (!_context && NeedsModelLoad(_state)) {
+    needsModelLoad = YES;
+  }
+  _state = LlamaSessionStateLoadingModel;
+  [_stateLock unlock];
+
+  if (!needsModelLoad) {
     return;
   }
 
-  _state = LlamaSessionStateLoadingModel;
-  [_delegate didStartLoadingModelInSession:self];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self->_delegate didStartLoadingModelInSession:self];
+  });
 
   LlamaSetupOperation *setupOperation = [[LlamaSetupOperation alloc] initWithParams:_params delegate:self];
   [_operationQueue addOperation:setupOperation];
@@ -124,7 +139,13 @@ BOOL IsModelLoaded(LlamaSessionState state)
                                                                         failureHandler:failureHandler
                                                                           handlerQueue:handlerQueue];
 
-  if (!IsModelLoaded(_state)) {
+  BOOL needsModelLoad = NO;
+
+  [_stateLock lock];
+  needsModelLoad = !IsModelLoaded(_state);
+  [_stateLock unlock];
+
+  if (needsModelLoad) {
     [_queuedPredictions addObject:payload];
     [self loadModelIfNeeded];
   } else {
@@ -141,14 +162,24 @@ BOOL IsModelLoaded(LlamaSessionState state)
 
 - (void)_runPredictionWithPayload:(LlamaPredictionPayload *)payload
 {
-  if (_context == nil) {
+  BOOL hasContext = NO;
+  [_stateLock lock];
+  hasContext = (_context != nil);
+  [_stateLock unlock];
+
+  if (!hasContext) {
     return;
   }
 
   LlamaPredictOperationEventHandler operationEventHandler = ^(_LlamaPredictionEvent *event) {
     [event matchStarted:^{
+      [self->_stateLock lock];
       self->_state = LlamaSessionStatePredicting;
-      [self->_delegate didStartPredictingInSession:self];
+      [self->_stateLock unlock];
+
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [self->_delegate didStartPredictingInSession:self];
+      });
       if (payload.startHandler != NULL) {
         dispatch_async(payload.handlerQueue, ^{
           payload.startHandler();
@@ -161,21 +192,30 @@ BOOL IsModelLoaded(LlamaSessionState state)
         });
       }
     } completed:^{
+      [self->_stateLock lock];
       self->_state = LlamaSessionStateReadyToPredict;
+      [self->_stateLock unlock];
+
       if (payload.completionHandler != NULL) {
         dispatch_async(payload.handlerQueue, ^{
           payload.completionHandler();
         });
       }
     } cancelled:^{
+      [self->_stateLock lock];
       self->_state = LlamaSessionStateReadyToPredict;
+      [self->_stateLock unlock];
+
       if (payload.cancelHandler != NULL) {
         dispatch_async(payload.handlerQueue, ^{
           payload.cancelHandler();
         });
       }
     } failed:^(NSError * _Nonnull error) {
+      [self->_stateLock lock];
       self->_state = LlamaSessionStateFailed;
+      [self->_stateLock unlock];
+
       if (payload.failureHandler != NULL) {
         dispatch_async(payload.handlerQueue, ^{
           payload.failureHandler(error);
@@ -184,12 +224,15 @@ BOOL IsModelLoaded(LlamaSessionState state)
     }];
   };
 
-  LlamaPredictOperation *predictOperation = [[LlamaPredictOperation alloc] initWithIdentifier:payload.identifier
-                                                                                      context:_context
-                                                                                       prompt:payload.prompt
-                                                                                 eventHandler:operationEventHandler
-                                                                            eventHandlerQueue:dispatch_get_main_queue()];
+  LlamaContext *context = nil;
+  [_stateLock lock];
+  context = _context;
+  [_stateLock unlock];
 
+  LlamaPredictOperation *predictOperation = [[LlamaPredictOperation alloc] initWithIdentifier:payload.identifier
+                                                                                      context:context
+                                                                                       prompt:payload.prompt
+                                                                                 eventHandler:operationEventHandler];
   [_operationQueue addOperation:predictOperation];
 }
 
@@ -197,7 +240,12 @@ BOOL IsModelLoaded(LlamaSessionState state)
 
 - (void)getCurrentContextWithHandler:(void(^)(NSString *context))handler handlerQueue:(dispatch_queue_t)handlerQueue
 {
-  LlamaGetCurrentContextOperation *operation = [[LlamaGetCurrentContextOperation alloc] initWithContext:_context
+  LlamaContext *context = nil;
+  [_stateLock lock];
+  context = _context;
+  [_stateLock unlock];
+
+  LlamaGetCurrentContextOperation *operation = [[LlamaGetCurrentContextOperation alloc] initWithContext:context
                                                                                    returnContextHandler:handler
                                                                                            handlerQueue:handlerQueue];
   [_operationQueue addOperation:operation];
@@ -251,14 +299,20 @@ BOOL IsModelLoaded(LlamaSessionState state)
 
 - (void)setupOperation:(nonnull LlamaSetupOperation *)operation didFailWithError:(nonnull NSError *)error
 {
+  [self->_stateLock lock];
   _state = LlamaSessionStateFailed;
+  [self->_stateLock unlock];
+
   [_delegate session:self didMoveToErrorStateWithError:error];
 }
 
 - (void)setupOperation:(nonnull LlamaSetupOperation *)operation didSucceedWithContext:(nonnull LlamaContext *)context
 {
+  [self->_stateLock lock];
   _context = context;
   _state = LlamaSessionStateReadyToPredict;
+  [self->_stateLock unlock];
+
   [_delegate didLoadModelInSession:self];
 
   for (LlamaPredictionPayload *payload in _queuedPredictions) {

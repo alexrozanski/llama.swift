@@ -27,6 +27,7 @@ class BridgedPredictionCancellable: PredictionCancellable {
 class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
   let paramsBuilder: ObjCxxParamsBuilder
 
+  // Synchronize state on the main queue.
   private(set) var state: SessionState = .notStarted {
     didSet {
       stateChangeHandler?(state)
@@ -79,15 +80,15 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
     stateChangeHandler: @escaping PredictionStateChangeHandler,
     handlerQueue: DispatchQueue?
   ) -> AsyncStream<String> {
-    let handlerQueue = handlerQueue ?? .main
+    let outerHandlerQueue = handlerQueue ?? .main
     return AsyncStream<String> { continuation in
-      handlerQueue.async {
+      outerHandlerQueue.async {
         stateChangeHandler(.notStarted)
       }
       _session.runPrediction(
         withPrompt: prompt,
         startHandler: {
-          handlerQueue.async {
+          outerHandlerQueue.async {
             stateChangeHandler(.predicting)
           }
         },
@@ -96,21 +97,21 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
         },
         completionHandler: {
           self.state = .readyToPredict
-          handlerQueue.async {
+          outerHandlerQueue.async {
             stateChangeHandler(.finished)
           }
           continuation.finish()
         },
         cancelHandler: {
           self.state = .readyToPredict
-          handlerQueue.async {
+          outerHandlerQueue.async {
             stateChangeHandler(.cancelled)
           }
           continuation.finish()
         },
         failureHandler: { error in
           self.state = .error(error)
-          handlerQueue.async {
+          outerHandlerQueue.async {
             stateChangeHandler(.error(error))
           }
         },
@@ -125,37 +126,37 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
     stateChangeHandler: @escaping PredictionStateChangeHandler,
     handlerQueue: DispatchQueue?
   ) -> PredictionCancellable {
-    let handlerQueue = handlerQueue ?? .main
-    handlerQueue.async {
+    let outerHandlerQueue = handlerQueue ?? .main
+    outerHandlerQueue.async {
       stateChangeHandler(.notStarted)
     }
     let objCxxHandle = _session.runPrediction(
       withPrompt: prompt,
       startHandler: {
-        handlerQueue.async {
+        outerHandlerQueue.async {
           stateChangeHandler(.predicting)
         }
       },
       tokenHandler: { token in
-        handlerQueue.async {
+        outerHandlerQueue.async {
           tokenHandler(token)
         }
       },
       completionHandler: {
         self.state = .readyToPredict
-        handlerQueue.async {
+        outerHandlerQueue.async {
           stateChangeHandler(.finished)
         }
       },
       cancelHandler: {
         self.state = .readyToPredict
-        handlerQueue.async {
+        outerHandlerQueue.async {
           stateChangeHandler(.cancelled)
         }
       },
       failureHandler: { error in
         self.state = .error(error)
-        handlerQueue.async {
+        outerHandlerQueue.async {
           stateChangeHandler(.error(error))
         }
       },
@@ -169,11 +170,9 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
 
   func currentContext() async -> String {
     return await withCheckedContinuation { continuation in
-      DispatchQueue.main.async {
-        self._session.getCurrentContext(handler: { context in
-          continuation.resume(returning: context)
-        }, handlerQueue: .main)
-      }
+      self._session.getCurrentContext(handler: { context in
+        continuation.resume(returning: context)
+      }, handlerQueue: .main)
     }
   }
 

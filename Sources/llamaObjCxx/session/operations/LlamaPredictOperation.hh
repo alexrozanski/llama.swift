@@ -21,8 +21,7 @@ typedef void (^LlamaPredictOperationEventHandler)(_LlamaPredictionEvent *event);
 - (instancetype)initWithIdentifier:(NSString *)identifier
                            context:(LlamaContext *)context
                             prompt:(NSString *)prompt
-                      eventHandler:(LlamaPredictOperationEventHandler)eventHandler
-                 eventHandlerQueue:(dispatch_queue_t)eventHandlerQueue;
+                      eventHandler:(LlamaPredictOperationEventHandler)eventHandler;
 
 @end
 

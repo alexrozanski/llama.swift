@@ -13,6 +13,8 @@
 		8227D27729C2A87E003E3197 /* ggml.h in Headers */ = {isa = PBXBuildFile; fileRef = 8227D27629C2A87E003E3197 /* ggml.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8227DA8729D89E39000E554D /* LlamaOperationUtils.hh in Headers */ = {isa = PBXBuildFile; fileRef = 8227DA8529D89E39000E554D /* LlamaOperationUtils.hh */; };
 		8227DA8829D89E39000E554D /* LlamaOperationUtils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8227DA8629D89E39000E554D /* LlamaOperationUtils.mm */; };
+		8227DAA629D99BC6000E554D /* LlamaGetCurrentContextOperation.hh in Headers */ = {isa = PBXBuildFile; fileRef = 8227DAA429D99BC6000E554D /* LlamaGetCurrentContextOperation.hh */; };
+		8227DAA729D99BC6000E554D /* LlamaGetCurrentContextOperation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8227DAA529D99BC6000E554D /* LlamaGetCurrentContextOperation.mm */; };
 		82718C6029CBEB8900545C32 /* llama.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C5E29CBEB8900545C32 /* llama.mm */; };
 		82718C6129CBEB8900545C32 /* llama.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82718C5F29CBEB8900545C32 /* llama.hh */; };
 		82718C6329CBED4300545C32 /* LlamaErrorInternal.m in Sources */ = {isa = PBXBuildFile; fileRef = 82718C6229CBED4300545C32 /* LlamaErrorInternal.m */; };
@@ -64,6 +66,8 @@
 		8227D27629C2A87E003E3197 /* ggml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ggml.h; path = Sources/cpp/ggml.h; sourceTree = SOURCE_ROOT; };
 		8227DA8529D89E39000E554D /* LlamaOperationUtils.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LlamaOperationUtils.hh; sourceTree = "<group>"; };
 		8227DA8629D89E39000E554D /* LlamaOperationUtils.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaOperationUtils.mm; sourceTree = "<group>"; };
+		8227DAA429D99BC6000E554D /* LlamaGetCurrentContextOperation.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LlamaGetCurrentContextOperation.hh; sourceTree = "<group>"; };
+		8227DAA529D99BC6000E554D /* LlamaGetCurrentContextOperation.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaGetCurrentContextOperation.mm; sourceTree = "<group>"; };
 		82293E3929BDC4ED00C67BD9 /* llama.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = llama.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		82718C5E29CBEB8900545C32 /* llama.mm */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = llama.mm; path = Sources/cpp/llama.mm; sourceTree = SOURCE_ROOT; tabWidth = 4; };
 		82718C5F29CBEB8900545C32 /* llama.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = llama.hh; path = Sources/cpp/llama.hh; sourceTree = SOURCE_ROOT; };
@@ -215,12 +219,14 @@
 		82718C6E29CC6B8F00545C32 /* operations */ = {
 			isa = PBXGroup;
 			children = (
+				8227DAA429D99BC6000E554D /* LlamaGetCurrentContextOperation.hh */,
+				8227DAA529D99BC6000E554D /* LlamaGetCurrentContextOperation.mm */,
 				82819F8F29BF387400399B7E /* LlamaPredictOperation.hh */,
 				82819F9029BF387400399B7E /* LlamaPredictOperation.mm */,
-				82718C6F29CC6BA600545C32 /* LlamaSetupOperation.hh */,
-				82718C7029CC6BA600545C32 /* LlamaSetupOperation.mm */,
 				8227DA8529D89E39000E554D /* LlamaOperationUtils.hh */,
 				8227DA8629D89E39000E554D /* LlamaOperationUtils.mm */,
+				82718C6F29CC6BA600545C32 /* LlamaSetupOperation.hh */,
+				82718C7029CC6BA600545C32 /* LlamaSetupOperation.mm */,
 			);
 			path = operations;
 			sourceTree = "<group>";
@@ -312,6 +318,7 @@
 				82718C6129CBEB8900545C32 /* llama.hh in Headers */,
 				8227D27729C2A87E003E3197 /* ggml.h in Headers */,
 				82718C6629CBF21D00545C32 /* LlamaErrorInternal.h in Headers */,
+				8227DAA629D99BC6000E554D /* LlamaGetCurrentContextOperation.hh in Headers */,
 				8227D27529C2A844003E3197 /* LlamaSessionParams.h in Headers */,
 				8227D27429C2A844003E3197 /* LlamaError.h in Headers */,
 			);
@@ -438,6 +445,7 @@
 				82819FB929C1DB5E00399B7E /* ggml.c in Sources */,
 				82819FB229C1DB5400399B7E /* LlamaError.m in Sources */,
 				82718C8C29CF05AB00545C32 /* LlamaPredictionPayload.m in Sources */,
+				8227DAA729D99BC6000E554D /* LlamaGetCurrentContextOperation.mm in Sources */,
 				82718C7B29CD376700545C32 /* LlamaSession.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

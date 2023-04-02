@@ -32,8 +32,12 @@ public protocol Session {
   typealias TokenHandler = (String) -> Void
   typealias PredictionStateChangeHandler = (PredictionState) -> Void
 
+  // MARK: - State
+
   var state: SessionState { get }
   var stateChangeHandler: StateChangeHandler? { get }
+
+  // MARK: - Prediction
 
   // Run prediction to generate tokens.
   func predict(with prompt: String) -> AsyncStream<String>
@@ -52,4 +56,8 @@ public protocol Session {
     stateChangeHandler: @escaping PredictionStateChangeHandler,
     handlerQueue: DispatchQueue?
   ) -> PredictionCancellable
+
+  // MARK: - Diagnostics
+
+  func currentContext() async -> String
 }

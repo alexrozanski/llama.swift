@@ -29,11 +29,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nullable, weak, readonly) id<_LlamaSessionDelegate> delegate;
 
++ (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
 - (instancetype)initWithParams:(_LlamaSessionParams *)params delegate:(id<_LlamaSessionDelegate>)delegate;
 
+// MARK: - Preloading
+
 - (void)loadModelIfNeeded;
+
+// MARK: - Prediction
 
 - (id<_LlamaSessionPredictionHandle>)runPredictionWithPrompt:(NSString*)prompt
                                                 startHandler:(void(^)(void))startHandler
@@ -42,6 +47,10 @@ NS_ASSUME_NONNULL_BEGIN
                                                cancelHandler:(void(^)(void))cancelHandler
                                               failureHandler:(void(^)(NSError*))errorHandler
                                                 handlerQueue:(dispatch_queue_t)handlerQueue;
+
+// MARK: - Diagnostics
+
+- (void)getCurrentContextWithHandler:(void(^)(NSString *context))handler handlerQueue:(dispatch_queue_t)handlerQueue;
 
 @end
 

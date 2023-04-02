@@ -7,6 +7,7 @@
 
 #import "LlamaSession.h"
 
+#import "LlamaGetCurrentContextOperation.hh"
 #import "LlamaPredictOperation.hh"
 #import "LlamaPredictionEvent.h"
 #import "LlamaPredictionPayload.h"
@@ -190,6 +191,16 @@ BOOL IsModelLoaded(LlamaSessionState state)
                                                                             eventHandlerQueue:dispatch_get_main_queue()];
 
   [_operationQueue addOperation:predictOperation];
+}
+
+#pragma mark - Diagnostics
+
+- (void)getCurrentContextWithHandler:(void(^)(NSString *context))handler handlerQueue:(dispatch_queue_t)handlerQueue
+{
+  LlamaGetCurrentContextOperation *operation = [[LlamaGetCurrentContextOperation alloc] initWithContext:_context
+                                                                                   returnContextHandler:handler
+                                                                                           handlerQueue:handlerQueue];
+  [_operationQueue addOperation:operation];
 }
 
 #pragma mark - Cancellation

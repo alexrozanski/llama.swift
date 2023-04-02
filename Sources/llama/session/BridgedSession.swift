@@ -48,6 +48,8 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
     self.stateChangeHandler = stateChangeHandler
   }
 
+  // MARK: - Prediction
+
   func predict(with prompt: String) -> AsyncStream<String> {
     return AsyncStream<String> { continuation in
       _session.runPrediction(
@@ -161,6 +163,18 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
     )
 
     return BridgedPredictionCancellable(objCxxHandle: objCxxHandle)
+  }
+
+  // MARK: - Diagnostics
+
+  func currentContext() async -> String {
+    return await withCheckedContinuation { continuation in
+      DispatchQueue.main.async {
+        self._session.getCurrentContext(handler: { context in
+          continuation.resume(returning: context)
+        }, handlerQueue: .main)
+      }
+    }
   }
 
   // MARK: - _LlamaSessionDelegate

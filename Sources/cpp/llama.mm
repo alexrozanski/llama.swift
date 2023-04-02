@@ -46,15 +46,6 @@ static const std::unordered_map<int, int> LLAMA_N_PARTS = {
     { 8192, 8 },
 };
 
-// available llama models
-enum e_model {
-    MODEL_UNKNOWN,
-    MODEL_7B,
-    MODEL_13B,
-    MODEL_30B,
-    MODEL_65B,
-};
-
 static const size_t MB = 1024*1024;
 
 // computed for n_ctx == 2048
@@ -358,6 +349,175 @@ static bool report_bad_magic(const char *path, uint32_t got, uint32_t want) {
             "\tuse migrate-ggml-2023-03-30-pr613.py if you deleted originals\n",
             path, got, want);
     return false;
+}
+
+static bool llama_model_load_headers(
+        const std::string & fname,
+        std::ifstream &outStream,
+        size_t &file_size,
+        NSError **outError) {
+    auto fin = std::ifstream(fname, std::ios::binary);
+    if (!fin) {
+        if (outError) {
+            *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"failed to open '%s'", fname.c_str()]);
+        }
+        return false;
+    }
+
+    std::vector<char> f_buf(1024*1024);
+    fin.rdbuf()->pubsetbuf(f_buf.data(), f_buf.size());
+
+    fin.seekg(0, fin.end);
+    file_size = fin.tellg();
+    fin.seekg(0);
+
+    // verify magic
+    {
+        uint32_t magic;
+        fin.read((char *) &magic, sizeof(magic));
+        if (magic == LLAMA_FILE_MAGIC_UNVERSIONED) {
+            if (outError) {
+                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (too old)", fname.c_str()]);
+            }
+            return false;
+        }
+        if (magic != LLAMA_FILE_MAGIC) {
+            if (outError) {
+                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (bad magic)", fname.c_str()]);
+            }
+            return false;
+
+        }
+
+        uint32_t format_version;
+        fin.read((char *) &format_version, sizeof(format_version));
+
+        if (format_version != LLAMA_FILE_VERSION) {
+            if (outError) {
+                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)",
+                                                                              fname.c_str(), format_version, LLAMA_FILE_VERSION]);
+            }
+            return false;
+        }
+    }
+
+    outStream = std::move(fin);
+
+    return true;
+}
+
+// Dedupe this code
+bool llama_get_model_type(
+            const char * path_model,
+            e_model & model_type,
+            NSError **outError) {
+    // fprintf(stderr, "%s: loading model from '%s' - please wait ...\n", __func__, fname.c_str());
+
+    const std::string fname(path_model);
+    auto fin = std::ifstream(fname, std::ios::binary);
+    if (!fin) {
+        if (outError) {
+            *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"failed to open '%s'", fname.c_str()]);
+        }
+        return false;
+    }
+
+    std::vector<char> f_buf(1024*1024);
+    fin.rdbuf()->pubsetbuf(f_buf.data(), f_buf.size());
+
+    fin.seekg(0);
+
+    // verify magic
+    {
+        uint32_t magic;
+        fin.read((char *) &magic, sizeof(magic));
+        if (magic == LLAMA_FILE_MAGIC_UNVERSIONED) {
+            if (outError) {
+                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (too old)", fname.c_str()]);
+            }
+            return false;
+        }
+        if (magic != LLAMA_FILE_MAGIC) {
+            if (outError) {
+                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (bad magic)", fname.c_str()]);
+            }
+            return false;
+
+        }
+
+        uint32_t format_version;
+        fin.read((char *) &format_version, sizeof(format_version));
+
+        if (format_version != LLAMA_FILE_VERSION) {
+            if (outError) {
+                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)",
+                                                                             fname.c_str(), format_version, LLAMA_FILE_VERSION]);
+            }
+            return false;
+        }
+    }
+
+    int n_ff = 0;
+
+    // load hparams
+    {
+        llama_hparams hparams;
+
+        fin.read((char *) &hparams.n_vocab, sizeof(hparams.n_vocab));
+        //fin.read((char *) &hparams.n_ctx,   sizeof(hparams.n_ctx));
+        fin.read((char *) &hparams.n_embd,  sizeof(hparams.n_embd));
+        fin.read((char *) &hparams.n_mult,  sizeof(hparams.n_mult));
+        fin.read((char *) &hparams.n_head,  sizeof(hparams.n_head));
+        fin.read((char *) &hparams.n_layer, sizeof(hparams.n_layer));
+        fin.read((char *) &hparams.n_rot,   sizeof(hparams.n_rot));
+        fin.read((char *) &hparams.f16,     sizeof(hparams.f16));
+
+//        hparams.n_ctx = n_ctx;
+
+        n_ff = ((2*(4*hparams.n_embd)/3 + hparams.n_mult - 1)/hparams.n_mult)*hparams.n_mult;
+
+//        if (n_parts < 1) {
+//            n_parts = LLAMA_N_PARTS.at(hparams.n_embd);
+//        }
+//
+//        // temp warning to tell the user to use "--n_parts"
+//        if (hparams.f16 == 4 && n_parts != 1) {
+////            fprintf(stderr, "%s: GPTQ model detected - are you sure n_parts should be %d? we normally expect it to be 1\n", __func__, n_parts);
+////            fprintf(stderr, "%s: use '--n_parts 1' if necessary\n", __func__);
+//        }
+
+        model_type = e_model::MODEL_UNKNOWN;
+
+        if (hparams.n_layer == 32) {
+            model_type = e_model::MODEL_7B;
+        }
+
+        if (hparams.n_layer == 40) {
+            model_type = e_model::MODEL_13B;
+        }
+
+        if (hparams.n_layer == 60) {
+            model_type = e_model::MODEL_30B;
+        }
+
+        if (hparams.n_layer == 80) {
+            model_type = e_model::MODEL_65B;
+        }
+
+//        fprintf(stderr, "%s: n_vocab = %d\n", __func__, hparams.n_vocab);
+//        fprintf(stderr, "%s: n_ctx   = %d\n", __func__, hparams.n_ctx);
+//        fprintf(stderr, "%s: n_embd  = %d\n", __func__, hparams.n_embd);
+//        fprintf(stderr, "%s: n_mult  = %d\n", __func__, hparams.n_mult);
+//        fprintf(stderr, "%s: n_head  = %d\n", __func__, hparams.n_head);
+//        fprintf(stderr, "%s: n_layer = %d\n", __func__, hparams.n_layer);
+//        fprintf(stderr, "%s: n_rot   = %d\n", __func__, hparams.n_rot);
+//        fprintf(stderr, "%s: f16     = %d\n", __func__, hparams.f16);
+//        fprintf(stderr, "%s: n_ff    = %d\n", __func__, n_ff);
+//        fprintf(stderr, "%s: n_parts = %d\n", __func__, n_parts);
+//        fprintf(stderr, "%s: type    = %d\n", __func__, model.type);
+    }
+
+    return true;
 }
 
 static bool llama_model_load(

@@ -49,6 +49,27 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
     self.stateChangeHandler = stateChangeHandler
   }
 
+  // MARK: - Model Metrics
+
+  public static func getModelType(forFileAt fileURL: URL) throws -> ModelType {
+    var modelType: _LlamaModelType = .typeUnknown
+    try _LlamaSession.loadModelTypeForFile(at: fileURL, outModelType: &modelType)
+    switch modelType {
+    case .typeUnknown:
+      return .unknown
+    case .type7B:
+      return .size7B
+    case .type12B:
+      return .size12B
+    case .type30B:
+      return .size30B
+    case .type65B:
+      return .size65B
+    default:
+      return .unknown
+    }
+  }
+
   // MARK: - Prediction
 
   func predict(with prompt: String) -> AsyncStream<String> {

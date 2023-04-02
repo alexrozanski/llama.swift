@@ -15,6 +15,14 @@ NS_ASSUME_NONNULL_BEGIN
 @class _LlamaSession;
 @class _LlamaSessionContext;
 
+typedef NS_ENUM(NSUInteger, _LlamaModelType) {
+  _LlamaModelTypeUnknown = 0,
+  _LlamaModelType7B,
+  _LlamaModelType12B,
+  _LlamaModelType30B,
+  _LlamaModelType65B
+};
+
 @protocol _LlamaSessionDelegate <NSObject>
 
 - (void)didStartLoadingModelInSession:(_LlamaSession *)session;
@@ -34,6 +42,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init NS_UNAVAILABLE;
 
 - (instancetype)initWithParams:(_LlamaSessionParams *)params delegate:(id<_LlamaSessionDelegate>)delegate;
+
+// MARK: - Models
+
++ (BOOL)loadModelTypeForFileAtURL:(NSURL *)fileURL
+                     outModelType:(_LlamaModelType *)outModelType
+                         outError:(NSError **)outError;
 
 // MARK: - Preloading
 

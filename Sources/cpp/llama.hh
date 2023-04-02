@@ -29,6 +29,15 @@
 extern "C" {
 #endif
 
+    // available llama models
+    enum e_model {
+        MODEL_UNKNOWN,
+        MODEL_7B,
+        MODEL_13B,
+        MODEL_30B,
+        MODEL_65B,
+    };
+
     //
     // C interface
     //
@@ -67,6 +76,11 @@ extern "C" {
     };
 
     LLAMA_API struct llama_context_params llama_context_default_params();
+
+    LLAMA_API bool llama_get_model_type(
+            const char * path_model,
+            e_model & model_type,
+            NSError **outError);
 
     // Various functions for loading a ggml llama model.
     // Allocate (almost) all memory needed for the model.

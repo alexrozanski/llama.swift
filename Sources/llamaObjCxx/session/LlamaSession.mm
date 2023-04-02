@@ -60,11 +60,11 @@ BOOL NeedsModelLoad(LlamaSessionState state)
   _LlamaSessionParams *_params;
   NSOperationQueue *_operationQueue;
 
+  // Use this to lock all local state.
+  NSLock *_stateLock;
+
   NSMutableArray<LlamaPredictionPayload *> *_queuedPredictions;
   NSMutableArray<_LlamaSessionConcretePredictionHandle *> *_predictionHandles;
-
-  // Use this to lock _state and _context.
-  NSLock *_stateLock;
   LlamaSessionState _state;
 
   // Only access properties of _context on operations posted to _operationQueue.
@@ -303,7 +303,17 @@ BOOL NeedsModelLoad(LlamaSessionState state)
 {
   [self->_stateLock lock];
   _state = LlamaSessionStateFailed;
+  NSArray *queuedPredictions = [_queuedPredictions copy];
+  [_queuedPredictions removeAllObjects];
   [self->_stateLock unlock];
+
+  for (LlamaPredictionPayload *payload in queuedPredictions) {
+    if (payload.failureHandler) {
+      dispatch_async(payload.handlerQueue, ^{
+        payload.failureHandler(error);
+      });
+    }
+  }
 
   [_delegate session:self didMoveToErrorStateWithError:error];
 }
@@ -313,14 +323,15 @@ BOOL NeedsModelLoad(LlamaSessionState state)
   [self->_stateLock lock];
   _context = context;
   _state = LlamaSessionStateReadyToPredict;
+  NSArray *queuedPredictions = [_queuedPredictions copy];
+  [_queuedPredictions removeAllObjects];
   [self->_stateLock unlock];
 
   [_delegate didLoadModelInSession:self];
 
-  for (LlamaPredictionPayload *payload in _queuedPredictions) {
+  for (LlamaPredictionPayload *payload in queuedPredictions) {
     [self _runPredictionWithPayload:payload];
   }
-  [_queuedPredictions removeAllObjects];
 }
 
 @end

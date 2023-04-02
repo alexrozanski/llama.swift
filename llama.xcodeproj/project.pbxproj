@@ -15,6 +15,7 @@
 		8227DA8829D89E39000E554D /* LlamaOperationUtils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8227DA8629D89E39000E554D /* LlamaOperationUtils.mm */; };
 		8227DAA629D99BC6000E554D /* LlamaGetCurrentContextOperation.hh in Headers */ = {isa = PBXBuildFile; fileRef = 8227DAA429D99BC6000E554D /* LlamaGetCurrentContextOperation.hh */; };
 		8227DAA729D99BC6000E554D /* LlamaGetCurrentContextOperation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8227DAA529D99BC6000E554D /* LlamaGetCurrentContextOperation.mm */; };
+		8227DAAD29D9B67F000E554D /* LlamaSessionContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 8227DAAB29D9B67F000E554D /* LlamaSessionContext.m */; };
 		82718C6029CBEB8900545C32 /* llama.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C5E29CBEB8900545C32 /* llama.mm */; };
 		82718C6129CBEB8900545C32 /* llama.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82718C5F29CBEB8900545C32 /* llama.hh */; };
 		82718C6329CBED4300545C32 /* LlamaErrorInternal.m in Sources */ = {isa = PBXBuildFile; fileRef = 82718C6229CBED4300545C32 /* LlamaErrorInternal.m */; };
@@ -68,6 +69,9 @@
 		8227DA8629D89E39000E554D /* LlamaOperationUtils.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaOperationUtils.mm; sourceTree = "<group>"; };
 		8227DAA429D99BC6000E554D /* LlamaGetCurrentContextOperation.hh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = LlamaGetCurrentContextOperation.hh; sourceTree = "<group>"; };
 		8227DAA529D99BC6000E554D /* LlamaGetCurrentContextOperation.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LlamaGetCurrentContextOperation.mm; sourceTree = "<group>"; };
+		8227DAA829D9B2E6000E554D /* LlamaSessionContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaSessionContext.h; sourceTree = "<group>"; };
+		8227DAA929D9B32C000E554D /* LlamaSessionContext+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LlamaSessionContext+Internal.h"; sourceTree = "<group>"; };
+		8227DAAB29D9B67F000E554D /* LlamaSessionContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaSessionContext.m; sourceTree = "<group>"; };
 		82293E3929BDC4ED00C67BD9 /* llama.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = llama.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		82718C5E29CBEB8900545C32 /* llama.mm */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = llama.mm; path = Sources/cpp/llama.mm; sourceTree = SOURCE_ROOT; tabWidth = 4; };
 		82718C5F29CBEB8900545C32 /* llama.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = llama.hh; path = Sources/cpp/llama.hh; sourceTree = SOURCE_ROOT; };
@@ -135,6 +139,7 @@
 				82718C8729CE4C0200545C32 /* LlamaPredictionEvent.h */,
 				8227D27129C2A844003E3197 /* LlamaSessionParams.h */,
 				82718C7829CD376700545C32 /* LlamaSession.h */,
+				8227DAA829D9B2E6000E554D /* LlamaSessionContext.h */,
 				82914CD529D7802100858B2C /* LlamaSessionPredictionHandle.h */,
 			);
 			path = headers;
@@ -194,8 +199,9 @@
 			isa = PBXGroup;
 			children = (
 				82718C6E29CC6B8F00545C32 /* operations */,
-				82819F8C29BF2F5800399B7E /* LlamaSessionParams.mm */,
 				82718C7929CD376700545C32 /* LlamaSession.mm */,
+				8227DAAB29D9B67F000E554D /* LlamaSessionContext.m */,
+				82819F8C29BF2F5800399B7E /* LlamaSessionParams.mm */,
 			);
 			path = session;
 			sourceTree = "<group>";
@@ -212,6 +218,7 @@
 				82718CC529D2F7BD00545C32 /* LlamaRunState.h */,
 				82914CD129D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.h */,
 				82914CD229D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.m */,
+				8227DAA929D9B32C000E554D /* LlamaSessionContext+Internal.h */,
 			);
 			path = internal;
 			sourceTree = "<group>";
@@ -432,6 +439,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8227DAAD29D9B67F000E554D /* LlamaSessionContext.m in Sources */,
 				82819FB629C1DB5800399B7E /* LlamaPredictOperation.mm in Sources */,
 				82718C8229CD406400545C32 /* LlamaContext.mm in Sources */,
 				82718C6029CBEB8900545C32 /* llama.mm in Sources */,

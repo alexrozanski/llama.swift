@@ -15,6 +15,16 @@ public enum SessionState {
   case error(Error)
 }
 
+public struct SessionContext {
+  public let contextString: String?
+  public let tokens: [Int64]?
+
+  internal init(contextString: String?, tokens: [Int64]?) {
+    self.contextString = contextString
+    self.tokens = tokens
+  }
+}
+
 public enum PredictionState {
   case notStarted
   case predicting
@@ -59,5 +69,5 @@ public protocol Session {
 
   // MARK: - Diagnostics
 
-  func currentContext() async -> String?
+  func currentContext() async -> SessionContext
 }

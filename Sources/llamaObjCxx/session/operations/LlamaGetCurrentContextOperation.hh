@@ -7,11 +7,12 @@
 
 #import <Foundation/Foundation.h>
 
+@class _LlamaSessionContext;
 @class LlamaContext;
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void (^LlamaGetContextOperationContextHandler)(NSString *context);
+typedef void (^LlamaGetContextOperationContextHandler)(_LlamaSessionContext *context);
 
 @interface LlamaGetCurrentContextOperation : NSOperation
 

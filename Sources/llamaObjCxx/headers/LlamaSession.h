@@ -13,6 +13,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class _LlamaSession;
+@class _LlamaSessionContext;
 
 @protocol _LlamaSessionDelegate <NSObject>
 
@@ -50,7 +51,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // MARK: - Diagnostics
 
-- (void)getCurrentContextWithHandler:(void(^)(NSString *__nullable context))handler;
+- (void)getCurrentContextWithHandler:(void(^)(_LlamaSessionContext *context))handler;
 
 @end
 

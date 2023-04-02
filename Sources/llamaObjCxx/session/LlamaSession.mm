@@ -238,7 +238,7 @@ BOOL NeedsModelLoad(LlamaSessionState state)
 
 #pragma mark - Diagnostics
 
-- (void)getCurrentContextWithHandler:(void(^)(NSString *context))handler
+- (void)getCurrentContextWithHandler:(void(^)(_LlamaSessionContext *context))handler
 {
   LlamaContext *context = nil;
   [_stateLock lock];

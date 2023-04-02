@@ -8,6 +8,8 @@
 #import "LlamaGetCurrentContextOperation.hh"
 
 #import "LlamaContext.hh"
+#import "LlamaSessionContext.h"
+#import "LlamaSessionContext+Internal.h"
 
 @implementation LlamaGetCurrentContextOperation {
   LlamaContext *_context;
@@ -25,27 +27,30 @@
 
 - (void)main
 {
-  NSString *context = [[self _run] copy];
+  _LlamaSessionContext *context = [self _run];
   if (_contextHandler) {
     self->_contextHandler(context);
   }
 }
 
-- (NSString *)_run
+- (_LlamaSessionContext *)_run
 {
   if (_context.ctx == NULL || _context.runState == NULL) {
     return nil;
   }
 
   NSMutableString *contextString = [[NSMutableString alloc] init];
+  NSMutableArray<NSNumber *> *tokens = [[NSMutableArray alloc] init];
+
   for (auto &token : _context.runState->last_n_tokens) {
     if (token == 0) { continue; }
 
     const char *string = llama_token_to_str(_context.ctx, token);
     [contextString appendString:[NSString stringWithCString:string encoding:NSUTF8StringEncoding]];
+    [tokens addObject:@(token)];
   }
 
-  return contextString;
+  return [[_LlamaSessionContext alloc] initWithContextString:contextString tokens:tokens];
 }
 
 @end

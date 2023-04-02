@@ -1614,7 +1614,7 @@ struct llama_context * llama_init_from_file(const char * path_model, struct llam
     if (!llama_model_load(path_model, *ctx, params.n_ctx, params.n_parts, memory_type,
                           params.vocab_only,params.progress_callback,
                           params.progress_callback_user_data, outError)) {
-        fprintf(stderr, "%s: failed to load model\n", __func__);
+//        fprintf(stderr, "%s: failed to load model\n", __func__);
         llama_free(ctx);
         return nullptr;
     }
@@ -1625,7 +1625,9 @@ struct llama_context * llama_init_from_file(const char * path_model, struct llam
                         ctx->model.mm_addr,
                         ctx->model.mm_length,
                         &err)) {
-            fprintf(stderr, "%s\n", err);
+            if (outError) {
+                *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithCString:err encoding:NSUTF8StringEncoding]);
+            }
             free(err);
             llama_free(ctx);
             return nullptr;
@@ -1635,7 +1637,9 @@ struct llama_context * llama_init_from_file(const char * path_model, struct llam
     // reserve memory for context buffers
     if (!params.vocab_only) {
         if (!kv_cache_init(ctx->model.hparams, ctx->model.kv_self, memory_type, ctx->model.hparams.n_ctx)) {
-            fprintf(stderr, "%s: kv_cache_init() failed for self-attention cache\n", __func__);
+            if (outError) {
+                *outError = makeLlamaError(LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"kv_cache_init() failed for self-attention cache"]);
+            }
             llama_free(ctx);
             return nullptr;
         }

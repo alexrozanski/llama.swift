@@ -7,6 +7,7 @@
 
 #import "LlamaSession.h"
 
+#import "LlamaErrorInternal.h"
 #import "LlamaGetCurrentContextOperation.hh"
 #import "LlamaPredictOperation.hh"
 #import "LlamaPredictionEvent.h"
@@ -20,7 +21,7 @@ typedef NS_ENUM(NSUInteger, LlamaSessionState) {
   LlamaSessionStateLoadingModel,
   LlamaSessionStateReadyToPredict,
   LlamaSessionStatePredicting,
-  LlamaSessionStateFailed
+  LlamaSessionStateError
 };
 
 BOOL IsModelLoaded(LlamaSessionState state)
@@ -32,9 +33,7 @@ BOOL IsModelLoaded(LlamaSessionState state)
     case LlamaSessionStateReadyToPredict:
     case LlamaSessionStatePredicting:
       return YES;
-    case LlamaSessionStateFailed:
-      return NO;
-    default:
+    case LlamaSessionStateError:
       return NO;
   }
 }
@@ -46,10 +45,22 @@ BOOL NeedsModelLoad(LlamaSessionState state)
       return YES;
     case LlamaSessionStateLoadingModel:
     case LlamaSessionStateReadyToPredict:
-    case LlamaSessionStateFailed:
+    case LlamaSessionStatePredicting:
+    case LlamaSessionStateError:
       return NO;
-    default:
+  }
+}
+
+BOOL IsErrorState(LlamaSessionState state)
+{
+  switch (state) {
+    case LlamaSessionStateNone:
+    case LlamaSessionStateLoadingModel:
+    case LlamaSessionStateReadyToPredict:
+    case LlamaSessionStatePredicting:
       return NO;
+    case LlamaSessionStateError:
+      return YES;
   }
 }
 
@@ -162,12 +173,26 @@ BOOL NeedsModelLoad(LlamaSessionState state)
 
 - (void)_runPredictionWithPayload:(LlamaPredictionPayload *)payload
 {
+  BOOL isInErrorState = NO;
   BOOL hasContext = NO;
   [_stateLock lock];
+  isInErrorState = IsErrorState(_state);
   hasContext = (_context != nil);
   [_stateLock unlock];
 
+  if (isInErrorState && payload.failureHandler != NULL) {
+    NSError *error = makeLlamaError(_LlamaErrorCodeFailedToPredict, @"Couldn't run prediction as session is in error state");
+    dispatch_async(payload.handlerQueue, ^{
+      payload.failureHandler(error);
+    });
+    return;
+  }
+
   if (!hasContext) {
+    NSError *error = makeLlamaError(_LlamaErrorCodeFailedToPredict, @"Couldn't run prediction as context is not set");
+    dispatch_async(payload.handlerQueue, ^{
+      payload.failureHandler(error);
+    });
     return;
   }
 
@@ -213,7 +238,7 @@ BOOL NeedsModelLoad(LlamaSessionState state)
       }
     } failed:^(NSError * _Nonnull error) {
       [self->_stateLock lock];
-      self->_state = LlamaSessionStateFailed;
+      self->_state = LlamaSessionStateError;
       [self->_stateLock unlock];
 
       if (payload.failureHandler != NULL) {
@@ -239,14 +264,24 @@ BOOL NeedsModelLoad(LlamaSessionState state)
 #pragma mark - Diagnostics
 
 - (void)getCurrentContextWithHandler:(void(^)(_LlamaSessionContext *context))handler
+                        errorHandler:(void(^)(NSError*))errorHandler
 {
+  BOOL isInErrorState = NO;
   LlamaContext *context = nil;
   [_stateLock lock];
   context = _context;
+  isInErrorState = IsErrorState(_state);
   [_stateLock unlock];
 
   if (!context) {
     handler(nil);
+    return;
+  }
+
+  if (isInErrorState) {
+    if (errorHandler) {
+      errorHandler(makeLlamaError(_LlamaErrorCodeFailedToLoadSessionContext, @"Couldn't load session context as session is in error state"));
+    }
     return;
   }
 
@@ -302,7 +337,7 @@ BOOL NeedsModelLoad(LlamaSessionState state)
 - (void)setupOperation:(nonnull LlamaSetupOperation *)operation didFailWithError:(nonnull NSError *)error
 {
   [self->_stateLock lock];
-  _state = LlamaSessionStateFailed;
+  _state = LlamaSessionStateError;
   NSArray *queuedPredictions = [_queuedPredictions copy];
   [_queuedPredictions removeAllObjects];
   [self->_stateLock unlock];

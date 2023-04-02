@@ -1753,7 +1753,7 @@ int llama_tokenize(
 
     if (n_max_tokens < (int) res.size()) {
         if (outError) {
-            *outError = makeLlamaError(_LlamaErrorCodePredictionFailed, @"too many tokens");
+            *outError = makeLlamaError(_LlamaErrorCodeFailedToPredict, @"too many tokens");
         }
         return -((int) res.size());
     }

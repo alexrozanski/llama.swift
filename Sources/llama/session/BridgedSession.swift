@@ -168,12 +168,14 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
 
   // MARK: - Diagnostics
 
-  func currentContext() async -> SessionContext {
-    return await withCheckedContinuation { continuation in
-      _session.getCurrentContext { objCxxSessionContext in
+  func currentContext() async throws -> SessionContext {
+    return try await withCheckedThrowingContinuation { continuation in
+      _session.getCurrentContext(handler: { objCxxSessionContext in
         let tokens = (objCxxSessionContext.tokens ?? []).map { $0.int64Value }
         continuation.resume(returning: SessionContext(contextString: objCxxSessionContext.contextString, tokens: tokens))
-      }
+      }, errorHandler: { error in
+        continuation.resume(throwing: error)
+      })
     }
   }
 

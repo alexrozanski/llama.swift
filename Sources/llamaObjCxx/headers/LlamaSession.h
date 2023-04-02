@@ -51,7 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 // MARK: - Diagnostics
 
-- (void)getCurrentContextWithHandler:(void(^)(_LlamaSessionContext *context))handler;
+- (void)getCurrentContextWithHandler:(void(^)(_LlamaSessionContext *context))handler
+                        errorHandler:(void(^)(NSError*))errorHandler;
 
 @end
 

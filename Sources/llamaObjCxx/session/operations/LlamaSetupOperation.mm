@@ -118,7 +118,7 @@
   // Remaining setup.
   if ((int)context.runState->embd_inp.size() > n_ctx - 4) {
     if (outError) {
-      *outError = makeLlamaError(_LlamaErrorCodePredictionFailed, [NSString stringWithFormat:@"prompt is too long (%d tokens, max %d)\n", (int)context.runState->embd_inp.size(), n_ctx - 4]);
+      *outError = makeLlamaError(_LlamaErrorCodeFailedToPredict, [NSString stringWithFormat:@"prompt is too long (%d tokens, max %d)\n", (int)context.runState->embd_inp.size(), n_ctx - 4]);
     }
     return NO;
   }

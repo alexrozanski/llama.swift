@@ -69,5 +69,5 @@ public protocol Session {
 
   // MARK: - Diagnostics
 
-  func currentContext() async -> SessionContext
+  func currentContext() async throws -> SessionContext
 }

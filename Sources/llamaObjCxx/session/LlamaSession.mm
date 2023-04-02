@@ -24,20 +24,6 @@ typedef NS_ENUM(NSUInteger, LlamaSessionState) {
   LlamaSessionStateError
 };
 
-BOOL IsModelLoaded(LlamaSessionState state)
-{
-  switch (state) {
-    case LlamaSessionStateNone:
-    case LlamaSessionStateLoadingModel:
-      return NO;
-    case LlamaSessionStateReadyToPredict:
-    case LlamaSessionStatePredicting:
-      return YES;
-    case LlamaSessionStateError:
-      return NO;
-  }
-}
-
 BOOL NeedsModelLoad(LlamaSessionState state)
 {
   switch (state) {
@@ -151,9 +137,8 @@ BOOL IsErrorState(LlamaSessionState state)
                                                                           handlerQueue:handlerQueue];
 
   BOOL needsModelLoad = NO;
-
   [_stateLock lock];
-  needsModelLoad = !IsModelLoaded(_state);
+  needsModelLoad = NeedsModelLoad(_state);
   [_stateLock unlock];
 
   if (needsModelLoad) {

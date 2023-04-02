@@ -59,5 +59,5 @@ public protocol Session {
 
   // MARK: - Diagnostics
 
-  func currentContext() async -> String
+  func currentContext() async -> String?
 }

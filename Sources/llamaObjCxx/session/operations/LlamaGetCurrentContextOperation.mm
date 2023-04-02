@@ -12,34 +12,40 @@
 @implementation LlamaGetCurrentContextOperation {
   LlamaContext *_context;
   LlamaGetContextOperationContextHandler _contextHandler;
-  dispatch_queue_t _handlerQueue;
 }
 
-- (instancetype)initWithContext:(LlamaContext *)context
-           returnContextHandler:(LlamaGetContextOperationContextHandler)contextHandler
-                   handlerQueue:(dispatch_queue_t)handlerQueue
+- (instancetype)initWithContext:(LlamaContext *)context returnContextHandler:(LlamaGetContextOperationContextHandler)contextHandler
 {
   if ((self = [super init])) {
     _context = context;
+    _contextHandler = [contextHandler copy];
   }
   return self;
 }
 
 - (void)main
 {
-  NSMutableString *context = [[NSMutableString alloc] init];
+  NSString *context = [[self _run] copy];
+  if (_contextHandler) {
+    self->_contextHandler(context);
+  }
+}
+
+- (NSString *)_run
+{
+  if (_context.ctx == NULL || _context.runState == NULL) {
+    return nil;
+  }
+
+  NSMutableString *contextString = [[NSMutableString alloc] init];
   for (auto &token : _context.runState->last_n_tokens) {
     if (token == 0) { continue; }
 
     const char *string = llama_token_to_str(_context.ctx, token);
-    [context appendString:[NSString stringWithCString:string encoding:NSUTF8StringEncoding]];
+    [contextString appendString:[NSString stringWithCString:string encoding:NSUTF8StringEncoding]];
   }
 
-  if (_contextHandler) {
-    dispatch_async(_handlerQueue, ^{
-      self->_contextHandler(context);
-    });
-  }
+  return contextString;
 }
 
 @end

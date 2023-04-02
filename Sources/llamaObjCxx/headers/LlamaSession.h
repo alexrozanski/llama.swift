@@ -50,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // MARK: - Diagnostics
 
-- (void)getCurrentContextWithHandler:(void(^)(NSString *context))handler handlerQueue:(dispatch_queue_t)handlerQueue;
+- (void)getCurrentContextWithHandler:(void(^)(NSString *__nullable context))handler;
 
 @end
 

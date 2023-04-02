@@ -238,16 +238,19 @@ BOOL NeedsModelLoad(LlamaSessionState state)
 
 #pragma mark - Diagnostics
 
-- (void)getCurrentContextWithHandler:(void(^)(NSString *context))handler handlerQueue:(dispatch_queue_t)handlerQueue
+- (void)getCurrentContextWithHandler:(void(^)(NSString *context))handler
 {
   LlamaContext *context = nil;
   [_stateLock lock];
   context = _context;
   [_stateLock unlock];
 
-  LlamaGetCurrentContextOperation *operation = [[LlamaGetCurrentContextOperation alloc] initWithContext:context
-                                                                                   returnContextHandler:handler
-                                                                                           handlerQueue:handlerQueue];
+  if (!context) {
+    handler(nil);
+    return;
+  }
+
+  LlamaGetCurrentContextOperation *operation = [[LlamaGetCurrentContextOperation alloc] initWithContext:context returnContextHandler:handler];
   [_operationQueue addOperation:operation];
 }
 
@@ -277,7 +280,6 @@ BOOL NeedsModelLoad(LlamaSessionState state)
 
 - (BOOL)_cancelQueuedPredictionWithIdentifier:(NSString *)identifier
 {
-
   // Check to see if it's queued
   LlamaPredictionPayload *payloadToRemove = nil;
   for (LlamaPredictionPayload *payload in _queuedPredictions) {

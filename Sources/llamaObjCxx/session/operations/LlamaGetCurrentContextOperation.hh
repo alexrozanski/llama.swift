@@ -15,9 +15,7 @@ typedef void (^LlamaGetContextOperationContextHandler)(NSString *context);
 
 @interface LlamaGetCurrentContextOperation : NSOperation
 
-- (instancetype)initWithContext:(LlamaContext *)context
-           returnContextHandler:(LlamaGetContextOperationContextHandler)contextHandler
-                   handlerQueue:(dispatch_queue_t)eventHandlerQueue;
+- (instancetype)initWithContext:(LlamaContext *)context returnContextHandler:(LlamaGetContextOperationContextHandler)contextHandler;
 
 @end
 

@@ -52,6 +52,8 @@ typedef NS_ENUM(NSUInteger, _LlamaSessionMode) {
 
 // memory_f16 in gpt_params
 @property (nonatomic, assign) BOOL useF16Memory;
+// use_mlock in gpt_params
+@property (nonatomic, assign) BOOL keepModelInMemory;
 
 // Support for other model types
 @property (nonatomic, nullable, copy) NSString *initialPrompt;

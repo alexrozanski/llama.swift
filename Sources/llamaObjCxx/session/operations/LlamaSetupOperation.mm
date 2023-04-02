@@ -74,7 +74,7 @@
 {
   if (_params.contextSize > 2048) {
     NSLog(@"warning: model does not support context sizes greater than 2048 tokens (%d specified);"
-          "expect poor results\n", _params.contextSize);
+          "expect poor results", _params.contextSize);
   }
 
   llama_context * ctx;
@@ -87,13 +87,10 @@
     lparams.n_parts    = _params.numberOfParts;
     lparams.seed       = _params.seed;
     lparams.f16_kv     = _params.useF16Memory;
-
-    // Expose perplexity on params?
-    lparams.logits_all = false; // _params.perplexity;
+    lparams.use_mlock  = _params.keepModelInMemory;
 
     const char *modelPath = [_params.modelPath cStringUsingEncoding:NSUTF8StringEncoding];
     ctx = llama_init_from_file(modelPath, lparams, outError);
-
     if (ctx == NULL) {
       return NO;
     }
@@ -128,7 +125,10 @@
 
   auto runState = context.runState;
 
-  context.params.numberOfTokensToKeepFromInitialPrompt = std::min(context.params.numberOfTokensToKeepFromInitialPrompt, (int)context.runState->embd_inp.size());
+  // number of tokens to keep when resetting context
+  if (context.params.numberOfTokensToKeepFromInitialPrompt < 0 || context.params.numberOfTokensToKeepFromInitialPrompt > (int)context.runState->embd_inp.size() || _params.isInstructional) {
+    context.params.numberOfTokensToKeepFromInitialPrompt = (int)context.runState->embd_inp.size();
+  }
 
   // TODO: replace with ring-buffer
   context.runState->last_n_tokens.resize(n_ctx);
@@ -137,6 +137,8 @@
   runState->n_past = 0;
   runState->n_remain = context.params.numberOfTokens;
   runState->n_consumed = 0;
+
+  runState->is_antiprompt = false;
 
   if (outContext != NULL) {
     *outContext = context;

@@ -18,4 +18,6 @@ typedef struct {
 
   // TODO: replace with ring-buffer when done so in llama.cpp
   std::vector<llama_token> last_n_tokens;
+
+  bool is_antiprompt;
 } llama_swift_run_state;

@@ -63,11 +63,11 @@
     dispatch_async(dispatch_get_main_queue(), ^{
       [self->_delegate setupOperation:self didFailWithError:setUpError];
     });
+  } else {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self->_delegate setupOperation:self didSucceedWithContext:context];
+    });
   }
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self->_delegate setupOperation:self didSucceedWithContext:context];
-  });
 }
 
 - (BOOL)_setUpReturningContext:(LlamaContext **)outContext error:(NSError **)outError

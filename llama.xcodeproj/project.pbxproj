@@ -16,6 +16,7 @@
 		8227DAA629D99BC6000E554D /* LlamaGetCurrentContextOperation.hh in Headers */ = {isa = PBXBuildFile; fileRef = 8227DAA429D99BC6000E554D /* LlamaGetCurrentContextOperation.hh */; };
 		8227DAA729D99BC6000E554D /* LlamaGetCurrentContextOperation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8227DAA529D99BC6000E554D /* LlamaGetCurrentContextOperation.mm */; };
 		8227DAAD29D9B67F000E554D /* LlamaSessionContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 8227DAAB29D9B67F000E554D /* LlamaSessionContext.m */; };
+		8227DAB229D9D083000E554D /* LlamaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8227DAAF29D9D07C000E554D /* LlamaError.swift */; };
 		82718C6029CBEB8900545C32 /* llama.mm in Sources */ = {isa = PBXBuildFile; fileRef = 82718C5E29CBEB8900545C32 /* llama.mm */; };
 		82718C6129CBEB8900545C32 /* llama.hh in Headers */ = {isa = PBXBuildFile; fileRef = 82718C5F29CBEB8900545C32 /* llama.hh */; };
 		82718C6329CBED4300545C32 /* LlamaErrorInternal.m in Sources */ = {isa = PBXBuildFile; fileRef = 82718C6229CBED4300545C32 /* LlamaErrorInternal.m */; };
@@ -72,6 +73,7 @@
 		8227DAA829D9B2E6000E554D /* LlamaSessionContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaSessionContext.h; sourceTree = "<group>"; };
 		8227DAA929D9B32C000E554D /* LlamaSessionContext+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LlamaSessionContext+Internal.h"; sourceTree = "<group>"; };
 		8227DAAB29D9B67F000E554D /* LlamaSessionContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaSessionContext.m; sourceTree = "<group>"; };
+		8227DAAF29D9D07C000E554D /* LlamaError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaError.swift; sourceTree = "<group>"; };
 		82293E3929BDC4ED00C67BD9 /* llama.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = llama.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		82718C5E29CBEB8900545C32 /* llama.mm */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = llama.mm; path = Sources/cpp/llama.mm; sourceTree = SOURCE_ROOT; tabWidth = 4; };
 		82718C5F29CBEB8900545C32 /* llama.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = llama.hh; path = Sources/cpp/llama.hh; sourceTree = SOURCE_ROOT; };
@@ -145,6 +147,14 @@
 			path = headers;
 			sourceTree = "<group>";
 		};
+		8227DAAE29D9D070000E554D /* error */ = {
+			isa = PBXGroup;
+			children = (
+				8227DAAF29D9D07C000E554D /* LlamaError.swift */,
+			);
+			path = error;
+			sourceTree = "<group>";
+		};
 		82293E2F29BDC4ED00C67BD9 = {
 			isa = PBXGroup;
 			children = (
@@ -171,6 +181,7 @@
 			children = (
 				82718C7C29CD3AF800545C32 /* Inference.swift */,
 				82EDD1C329D48517004D3A76 /* config */,
+				8227DAAE29D9D070000E554D /* error */,
 				82EDD1C829D48A90004D3A76 /* params */,
 				82EDD1B829D4664C004D3A76 /* session */,
 			);
@@ -431,6 +442,7 @@
 				82EDD1C729D487C3004D3A76 /* AlpacaSessionConfig.swift in Sources */,
 				82EDD1CA29D48AA1004D3A76 /* AlpacaSessionParamsBuilder.swift in Sources */,
 				82718C7D29CD3AF800545C32 /* Inference.swift in Sources */,
+				8227DAB229D9D083000E554D /* LlamaError.swift in Sources */,
 				82EDD1BA29D466E8004D3A76 /* Session.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

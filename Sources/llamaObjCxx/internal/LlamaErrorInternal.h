@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-NSError *makeLlamaError(LlamaErrorCode errorCode, NSString *description);
+NSError *makeLlamaError(_LlamaErrorCode errorCode, NSString *description);
 
 #ifdef  __cplusplus
 }

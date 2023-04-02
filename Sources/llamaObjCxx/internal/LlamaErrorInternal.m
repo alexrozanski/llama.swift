@@ -7,9 +7,9 @@
 
 #import "LlamaErrorInternal.h"
 
-NSError *makeLlamaError(LlamaErrorCode errorCode, NSString *description)
+NSError *makeLlamaError(_LlamaErrorCode errorCode, NSString *description)
 {
-  return [[NSError alloc] initWithDomain:LlamaErrorDomain code:errorCode userInfo:@{
+  return [[NSError alloc] initWithDomain:_LlamaErrorDomain code:errorCode userInfo:@{
     NSLocalizedDescriptionKey: description
   }];
 }

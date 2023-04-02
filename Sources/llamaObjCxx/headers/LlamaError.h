@@ -9,13 +9,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern NSString *const LlamaErrorDomain;
+extern NSString *const _LlamaErrorDomain;
 
-typedef NS_ENUM(NSInteger, LlamaErrorCode) {
-  LlamaErrorCodeUnknown = -1,
+typedef NS_ENUM(NSInteger, _LlamaErrorCode) {
+  _LlamaErrorCodeUnknown = -1,
 
-  LlamaErrorCodeFailedToLoadModel = -1000,
-  LlamaErrorCodePredictionFailed = -1001,
+  _LlamaErrorCodeFailedToLoadModel = -1000,
+  _LlamaErrorCodePredictionFailed = -1001,
 };
 
 NS_ASSUME_NONNULL_END

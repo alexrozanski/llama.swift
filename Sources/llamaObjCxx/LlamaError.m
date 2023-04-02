@@ -7,4 +7,4 @@
 
 #import "LlamaError.h"
 
-NSString *const LlamaErrorDomain = @"com.alexrozanski.llama.error";
+NSString *const _LlamaErrorDomain = @"com.alexrozanski.llama.error";

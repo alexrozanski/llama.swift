@@ -7,7 +7,7 @@
 
 #import "LlamaSessionContext.h"
 
-static NSArray *deepCopyTokens(NSArray<NSNumber *> *tokens) {
+static NSArray *deepCopyTokens(NSArray<_LlamaSessionContextToken *> *tokens) {
   NSMutableArray *deepCopiedTokens = [[NSMutableArray alloc] initWithCapacity:tokens.count];
   for (NSNumber *token in tokens) {
     [deepCopiedTokens addObject:[token copy]];
@@ -15,12 +15,31 @@ static NSArray *deepCopyTokens(NSArray<NSNumber *> *tokens) {
   return [deepCopiedTokens copy];
 }
 
-@implementation _LlamaSessionContext
+@implementation _LlamaSessionContextToken
 
-- (instancetype)initWithContextString:(NSString *__nullable)contextString tokens:(NSArray<NSNumber *> *__nullable)tokens
+- (nonnull instancetype)initWithToken:(int)token string:(NSString *__nonnull)string
 {
   if ((self = [super init])) {
-    _contextString = [contextString copy];
+    _token = token;
+    _string = [string copy];
+  }
+  return self;
+}
+
+- (id)copyWithZone:(nullable NSZone *)zone
+{
+  return [[_LlamaSessionContextToken alloc] initWithToken:_token string:_string];
+}
+
+@end
+
+@implementation _LlamaSessionContext {
+  NSString *_contextString;
+}
+
+- (instancetype)initWithTokens:(NSArray<_LlamaSessionContextToken *> *)tokens
+{
+  if ((self = [super init])) {
     _tokens = deepCopyTokens(tokens);
   }
   return self;
@@ -28,7 +47,25 @@ static NSArray *deepCopyTokens(NSArray<NSNumber *> *tokens) {
 
 - (id)copyWithZone:(nullable NSZone *)zone
 {
-  return [[_LlamaSessionContext alloc] initWithContextString:_contextString tokens:_tokens];
+  return [[_LlamaSessionContext alloc] initWithTokens:_tokens];
+}
+
+- (NSString *)contextString
+{
+  if (_contextString != nil) {
+    return _contextString;
+  }
+
+  NSMutableString *contextString = [[NSMutableString alloc] init];
+  for (_LlamaSessionContextToken *token in _tokens) {
+    if (token.string != nil) {
+      [contextString appendString:token.string];
+    }
+  }
+
+  _contextString = [contextString copy];
+
+  return _contextString;
 }
 
 @end

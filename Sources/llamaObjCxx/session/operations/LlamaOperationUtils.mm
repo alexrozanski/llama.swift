@@ -36,21 +36,20 @@ addBeginningOfSequence:(bool)addBeginningOfSequence
     return nil;
   }
 
-  NSMutableString *contextString = [[NSMutableString alloc] init];
-  NSMutableArray<NSNumber *> *tokens = [[NSMutableArray alloc] init];
+  NSMutableArray<_LlamaSessionContextToken *> *tokens = [[NSMutableArray alloc] init];
 
   for (auto &token : context.runState->last_n_tokens) {
     if (token == 0) { continue; }
 
     const char *cString = llama_token_to_str(context.ctx, token);
     NSString *string = [NSString stringWithCString:cString encoding:NSUTF8StringEncoding];
-    if (string != nil) {
-      [contextString appendString:string];
+    if (!string) {
+      string = @"";
     }
-    [tokens addObject:@(token)];
+    [tokens addObject:[[_LlamaSessionContextToken alloc] initWithToken:token string:string]];
   }
 
-  return [[_LlamaSessionContext alloc] initWithContextString:contextString tokens:tokens];
+  return [[_LlamaSessionContext alloc] initWithTokens:tokens];
 }
 
 @end

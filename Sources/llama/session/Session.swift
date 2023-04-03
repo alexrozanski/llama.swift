@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import llamaObjCxx
 
 public enum SessionState {
   case notStarted
@@ -16,12 +17,29 @@ public enum SessionState {
 }
 
 public struct SessionContext {
-  public let contextString: String?
-  public let tokens: [Int64]?
+  public struct Token {
+    private let objCxxToken: _LlamaSessionContextToken
 
-  internal init(contextString: String?, tokens: [Int64]?) {
-    self.contextString = contextString
-    self.tokens = tokens
+    public var value: Int32 { return objCxxToken.token }
+    public var string: String { return objCxxToken.string }
+
+    internal init(objCxxToken: _LlamaSessionContextToken) {
+      self.objCxxToken = objCxxToken
+    }
+  }
+
+  public private(set) lazy var tokens: [Token]? = {
+    return objCxxContext.tokens?.map { Token(objCxxToken: $0) }
+  }()
+  
+  public var contextString: String? {
+    return objCxxContext.contextString
+  }
+
+  private let objCxxContext: _LlamaSessionContext
+
+  internal init(objCxxContext: _LlamaSessionContext) {
+    self.objCxxContext = objCxxContext
   }
 }
 

@@ -208,7 +208,7 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
   func currentContext() async throws -> SessionContext {
     return try await withCheckedThrowingContinuation { continuation in
       _session.getCurrentContext(handler: { sessionContext in
-        continuation.resume(returning: sessionContext.toSwiftSessionContext())
+        continuation.resume(returning: SessionContext(objCxxContext: sessionContext))
       }, errorHandler: { error in
         continuation.resume(throwing: error)
       })
@@ -234,17 +234,10 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
   }
 
   func session(_ session: _LlamaSession, didUpdate sessionContext: _LlamaSessionContext) {
-    self.sessionContext = sessionContext.toSwiftSessionContext()
+    self.sessionContext = SessionContext(objCxxContext: sessionContext)
   }
 
   func session(_ session: _LlamaSession, didMoveToErrorStateWithError error: Error) {
     state = .error(error)
-  }
-}
-
-fileprivate extension _LlamaSessionContext {
-  func toSwiftSessionContext() -> SessionContext {
-    let tokens = (tokens ?? []).map { $0.int64Value }
-    return SessionContext(contextString: contextString, tokens: tokens)
   }
 }

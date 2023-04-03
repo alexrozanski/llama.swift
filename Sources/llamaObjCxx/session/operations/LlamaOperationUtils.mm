@@ -42,8 +42,11 @@ addBeginningOfSequence:(bool)addBeginningOfSequence
   for (auto &token : context.runState->last_n_tokens) {
     if (token == 0) { continue; }
 
-    const char *string = llama_token_to_str(context.ctx, token);
-    [contextString appendString:[NSString stringWithCString:string encoding:NSUTF8StringEncoding]];
+    const char *cString = llama_token_to_str(context.ctx, token);
+    NSString *string = [NSString stringWithCString:cString encoding:NSUTF8StringEncoding];
+    if (string != nil) {
+      [contextString appendString:string];
+    }
     [tokens addObject:@(token)];
   }
 

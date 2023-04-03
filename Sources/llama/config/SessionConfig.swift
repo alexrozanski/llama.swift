@@ -18,7 +18,13 @@ public class GeneralSessionConfig: SessionConfig {
   public let reversePrompt: String?
   public let seed: Int32?
 
-  public init(numTokens: UInt, reversePrompt: String? = nil, seed: Int32? = nil) {
+  public static var `default`: Self {
+    // 512 is default in llama.cpp
+    return Self.init(numTokens: 512, reversePrompt: nil, seed: nil)
+  }
+
+  required public init(numTokens: UInt, reversePrompt: String? = nil, seed: Int32? = nil) {
+    // 512 is default in llama.cpp
     self.numTokens = numTokens
     self.reversePrompt = reversePrompt
     self.seed = seed

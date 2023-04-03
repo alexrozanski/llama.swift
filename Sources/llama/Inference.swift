@@ -59,4 +59,15 @@ public class Inference {
       stateChangeHandler: stateChangeHandler
     )
   }
+
+  public func makeGPT4AllSession(
+    with modelURL: URL,
+    config: GPT4AllSessionConfig,
+    stateChangeHandler: Session.StateChangeHandler?
+  ) -> Session {
+    return BridgedSession(
+      paramsBuilder: GPT4AllSessionParamsBuilder(modelURL: modelURL, sessionConfig: config, inferenceConfig: self.config),
+      stateChangeHandler: stateChangeHandler
+    )
+  }
 }

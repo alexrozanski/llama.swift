@@ -43,10 +43,12 @@
 		82819FC529C2585700399B7E /* libllamaObjCxx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 82819FA929C1DB2900399B7E /* libllamaObjCxx.a */; };
 		82914CD329D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.h in Headers */ = {isa = PBXBuildFile; fileRef = 82914CD129D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.h */; };
 		82914CD429D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 82914CD229D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.m */; };
+		82C686A029DAE5C500B76BA6 /* GPT4AllSessionParamsBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82C6869F29DAE5C400B76BA6 /* GPT4AllSessionParamsBuilder.swift */; };
+		82C686A229DAE65E00B76BA6 /* GPT4AllSessionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82C686A129DAE65E00B76BA6 /* GPT4AllSessionConfig.swift */; };
 		82EDD1BA29D466E8004D3A76 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1B929D466E8004D3A76 /* Session.swift */; };
 		82EDD1BC29D46754004D3A76 /* BridgedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1BB29D46754004D3A76 /* BridgedSession.swift */; };
 		82EDD1BE29D467D3004D3A76 /* SessionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1BD29D467D3004D3A76 /* SessionConfig.swift */; };
-		82EDD1C529D4866C004D3A76 /* RegularSessionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1C429D4866C004D3A76 /* RegularSessionConfig.swift */; };
+		82EDD1C529D4866C004D3A76 /* LlamaSessionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1C429D4866C004D3A76 /* LlamaSessionConfig.swift */; };
 		82EDD1C729D487C3004D3A76 /* AlpacaSessionConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1C629D487C3004D3A76 /* AlpacaSessionConfig.swift */; };
 		82EDD1CA29D48AA1004D3A76 /* AlpacaSessionParamsBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1C929D48AA1004D3A76 /* AlpacaSessionParamsBuilder.swift */; };
 		82EDD1CC29D48AAF004D3A76 /* LlamaSessionParamsBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82EDD1CB29D48AAF004D3A76 /* LlamaSessionParamsBuilder.swift */; };
@@ -107,10 +109,12 @@
 		82914CD129D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaSessionConcretePredictionHandle.h; sourceTree = "<group>"; };
 		82914CD229D77FDA00858B2C /* LlamaSessionConcretePredictionHandle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LlamaSessionConcretePredictionHandle.m; sourceTree = "<group>"; };
 		82914CD529D7802100858B2C /* LlamaSessionPredictionHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LlamaSessionPredictionHandle.h; sourceTree = "<group>"; };
+		82C6869F29DAE5C400B76BA6 /* GPT4AllSessionParamsBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPT4AllSessionParamsBuilder.swift; sourceTree = "<group>"; };
+		82C686A129DAE65E00B76BA6 /* GPT4AllSessionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPT4AllSessionConfig.swift; sourceTree = "<group>"; };
 		82EDD1B929D466E8004D3A76 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		82EDD1BB29D46754004D3A76 /* BridgedSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgedSession.swift; sourceTree = "<group>"; };
 		82EDD1BD29D467D3004D3A76 /* SessionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionConfig.swift; sourceTree = "<group>"; };
-		82EDD1C429D4866C004D3A76 /* RegularSessionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegularSessionConfig.swift; sourceTree = "<group>"; };
+		82EDD1C429D4866C004D3A76 /* LlamaSessionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaSessionConfig.swift; sourceTree = "<group>"; };
 		82EDD1C629D487C3004D3A76 /* AlpacaSessionConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlpacaSessionConfig.swift; sourceTree = "<group>"; };
 		82EDD1C929D48AA1004D3A76 /* AlpacaSessionParamsBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlpacaSessionParamsBuilder.swift; sourceTree = "<group>"; };
 		82EDD1CB29D48AAF004D3A76 /* LlamaSessionParamsBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaSessionParamsBuilder.swift; sourceTree = "<group>"; };
@@ -306,7 +310,8 @@
 			children = (
 				82EDD1BD29D467D3004D3A76 /* SessionConfig.swift */,
 				82EDD1C629D487C3004D3A76 /* AlpacaSessionConfig.swift */,
-				82EDD1C429D4866C004D3A76 /* RegularSessionConfig.swift */,
+				82C686A129DAE65E00B76BA6 /* GPT4AllSessionConfig.swift */,
+				82EDD1C429D4866C004D3A76 /* LlamaSessionConfig.swift */,
 			);
 			path = config;
 			sourceTree = "<group>";
@@ -315,6 +320,7 @@
 			isa = PBXGroup;
 			children = (
 				82EDD1C929D48AA1004D3A76 /* AlpacaSessionParamsBuilder.swift */,
+				82C6869F29DAE5C400B76BA6 /* GPT4AllSessionParamsBuilder.swift */,
 				82EDD1CB29D48AAF004D3A76 /* LlamaSessionParamsBuilder.swift */,
 			);
 			path = params;
@@ -448,11 +454,13 @@
 			files = (
 				82EDD1CC29D48AAF004D3A76 /* LlamaSessionParamsBuilder.swift in Sources */,
 				8227DAC229DA4001000E554D /* ModelType.swift in Sources */,
+				82C686A029DAE5C500B76BA6 /* GPT4AllSessionParamsBuilder.swift in Sources */,
 				82EDD1BE29D467D3004D3A76 /* SessionConfig.swift in Sources */,
-				82EDD1C529D4866C004D3A76 /* RegularSessionConfig.swift in Sources */,
+				82EDD1C529D4866C004D3A76 /* LlamaSessionConfig.swift in Sources */,
 				82EDD1BC29D46754004D3A76 /* BridgedSession.swift in Sources */,
 				82EDD1C729D487C3004D3A76 /* AlpacaSessionConfig.swift in Sources */,
 				82EDD1CA29D48AA1004D3A76 /* AlpacaSessionParamsBuilder.swift in Sources */,
+				82C686A229DAE65E00B76BA6 /* GPT4AllSessionConfig.swift in Sources */,
 				82718C7D29CD3AF800545C32 /* Inference.swift in Sources */,
 				8227DAB229D9D083000E554D /* LlamaError.swift in Sources */,
 				82EDD1BA29D466E8004D3A76 /* Session.swift in Sources */,

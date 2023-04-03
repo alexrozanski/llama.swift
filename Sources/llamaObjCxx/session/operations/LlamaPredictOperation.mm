@@ -58,6 +58,7 @@
   [self _postEvent:[_LlamaPredictionEvent started]];
   
   if ([self _runPrediction]) {
+    [self _postEvent:[_LlamaPredictionEvent updatedSessionContext:[LlamaOperationUtils currentSessionContextWithLlamaContext:_context]]];
     [self _postEvent:self.isCancelled ? [_LlamaPredictionEvent cancelled] : [_LlamaPredictionEvent completed]];
   }
 }

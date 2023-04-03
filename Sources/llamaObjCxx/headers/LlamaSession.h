@@ -30,6 +30,7 @@ typedef NS_ENUM(NSUInteger, _LlamaModelType) {
 - (void)didStartPredictingInSession:(_LlamaSession *)session;
 - (void)didFinishPredictingInSession:(_LlamaSession *)session;
 
+- (void)session:(_LlamaSession *)session didUpdateSessionContext:(_LlamaSessionContext *)sessionContext;
 - (void)session:(_LlamaSession *)session didMoveToErrorStateWithError:(NSError *)error;
 
 @end

@@ -12,10 +12,12 @@
 
 #include "llama.hh"
 
+@class _LlamaSessionContext;
 @class LlamaContext;
 
 NS_ASSUME_NONNULL_BEGIN
 
+/* WARNING: These methods should only be run on the session operation queue to ensure correct access of LlamaContext. */
 @interface LlamaOperationUtils : NSObject
 
 + (instancetype)new NS_UNAVAILABLE;
@@ -27,6 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
                   into:(std::vector<llama_token> &)tokens
 addBeginningOfSequence:(bool)addBeginningOfSequence
               outError:(NSError **)outError;
+
++ (_LlamaSessionContext *)currentSessionContextWithLlamaContext:(LlamaContext *)context;
 
 @end
 

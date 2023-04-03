@@ -8,5 +8,5 @@
 #import "LlamaSessionContext.h"
 
 @interface _LlamaSessionContext ()
-- (instancetype)initWithContextString:(NSString *__nullable)contextString tokens:(NSArray<NSNumber *> *__nullable)tokens;
+- (nonnull instancetype)initWithContextString:(NSString *__nullable)contextString tokens:(NSArray<NSNumber *> *__nullable)tokens;
 @end

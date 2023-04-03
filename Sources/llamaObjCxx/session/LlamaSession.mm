@@ -240,6 +240,10 @@ BOOL IsErrorState(LlamaSessionState state)
           payload.tokenHandler(token);
         });
       }
+    } updatedSessionContext:^(_LlamaSessionContext * _Nonnull sessionContext) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [self->_delegate session:self didUpdateSessionContext:sessionContext];
+      });
     } completed:^{
       [self->_stateLock lock];
       self->_state = LlamaSessionStateReadyToPredict;

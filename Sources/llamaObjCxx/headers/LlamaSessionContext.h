@@ -7,7 +7,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface _LlamaSessionContext : NSObject
+@interface _LlamaSessionContext : NSObject <NSCopying>
 
 @property (nonatomic, readonly, copy, nullable) NSString *contextString;
 @property (nonatomic, readonly, copy, nullable) NSArray<NSNumber *> *tokens;

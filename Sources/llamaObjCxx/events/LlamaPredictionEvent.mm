@@ -7,16 +7,20 @@
 
 #import "LlamaPredictionEvent.h"
 
+#import "LlamaSessionContext.h"
+
 typedef NS_ENUM(NSUInteger, LlamaPredictionEventType) {
   LlamaPredictionEventTypeNone = 0,
   LlamaPredictionEventTypeStarted,
   LlamaPredictionEventTypeOutputToken,
+  LlamaPredictionEventTypeUpdatedSessionContext,
   LlamaPredictionEventTypeCompleted,
   LlamaPredictionEventTypeCancelled,
   LlamaPredictionEventTypeFailed,
 };
 
 typedef struct LlamaPredictionEventData {
+  _LlamaSessionContext *updatedSessionContext_context;
   NSString *outputToken_token;
   NSError *failed_error;
 } LlamaPredictionEventData;
@@ -54,6 +58,12 @@ typedef struct LlamaPredictionEventData {
                                                      data:{ .outputToken_token = [token copy] }];
 }
 
++ (instancetype)updatedSessionContext:(_LlamaSessionContext *)sessionContext
+{
+  return [[_LlamaPredictionEvent alloc] initWithEventType:LlamaPredictionEventTypeUpdatedSessionContext
+                                                     data:{ .updatedSessionContext_context = [sessionContext copy] }];
+}
+
 + (instancetype)completed
 {
   return [[_LlamaPredictionEvent alloc] initWithEventType:LlamaPredictionEventTypeCompleted
@@ -74,6 +84,7 @@ typedef struct LlamaPredictionEventData {
 
 - (void)matchStarted:(void (^)(void))started
          outputToken:(void (^)(NSString *token))outputToken
+updatedSessionContext:(void (^)(_LlamaSessionContext *sessionContext))updatedSessionContext
            completed:(void (^)(void))completed
            cancelled:(void (^)(void))cancelled
               failed:(void (^)(NSError *error))failed
@@ -86,6 +97,13 @@ typedef struct LlamaPredictionEventData {
       break;
     case LlamaPredictionEventTypeOutputToken:
       outputToken(_data.outputToken_token);
+      break;
+    case LlamaPredictionEventTypeUpdatedSessionContext:
+      if (_data.updatedSessionContext_context) {
+        updatedSessionContext(_data.updatedSessionContext_context);
+      } else {
+        NSLog(@"Warning: missing UpdatedSessionContext data in _LlamaPredictionEvent");
+      }
       break;
     case LlamaPredictionEventTypeCompleted:
       completed();

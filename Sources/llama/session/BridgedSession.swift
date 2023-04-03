@@ -34,19 +34,35 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
     }
   }
 
-  let stateChangeHandler: StateChangeHandler?
+  private var sessionContext: SessionContext? {
+    didSet {
+      if let sessionContext {
+        updatedContextHandler?(sessionContext)
+      }
+    }
+  }
+
+  var stateChangeHandler: StateChangeHandler? {
+    didSet {
+      stateChangeHandler?(state)
+    }
+  }
+
+  var updatedContextHandler: UpdatedContextHandler? {
+    didSet {
+      if let sessionContext {
+        updatedContextHandler?(sessionContext)
+      }
+    }
+  }
 
   private lazy var _session = _LlamaSession(
     params: paramsBuilder.build(),
     delegate: self
   )
 
-  init(
-    paramsBuilder: ObjCxxParamsBuilder,
-    stateChangeHandler: StateChangeHandler?
-  ) {
+  init(paramsBuilder: ObjCxxParamsBuilder) {
     self.paramsBuilder = paramsBuilder
-    self.stateChangeHandler = stateChangeHandler
   }
 
   // MARK: - Model Metrics
@@ -191,9 +207,8 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
 
   func currentContext() async throws -> SessionContext {
     return try await withCheckedThrowingContinuation { continuation in
-      _session.getCurrentContext(handler: { objCxxSessionContext in
-        let tokens = (objCxxSessionContext.tokens ?? []).map { $0.int64Value }
-        continuation.resume(returning: SessionContext(contextString: objCxxSessionContext.contextString, tokens: tokens))
+      _session.getCurrentContext(handler: { sessionContext in
+        continuation.resume(returning: sessionContext.toSwiftSessionContext())
       }, errorHandler: { error in
         continuation.resume(throwing: error)
       })
@@ -218,7 +233,18 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
     state = .readyToPredict
   }
 
+  func session(_ session: _LlamaSession, didUpdate sessionContext: _LlamaSessionContext) {
+    self.sessionContext = sessionContext.toSwiftSessionContext()
+  }
+
   func session(_ session: _LlamaSession, didMoveToErrorStateWithError error: Error) {
     state = .error(error)
+  }
+}
+
+fileprivate extension _LlamaSessionContext {
+  func toSwiftSessionContext() -> SessionContext {
+    let tokens = (tokens ?? []).map { $0.int64Value }
+    return SessionContext(contextString: contextString, tokens: tokens)
   }
 }

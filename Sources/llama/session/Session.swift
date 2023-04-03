@@ -41,11 +41,12 @@ public protocol Session {
   typealias StateChangeHandler = (SessionState) -> Void
   typealias TokenHandler = (String) -> Void
   typealias PredictionStateChangeHandler = (PredictionState) -> Void
+  typealias UpdatedContextHandler = (SessionContext) -> Void
 
   // MARK: - State
 
   var state: SessionState { get }
-  var stateChangeHandler: StateChangeHandler? { get }
+  var stateChangeHandler: StateChangeHandler? { get set }
 
   // MARK: - Prediction
 
@@ -68,6 +69,10 @@ public protocol Session {
   ) -> PredictionCancellable
 
   // MARK: - Diagnostics
+
+  // Posted when the context changes -- note that this doesn't give an initial value; this can
+  // be loaded with currentContext().
+  var updatedContextHandler: UpdatedContextHandler? { get set }
 
   func currentContext() async throws -> SessionContext
 }

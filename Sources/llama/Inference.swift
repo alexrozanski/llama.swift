@@ -40,34 +40,28 @@ public class Inference {
   // MARK: - Sessions
   public func makeLlamaSession(
     with modelURL: URL,
-    config: LlamaSessionConfig,
-    stateChangeHandler: Session.StateChangeHandler?
+    config: LlamaSessionConfig
   ) -> Session {
     return BridgedSession(
-      paramsBuilder: LlamaSessionParamsBuilder(modelURL: modelURL, sessionConfig: config, inferenceConfig: self.config),
-      stateChangeHandler: stateChangeHandler
+      paramsBuilder: LlamaSessionParamsBuilder(modelURL: modelURL, sessionConfig: config, inferenceConfig: self.config)
     )
   }
 
   public func makeAlpacaSession(
     with modelURL: URL,
-    config: AlpacaSessionConfig,
-    stateChangeHandler: Session.StateChangeHandler?
+    config: AlpacaSessionConfig
   ) -> Session {
     return BridgedSession(
-      paramsBuilder: AlpacaSessionParamsBuilder(modelURL: modelURL, sessionConfig: config, inferenceConfig: self.config),
-      stateChangeHandler: stateChangeHandler
+      paramsBuilder: AlpacaSessionParamsBuilder(modelURL: modelURL, sessionConfig: config, inferenceConfig: self.config)
     )
   }
 
   public func makeGPT4AllSession(
     with modelURL: URL,
-    config: GPT4AllSessionConfig,
-    stateChangeHandler: Session.StateChangeHandler?
+    config: GPT4AllSessionConfig
   ) -> Session {
     return BridgedSession(
-      paramsBuilder: GPT4AllSessionParamsBuilder(modelURL: modelURL, sessionConfig: config, inferenceConfig: self.config),
-      stateChangeHandler: stateChangeHandler
+      paramsBuilder: GPT4AllSessionParamsBuilder(modelURL: modelURL, sessionConfig: config, inferenceConfig: self.config)
     )
   }
 }

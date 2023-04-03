@@ -8,6 +8,8 @@
 #import "LlamaOperationUtils.hh"
 
 #import "LlamaContext.hh"
+#import "LlamaSessionContext.h"
+#import "LlamaSessionContext+Internal.h"
 
 @implementation LlamaOperationUtils
 
@@ -26,6 +28,26 @@ addBeginningOfSequence:(bool)addBeginningOfSequence
   res.resize(n);
   tokens = res;
   return YES;
+}
+
++ (_LlamaSessionContext *)currentSessionContextWithLlamaContext:(LlamaContext *)context
+{
+  if (context.ctx == NULL || context.runState == NULL) {
+    return nil;
+  }
+
+  NSMutableString *contextString = [[NSMutableString alloc] init];
+  NSMutableArray<NSNumber *> *tokens = [[NSMutableArray alloc] init];
+
+  for (auto &token : context.runState->last_n_tokens) {
+    if (token == 0) { continue; }
+
+    const char *string = llama_token_to_str(context.ctx, token);
+    [contextString appendString:[NSString stringWithCString:string encoding:NSUTF8StringEncoding]];
+    [tokens addObject:@(token)];
+  }
+
+  return [[_LlamaSessionContext alloc] initWithContextString:contextString tokens:tokens];
 }
 
 @end

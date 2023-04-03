@@ -16,7 +16,7 @@ public enum SessionState {
   case error(Error)
 }
 
-public struct SessionContext {
+public class SessionContext {
   public struct Token {
     private let objCxxToken: _LlamaSessionContextToken
 

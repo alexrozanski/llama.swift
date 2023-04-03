@@ -74,15 +74,24 @@
 
   NSError *tokenizeError = nil;
 
+  auto params = _context.params;
+  auto runState = _context.runState;
+
   // prefix & suffix for instruct mode
+  BOOL hasPrefix = params.promptPrefix != nil && params.promptPrefix.length > 0;
   std::vector<llama_token> inp_pfx;
-  if (![LlamaOperationUtils tokenizeString:"\n\n### Instruction:\n\n" with:_context into:inp_pfx addBeginningOfSequence:true outError:&tokenizeError]) {
+  std::string prefix([params.promptPrefix cStringUsingEncoding:NSUTF8StringEncoding]);
+
+  if (hasPrefix && ![LlamaOperationUtils tokenizeString:prefix with:_context into:inp_pfx addBeginningOfSequence:true outError:&tokenizeError]) {
     [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
     return NO;
   }
 
+  BOOL hasSuffix = params.promptSuffix != nil && params.promptSuffix.length > 0;
   std::vector<llama_token> inp_sfx;
-  if (![LlamaOperationUtils tokenizeString:"\n\n### Response:\n\n" with:_context into:inp_sfx addBeginningOfSequence:false outError:&tokenizeError]) {
+  std::string suffix([params.promptSuffix cStringUsingEncoding:NSUTF8StringEncoding]);
+
+  if (hasSuffix && ![LlamaOperationUtils tokenizeString:suffix with:_context into:inp_sfx addBeginningOfSequence:false outError:&tokenizeError]) {
     [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
     return NO;
   }
@@ -93,9 +102,6 @@
     [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
     return NO;
   }
-
-  auto params = _context.params;
-  auto runState = _context.runState;
 
   // run in interactive mode always so run the loop until we are finished.
   while (runState->n_remain != 0) {
@@ -217,7 +223,7 @@
         std::string buffer;
 
         // instruct mode: insert instruction prefix
-        if (params.isInstructional && !runState->is_antiprompt) {
+        if (hasPrefix && !runState->is_antiprompt) {
           runState->n_consumed = (int)runState->embd_inp.size();
           runState->embd_inp.insert(runState->embd_inp.end(), inp_pfx.begin(), inp_pfx.end());
         }
@@ -232,7 +238,7 @@
         runState->embd_inp.insert(runState->embd_inp.end(), prompt_inp.begin(), prompt_inp.end());
 
         // instruct mode: insert response suffix
-        if (params.isInstructional) {
+        if (hasSuffix) {
           runState->embd_inp.insert(runState->embd_inp.end(), inp_sfx.begin(), inp_sfx.end());
         }
 

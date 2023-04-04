@@ -15,22 +15,23 @@ typedef NS_ENUM(NSInteger, _LlamaErrorCode) {
   _LlamaErrorCodeUnknown = -1,
 
   // High-level error codes
-  _LlamaErrorCodeFailedToLoadModel = -1000,
-  _LlamaErrorCodeFailedToPredict = -1001,
-  _LlamaErrorCodeFailedToLoadSessionContext = -1002,
+  _LlamaErrorCodeFailedToValidateModel = -100,
+  _LlamaErrorCodeFailedToLoadModel = -101,
+  _LlamaErrorCodeFailedToPredict = -102,
+  _LlamaErrorCodeFailedToLoadSessionContext = -103,
 
-  // Model failure internal error codes
-  _LlamaErrorCodeFailedToOpenModelFile = -2000,
-  _LlamaErrorCodeInvalidModelUnversioned = -2001,
-  _LlamaErrorCodeInvalidModelBadMagic = -2002,
-  _LlamaErrorCodeInvalidModelUnsupportedFileVersion = -2003,
+  // Model internal error codes
+  _LlamaErrorCodeFailedToOpenModelFile = -1000,
+  _LlamaErrorCodeInvalidModelUnversioned = -1001,
+  _LlamaErrorCodeInvalidModelBadMagic = -1002,
+  _LlamaErrorCodeInvalidModelUnsupportedFileVersion = -1003,
 
   // Model prediction internal error codes
-  _LlamaErrorCodePromptIsTooLong = -3000,
+  _LlamaErrorCodePromptIsTooLong = -2000,
 
   // General failure error codes
-  _LlamaErrorCodeGeneralInternalLoadFailure = -10000,
-  _LlamaErrorCodeGeneralInternalPredictionFailure = -10001,
+  _LlamaErrorCodeGeneralInternalLoadFailure = -10001,
+  _LlamaErrorCodeGeneralInternalPredictionFailure = -10002,
 };
 
 NS_ASSUME_NONNULL_END

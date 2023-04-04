@@ -68,7 +68,19 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
   // MARK: - Models
 
   static func validateModel(fileURL: URL) throws {
-    _ = try getModelType(forFileAt: fileURL)
+    do {
+      _ = try getModelType(forFileAt: fileURL)
+    } catch {
+      let error = error as NSError
+
+      // Since we get the model type by loading the file, failures should be `failedToLoadModel`.
+      guard error.domain == _LlamaErrorDomain, error.code == _LlamaErrorCode.failedToLoadModel.rawValue else {
+        throw error
+      }
+
+      // Retag this as `failedToValidateModel` for a more consistent API
+      throw NSError(domain: _LlamaErrorDomain, code: _LlamaErrorCode.failedToValidateModel.rawValue, userInfo: error.userInfo)
+    }
   }
 
   static func getModelType(forFileAt fileURL: URL) throws -> ModelType {

@@ -10,5 +10,7 @@ import llamaObjCxx
 
 public struct LlamaError {
   public typealias Code = _LlamaErrorCode
-  public let Domain = _LlamaErrorDomain
+  public static let Domain = _LlamaErrorDomain
+
+  private init() {}
 }

@@ -32,10 +32,14 @@ public class Inference {
     self.config = config
   }
 
-  // MARK: - Model Metrics
+  // MARK: - Models
 
   public static func getModelType(forFileAt fileURL: URL) throws -> ModelType {
     return try BridgedSession.getModelType(forFileAt: fileURL)
+  }
+
+  public static func validateModel(fileURL: URL) throws {
+    try BridgedSession.validateModel(fileURL: fileURL)
   }
 
   // MARK: - Sessions

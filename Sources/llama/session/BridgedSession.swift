@@ -65,9 +65,13 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
     self.paramsBuilder = paramsBuilder
   }
 
-  // MARK: - Model Metrics
+  // MARK: - Models
 
-  public static func getModelType(forFileAt fileURL: URL) throws -> ModelType {
+  static func validateModel(fileURL: URL) throws {
+    _ = try getModelType(forFileAt: fileURL)
+  }
+
+  static func getModelType(forFileAt fileURL: URL) throws -> ModelType {
     var modelType: _LlamaModelType = .typeUnknown
     try _LlamaSession.loadModelTypeForFile(at: fileURL, outModelType: &modelType)
     switch modelType {

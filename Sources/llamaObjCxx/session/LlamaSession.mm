@@ -205,7 +205,7 @@ BOOL IsErrorState(LlamaSessionState state)
   [_stateLock unlock];
 
   if (isInErrorState && payload.failureHandler != NULL) {
-    NSError *error = makeLlamaError(_LlamaErrorCodeFailedToPredict, @"Couldn't run prediction as session is in error state");
+    NSError *error = makeFailedToPredictErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalPredictionFailure, @"Couldn't run prediction as session is in error state"));
     dispatch_async(payload.handlerQueue, ^{
       payload.failureHandler(error);
     });
@@ -213,7 +213,7 @@ BOOL IsErrorState(LlamaSessionState state)
   }
 
   if (!hasContext) {
-    NSError *error = makeLlamaError(_LlamaErrorCodeFailedToPredict, @"Couldn't run prediction as context is not set");
+    NSError *error = makeFailedToPredictErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalPredictionFailure, @"Couldn't run prediction as context is not set"));
     dispatch_async(payload.handlerQueue, ^{
       payload.failureHandler(error);
     });

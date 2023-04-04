@@ -127,7 +127,7 @@
       }
 
       if (llama_eval(_context.ctx, runState->embd.data(), (int)runState->embd.size(), runState->n_past, params.numberOfThreads)) {
-        [self _postEvent:[_LlamaPredictionEvent failedWithError:makeLlamaError(_LlamaErrorCodeFailedToPredict, @"failed to eval")]];
+        [self _postEvent:[_LlamaPredictionEvent failedWithError:makeFailedToPredictErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalPredictionFailure, @"failed to eval"))]];
         return NO;
       }
     }

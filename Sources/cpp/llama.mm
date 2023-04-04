@@ -359,7 +359,7 @@ static bool llama_model_load_headers(
     auto fin = std::ifstream(fname, std::ios::binary);
     if (!fin) {
         if (outError) {
-            *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"failed to open '%s'", fname.c_str()]);
+            *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeFailedToOpenModelFile, [NSString stringWithFormat:@"failed to open '%s'", fname.c_str()]));
         }
         return false;
     }
@@ -377,13 +377,13 @@ static bool llama_model_load_headers(
         fin.read((char *) &magic, sizeof(magic));
         if (magic == LLAMA_FILE_MAGIC_UNVERSIONED) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (too old)", fname.c_str()]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidModelUnversioned, [NSString stringWithFormat:@"invalid model file '%s' (too old)", fname.c_str()]));
             }
             return false;
         }
         if (magic != LLAMA_FILE_MAGIC) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (bad magic)", fname.c_str()]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidModelBadMagic, [NSString stringWithFormat:@"invalid model file '%s' (bad magic)", fname.c_str()]));
             }
             return false;
 
@@ -394,8 +394,8 @@ static bool llama_model_load_headers(
 
         if (format_version != LLAMA_FILE_VERSION) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)",
-                                                                              fname.c_str(), format_version, LLAMA_FILE_VERSION]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidModelUnsupportedFileVersion, [NSString stringWithFormat:@"invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)",
+                                                                              fname.c_str(), format_version, LLAMA_FILE_VERSION]));
             }
             return false;
         }
@@ -417,7 +417,7 @@ bool llama_get_model_type(
     auto fin = std::ifstream(fname, std::ios::binary);
     if (!fin) {
         if (outError) {
-            *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"failed to open '%s'", fname.c_str()]);
+            *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeFailedToOpenModelFile, [NSString stringWithFormat:@"failed to open '%s'", fname.c_str()]));
         }
         return false;
     }
@@ -433,13 +433,13 @@ bool llama_get_model_type(
         fin.read((char *) &magic, sizeof(magic));
         if (magic == LLAMA_FILE_MAGIC_UNVERSIONED) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (too old)", fname.c_str()]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidModelUnversioned, [NSString stringWithFormat:@"invalid model file '%s' (too old)", fname.c_str()]));
             }
             return false;
         }
         if (magic != LLAMA_FILE_MAGIC) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (bad magic)", fname.c_str()]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidModelBadMagic, [NSString stringWithFormat:@"invalid model file '%s' (bad magic)", fname.c_str()]));
             }
             return false;
 
@@ -450,8 +450,8 @@ bool llama_get_model_type(
 
         if (format_version != LLAMA_FILE_VERSION) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)",
-                                                                             fname.c_str(), format_version, LLAMA_FILE_VERSION]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidModelUnsupportedFileVersion, [NSString stringWithFormat:@"invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)",
+                                                                             fname.c_str(), format_version, LLAMA_FILE_VERSION]));
             }
             return false;
         }
@@ -540,7 +540,7 @@ static bool llama_model_load(
     auto fin = std::ifstream(fname, std::ios::binary);
     if (!fin) {
         if (outError) {
-            *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"failed to open '%s'", fname.c_str()]);
+            *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeFailedToOpenModelFile, [NSString stringWithFormat:@"failed to open '%s'", fname.c_str()]));
         }
         return false;
     }
@@ -558,13 +558,13 @@ static bool llama_model_load(
         fin.read((char *) &magic, sizeof(magic));
         if (magic == LLAMA_FILE_MAGIC_UNVERSIONED) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (too old)", fname.c_str()]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidModelUnversioned, [NSString stringWithFormat:@"invalid model file '%s' (too old)", fname.c_str()]));
             }
             return false;
         }
         if (magic != LLAMA_FILE_MAGIC) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (bad magic)", fname.c_str()]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidModelBadMagic, [NSString stringWithFormat:@"invalid model file '%s' (bad magic)", fname.c_str()]));
             }
             return false;
 
@@ -575,8 +575,8 @@ static bool llama_model_load(
 
         if (format_version != LLAMA_FILE_VERSION) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)",
-                                                                             fname.c_str(), format_version, LLAMA_FILE_VERSION]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidModelUnsupportedFileVersion, [NSString stringWithFormat:@"invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)",
+                                                                             fname.c_str(), format_version, LLAMA_FILE_VERSION]));
             }
             return false;
         }
@@ -687,8 +687,8 @@ static bool llama_model_load(
         default:
                 {
                     if (outError) {
-                        *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"invalid model file '%s' (bad f16 value %d)",
-                                                                                     fname.c_str(), model.hparams.f16]);
+                        *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithFormat:@"invalid model file '%s' (bad f16 value %d)",
+                                                                                     fname.c_str(), model.hparams.f16]));
                     }
                     return false;
                 }
@@ -699,7 +699,7 @@ static bool llama_model_load(
     model.mm_addr = mmap_file(fname.c_str(), &model.mm_length);
     if (model.mm_addr == NULL) {
         if (outError) {
-            *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"failed to mmap '%s'", fname.c_str()]);
+            *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithFormat:@"failed to mmap '%s'", fname.c_str()]));
         }
         return false;
     }
@@ -749,7 +749,7 @@ static bool llama_model_load(
         model.ctx = ggml_init(params);
         if (!model.ctx) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"ggml_init() failed"]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithFormat:@"ggml_init() failed"]));
             }
             return false;
         }
@@ -846,7 +846,7 @@ static bool llama_model_load(
 
             if (model.tensors.find(name.data()) == model.tensors.end()) {
                 if (outError) {
-                    *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"unknown tensor '%s' in model file", name.data()]);
+                    *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithFormat:@"unknown tensor '%s' in model file", name.data()]));
                 }
                 return false;
             }
@@ -855,13 +855,13 @@ static bool llama_model_load(
 
             if (ggml_nelements(tensor) != nelements) {
                 if (outError) {
-                    *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"tensor '%s' has wrong size in model file", name.data()]);
+                    *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithFormat:@"tensor '%s' has wrong size in model file", name.data()]));
                 }
                 return false;
             }
             if (tensor->ne[0] != ne[0] || tensor->ne[1] != ne[1]) {
                 if (outError) {
-                    *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"tensor '%s' has wrong shape in model file: got [%" PRId64 ", %" PRId64 "], expected [%d, %d]", name.data(), tensor->ne[0], tensor->ne[1], ne[0], ne[1]]);
+                    *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithFormat:@"tensor '%s' has wrong shape in model file: got [%" PRId64 ", %" PRId64 "], expected [%d, %d]", name.data(), tensor->ne[0], tensor->ne[1], ne[0], ne[1]]));
                 }
                 return false;
             }
@@ -880,7 +880,7 @@ static bool llama_model_load(
                     break;
                 default:
                     if (outError) {
-                        *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"unknown ftype %d in model file", ftype]);
+                        *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithFormat:@"unknown ftype %d in model file", ftype]));
                     }
                     return false;
             };
@@ -908,7 +908,7 @@ static bool llama_model_load(
             fprintf(stderr, "%s: WARN no tensors loaded from model file - assuming empty model for testing\n", __func__);
         } else if (model.n_loaded != (int) model.tensors.size()) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"not all tensors loaded from model file - expected %zu, got %d", model.tensors.size(), model.n_loaded]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithFormat:@"not all tensors loaded from model file - expected %zu, got %d", model.tensors.size(), model.n_loaded]));
             }
             return false;
         }
@@ -1800,7 +1800,7 @@ struct llama_context * llama_init_from_file(const char * path_model, struct llam
                         ctx->model.mm_length,
                         &err)) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithCString:err encoding:NSUTF8StringEncoding]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithCString:err encoding:NSUTF8StringEncoding]));
             }
             free(err);
             llama_free(ctx);
@@ -1812,7 +1812,7 @@ struct llama_context * llama_init_from_file(const char * path_model, struct llam
     if (!params.vocab_only) {
         if (!kv_cache_init(ctx->model.hparams, ctx->model.kv_self, memory_type, ctx->model.hparams.n_ctx)) {
             if (outError) {
-                *outError = makeLlamaError(_LlamaErrorCodeFailedToLoadModel, [NSString stringWithFormat:@"kv_cache_init() failed for self-attention cache"]);
+                *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithFormat:@"kv_cache_init() failed for self-attention cache"]));
             }
             llama_free(ctx);
             return nullptr;
@@ -1927,7 +1927,7 @@ int llama_tokenize(
 
     if (n_max_tokens < (int) res.size()) {
         if (outError) {
-            *outError = makeLlamaError(_LlamaErrorCodeFailedToPredict, @"too many tokens");
+            *outError = makeFailedToPredictErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalPredictionFailure, @"too many tokens"));
         }
         return -((int) res.size());
     }

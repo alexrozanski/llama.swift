@@ -13,7 +13,11 @@
 extern "C" {
 #endif
 
-NSError *makeLlamaError(_LlamaErrorCode errorCode, NSString *description);
+NSError *__nonnull makeLlamaError(_LlamaErrorCode errorCode, NSString *__nonnull description);
+NSError *__nonnull makeLlamaErrorWithUnderlyingError(_LlamaErrorCode errorCode, NSString *__nonnull description, NSError *__nullable underlyingError);
+
+NSError *__nonnull makeFailedToLoadModelErrorWithUnderlyingError(NSError *__nullable underlyingError);
+NSError *__nonnull makeFailedToPredictErrorWithUnderlyingError(NSError *__nullable underlyingError);
 
 #ifdef  __cplusplus
 }

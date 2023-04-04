@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import llamaObjCxx
 
 public class Inference {
   public struct Config {

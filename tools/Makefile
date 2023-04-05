@@ -31,7 +31,7 @@ endif
 #
 
 # keep standard at C11 and C++11
-CPP_PATH = ../Sources/cpp
+CPP_PATH = ../Sources/llamaObjCxx/cpp
 LLAMAOBJCXX_PATH = ../Sources/llamaObjCxx
 CFLAGS    = -I. -I../Sources/llamaObjCxx/include/private/ -O3 -DNDEBUG -std=c11   -fPIC
 CXXFLAGS  = -I. -I../Sources/llamaObjCxx/include/private/ -I../Sources/llamaObjCxx/headers -I../Sources/llamaObjCxx/internal -I../Sources/llamaObjCxx/cpp -O3 -DNDEBUG -std=c++11 -fPIC

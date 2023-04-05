@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Coquille",
+        "repositoryURL": "https://github.com/alexrozanski/Coquille.git",
+        "state": {
+          "branch": null,
+          "revision": "ae4dbfbf2d423092e5bb02d1565fc1a2e2407ee3",
+          "version": "0.2.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -6,14 +6,51 @@
 //
 
 import Foundation
+import Coquille
 
 public class ModelConverter {
+  private enum Script {
+    case convertPthToGgml
+    case convertGPT4AllToGgml
+    case convertUnversionedGgmlToGgml
+    case dummy
+
+    var url: URL? {
+      switch self {
+      case .convertPthToGgml:
+        return Bundle.module.url(forResource: "convert-pth-to-ggml", withExtension: "py")
+      case .convertGPT4AllToGgml:
+        return Bundle.module.url(forResource: "convert-gpt4all-to-ggml", withExtension: "py")
+      case .convertUnversionedGgmlToGgml:
+        return Bundle.module.url(forResource: "convert-unversioned-ggml-to-ggml", withExtension: "py")
+      case .dummy:
+        return Bundle.module.url(forResource: "dummy", withExtension: "py")
+      }
+    }
+
+    var deps: [String] {
+      switch self {
+      case .convertPthToGgml:
+        return ["numpy", "sentencepiece", "torch"]
+      case .convertGPT4AllToGgml:
+        return ["sentencepiece"]
+      case .convertUnversionedGgmlToGgml:
+        return ["sentencepiece"]
+      case .dummy:
+        return ["numpy", "sentencepiece", "torch"]
+      }
+    }
+  }
+
   public static func convert() {
-    guard let url = Bundle.module.url(forResource: "convert-pth-to-ggml", withExtension: "py") else { return }
+    run(script: .dummy)
+  }
+
+  private static func run(script: Script) {
+    guard let url = script.url else { return }
 
     do {
       let contents = try String(contentsOf: url)
-      print(contents)
     } catch {
       print(error)
     }

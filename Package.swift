@@ -11,10 +11,13 @@ let package = Package(
   products: [
     .library(name: "llama", targets: ["llama"]),
   ],
+  dependencies: [
+    .package(url: "https://github.com/alexrozanski/Coquille.git", from: "0.2.0")
+  ],
   targets: [
     .target(
       name: "llama",
-      dependencies: ["llamaObjCxx"],
+      dependencies: ["llamaObjCxx", "Coquille"],
       path: "Sources/llama",
       resources: [
         .copy("resources/convert-gpt4all-to-ggml.py"),

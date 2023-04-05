@@ -13,6 +13,14 @@ public protocol SessionConfig {
   var seed: Int32? { get }
 }
 
+private var defaultNumThreads: UInt {
+  let processorCount = UInt(ProcessInfo().activeProcessorCount)
+  // Account for main thread and worker thread. Specifying all active processors seems to introduce a lot of contention.
+  let maxAvailableProcessors = processorCount - 2
+  // Experimentally 6 also seems like a pretty good number.
+  return min(maxAvailableProcessors, 6)
+}
+
 public class GeneralSessionConfig: SessionConfig {
   public let numThreads: UInt
   public let numTokens: UInt
@@ -20,14 +28,8 @@ public class GeneralSessionConfig: SessionConfig {
   public let seed: Int32?
 
   public static var `default`: Self {
-    let processorCount = UInt(ProcessInfo().activeProcessorCount)
-    // Account for main thread and worker thread. Specifying all active processors seems to introduce a lot of contention.
-    let maxAvailableProcessors = processorCount - 2
-    // Experimentally 6 also seems like a pretty good number.
-    let numThreads = min(maxAvailableProcessors, 6)
-
     return Self.init(
-      numThreads: numThreads,
+      numThreads: defaultNumThreads,
       numTokens: 512, // 512 is default in llama.cpp
       reversePrompt: nil,
       seed: nil
@@ -35,12 +37,12 @@ public class GeneralSessionConfig: SessionConfig {
   }
 
   required public init(
-    numThreads: UInt,
+    numThreads: UInt? = nil,
     numTokens: UInt,
     reversePrompt: String? = nil,
     seed: Int32? = nil
   ) {
-    self.numThreads = numThreads
+    self.numThreads = numThreads ?? defaultNumThreads
     self.numTokens = numTokens
     self.reversePrompt = reversePrompt
     self.seed = seed

@@ -9,7 +9,7 @@ import Foundation
 import llamaObjCxx
 
 public class SessionManager {
-  private init() {}  
+  public init() {}  
 
   // MARK: - Sessions
   public func makeLlamaSession(

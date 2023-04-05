@@ -11,17 +11,15 @@ import llamaObjCxx
 class AlpacaSessionParamsBuilder: ObjCxxParamsBuilder {
   let modelURL: URL
   let sessionConfig: AlpacaSessionConfig
-  let inferenceConfig: Inference.Config
 
-  init(modelURL: URL, sessionConfig: AlpacaSessionConfig, inferenceConfig: Inference.Config) {
+  init(modelURL: URL, sessionConfig: AlpacaSessionConfig) {
     self.modelURL = modelURL
     self.sessionConfig = sessionConfig
-    self.inferenceConfig = inferenceConfig
   }
 
   func build() -> _LlamaSessionParams {
     let params = _LlamaSessionParams.defaultParams(withModelPath: modelURL.path, mode: .instructional)
-    params.numberOfThreads = Int32(inferenceConfig.numThreads)
+    params.numberOfThreads = Int32(sessionConfig.numThreads)
 
     params.initialPrompt = "Below is an instruction that describes a task. Write a response that appropriately completes the request."
     params.promptPrefix = "\n\n### Instruction:\n\n"

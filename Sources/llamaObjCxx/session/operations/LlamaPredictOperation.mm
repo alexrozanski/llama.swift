@@ -81,20 +81,24 @@
   // prefix & suffix for instruct mode
   BOOL hasPrefix = params.promptPrefix != nil && params.promptPrefix.length > 0;
   std::vector<llama_token> inp_pfx;
-  std::string prefix([params.promptPrefix cStringUsingEncoding:NSUTF8StringEncoding]);
 
-  if (hasPrefix && ![LlamaOperationUtils tokenizeString:prefix with:_context into:inp_pfx addBeginningOfSequence:true outError:&tokenizeError]) {
-    [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
-    return NO;
+  if (hasPrefix) {
+    std::string prefix([params.promptPrefix cStringUsingEncoding:NSUTF8StringEncoding]);
+    if (![LlamaOperationUtils tokenizeString:prefix with:_context into:inp_pfx addBeginningOfSequence:true outError:&tokenizeError]) {
+      [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
+      return NO;
+    }
   }
 
   BOOL hasSuffix = params.promptSuffix != nil && params.promptSuffix.length > 0;
   std::vector<llama_token> inp_sfx;
-  std::string suffix([params.promptSuffix cStringUsingEncoding:NSUTF8StringEncoding]);
 
-  if (hasSuffix && ![LlamaOperationUtils tokenizeString:suffix with:_context into:inp_sfx addBeginningOfSequence:false outError:&tokenizeError]) {
-    [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
-    return NO;
+  if (hasSuffix) {
+    std::string suffix([params.promptSuffix cStringUsingEncoding:NSUTF8StringEncoding]);
+    if (![LlamaOperationUtils tokenizeString:suffix with:_context into:inp_sfx addBeginningOfSequence:false outError:&tokenizeError]) {
+      [self _postEvent:[_LlamaPredictionEvent failedWithError:tokenizeError]];
+      return NO;
+    }
   }
 
   // determine newline token

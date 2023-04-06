@@ -12,11 +12,16 @@ public enum ModelConversionType {
   case convertPyTorchToGgml
 }
 
+public struct ModelConversionFile {
+  public let url: URL
+  public let found: Bool
+}
+
 public protocol ModelConversion<DataType> where DataType: ModelConversionData {
   associatedtype DataType
 
   static func requiredFiles(for data: DataType) -> [URL]
-  static func validate(_ data: DataType) -> Result<Void, DataType.ValidationError>
+  static func validate(_ data: DataType, requiredFiles: inout [ModelConversionFile]?) -> Result<Void, DataType.ValidationError>
 }
 
 public protocol ModelConversionData<ModelConversionType, ValidationError> where ModelConversionType: ModelConversion<Self>, ValidationError: Error {
@@ -66,8 +71,8 @@ public class ModelConverter {
     }
   }
 
-  public static func validateData<Data>(_ data: Data) -> Result<Void, Data.ValidationError> where Data: ModelConversionData {
-    return Data.ModelConversionType.validate(data)
+  public static func validateData<Data>(_ data: Data, requiredFiles: inout [ModelConversionFile]?) -> Result<Void, Data.ValidationError> where Data: ModelConversionData {
+    return Data.ModelConversionType.validate(data, requiredFiles: &requiredFiles)
   }
 
   public static func convert() {

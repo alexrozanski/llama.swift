@@ -44,23 +44,37 @@ public class ConvertPyTorchToGgmlConversion: ModelConversion {
     return expectedFiles.map { data.directoryURL.appendingPathComponent($0) }
   }
 
-  public static func validate(_ data: Data) -> Result<Void, Data.ValidationError> {
+  public static func validate(_ data: Data, requiredFiles: inout [ModelConversionFile]?) -> Result<Void, Data.ValidationError> {
     let paramsFile = data.directoryURL.appendingPathComponent(paramsFileName)
     let tokenizerFile = data.directoryURL.appendingPathComponent(tokenizerFileName)
 
-    if !FileManager.default.fileExists(atPath: paramsFile.path) {
-      return .failure(.missingParamsFile(filename: paramsFileName))
+    var result: Result<Void, Data.ValidationError>? = nil
+    var requiredFileState = [ModelConversionFile]()
+
+    let foundParams = FileManager.default.fileExists(atPath: paramsFile.path)
+    requiredFileState.append(ModelConversionFile(url: paramsFile, found: foundParams))
+    if !foundParams && result == nil {
+      result = .failure(.missingParamsFile(filename: paramsFileName))
     }
-    if !FileManager.default.fileExists(atPath: tokenizerFile.path) {
-      return .failure(.missingParamsFile(filename: tokenizerFileName))
+
+    let foundTokenizerFile = FileManager.default.fileExists(atPath: tokenizerFile.path)
+    requiredFileState.append(ModelConversionFile(url: tokenizerFile, found: foundParams))
+    if !foundTokenizerFile && result == nil {
+      result = .failure(.missingTokenizerFile(filename: tokenizerFileName))
     }
 
     for i in (0..<data.modelType.numPyTorchModelParts) {
       let checkpointFileName = checkpointFileName(i: i)
-      if !FileManager.default.fileExists(atPath: data.directoryURL.appendingPathComponent(checkpointFileName).path) {
-        return .failure(.missingPyTorchCheckpoint(filename: checkpointFileName))
+      let checkpointFile = data.directoryURL.appendingPathComponent(checkpointFileName)
+      let foundCheckpointFile = FileManager.default.fileExists(atPath: checkpointFile.path)
+      requiredFileState.append(ModelConversionFile(url: checkpointFile, found: foundCheckpointFile))
+      if !foundCheckpointFile && result == nil {
+        result = .failure(.missingPyTorchCheckpoint(filename: checkpointFileName))
       }
     }
+
+    requiredFiles = requiredFileState
+
     return .success(())
   }
 }

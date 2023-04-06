@@ -19,9 +19,7 @@ public class ConvertPyTorchToGgmlConversion: ModelConversion {
     public typealias ModelConversionType = ConvertPyTorchToGgmlConversion
 
     public enum ValidationError: Error {
-      case missingParamsFile(filename: String)
-      case missingTokenizerFile(filename: String)
-      case missingPyTorchCheckpoint(filename: String)
+      case missingFiles(filenames: [String])
     }
 
     public let modelType: ModelType
@@ -48,19 +46,19 @@ public class ConvertPyTorchToGgmlConversion: ModelConversion {
     let paramsFile = data.directoryURL.appendingPathComponent(paramsFileName)
     let tokenizerFile = data.directoryURL.appendingPathComponent(tokenizerFileName)
 
-    var result: Result<Void, Data.ValidationError>? = nil
+    var missingFilenames: [String] = []
     var requiredFileState = [ModelConversionFile]()
 
     let foundParams = FileManager.default.fileExists(atPath: paramsFile.path)
     requiredFileState.append(ModelConversionFile(url: paramsFile, found: foundParams))
-    if !foundParams && result == nil {
-      result = .failure(.missingParamsFile(filename: paramsFileName))
+    if !foundParams {
+      missingFilenames.append(paramsFileName)
     }
 
     let foundTokenizerFile = FileManager.default.fileExists(atPath: tokenizerFile.path)
     requiredFileState.append(ModelConversionFile(url: tokenizerFile, found: foundParams))
-    if !foundTokenizerFile && result == nil {
-      result = .failure(.missingTokenizerFile(filename: tokenizerFileName))
+    if !foundTokenizerFile {
+      missingFilenames.append(tokenizerFileName)
     }
 
     for i in (0..<data.modelType.numPyTorchModelParts) {
@@ -68,13 +66,17 @@ public class ConvertPyTorchToGgmlConversion: ModelConversion {
       let checkpointFile = data.directoryURL.appendingPathComponent(checkpointFileName)
       let foundCheckpointFile = FileManager.default.fileExists(atPath: checkpointFile.path)
       requiredFileState.append(ModelConversionFile(url: checkpointFile, found: foundCheckpointFile))
-      if !foundCheckpointFile && result == nil {
-        result = .failure(.missingPyTorchCheckpoint(filename: checkpointFileName))
+      if !foundCheckpointFile {
+        missingFilenames.append(checkpointFileName)
       }
     }
 
     requiredFiles = requiredFileState
 
-    return .success(())
+    if !missingFilenames.isEmpty {
+      return .failure(.missingFiles(filenames: missingFilenames))
+    } else {
+      return .success(())
+    }
   }
 }

@@ -15,60 +15,13 @@ public enum ModelConversionType {
 public protocol ModelConversion<DataType> where DataType: ModelConversionData {
   associatedtype DataType
 
+  static func requiredFiles(for data: DataType) -> [URL]
   static func validate(_ data: DataType) -> Result<Void, DataType.ValidationError>
 }
 
 public protocol ModelConversionData<ModelConversionType, ValidationError> where ModelConversionType: ModelConversion<Self>, ValidationError: Error {
   associatedtype ValidationError
   associatedtype ModelConversionType
-}
-
-public class ConvertPyTorchToGgmlConversion: ModelConversion {
-  public struct Data: ModelConversionData {
-    public typealias ModelConversionType = ConvertPyTorchToGgmlConversion
-
-    public enum ValidationError: Error {
-      case missingParamsFile(filename: String)
-      case missingTokenizerFile(filename: String)
-      case missingPyTorchCheckpoint(filename: String)
-    }
-
-    public let modelType: ModelType
-    public let directoryURL: URL
-
-    public init(modelType: ModelType, directoryURL: URL) {
-      self.modelType = modelType
-      self.directoryURL = directoryURL
-    }
-  }
-
-  let data: Data
-  init(data: Data) {
-    self.data = data
-  }
-
-  public static func validate(_ data: Data) -> Result<Void, Data.ValidationError> {
-    let paramsFileName = "params.json"
-    let tokenizerFileName = "tokenizer.model"
-
-    let paramsFile = data.directoryURL.appendingPathComponent(paramsFileName)
-    let tokenizerFile = data.directoryURL.appendingPathComponent(tokenizerFileName)
-
-    if !FileManager.default.fileExists(atPath: paramsFile.path) {
-      return .failure(.missingParamsFile(filename: paramsFileName))
-    }
-    if !FileManager.default.fileExists(atPath: tokenizerFile.path) {
-      return .failure(.missingParamsFile(filename: tokenizerFileName))
-    }
-
-    for i in (0..<data.modelType.numPyTorchModelParts) {
-      let checkpointFileName = "consolidated.0\(i).pth"
-      if !FileManager.default.fileExists(atPath: data.directoryURL.appendingPathComponent(checkpointFileName).path) {
-        return .failure(.missingPyTorchCheckpoint(filename: checkpointFileName))
-      }
-    }
-    return .success(())
-  }
 }
 
 public class ModelConverter {

@@ -15,13 +15,24 @@ public enum ModelConversionType {
 public protocol ModelConversion<DataType> where DataType: ModelConversionData {
   associatedtype DataType
 
-  static func validate(_ data: DataType) -> Bool
+  static func validate(_ data: DataType) -> Result<Void, DataType.ValidationError>
 }
 
-public protocol ModelConversionData {}
+public protocol ModelConversionData<ModelConversionType, ValidationError> where ModelConversionType: ModelConversion<Self>, ValidationError: Error {
+  associatedtype ValidationError
+  associatedtype ModelConversionType
+}
 
 public class ConvertPyTorchToGgmlConversion: ModelConversion {
   public struct Data: ModelConversionData {
+    public typealias ModelConversionType = ConvertPyTorchToGgmlConversion
+
+    public enum ValidationError: Error {
+      case missingParamsFile(filename: String)
+      case missingTokenizerFile(filename: String)
+      case missingPyTorchCheckpoint(filename: String)
+    }
+
     public let modelType: ModelType
     public let directoryURL: URL
 
@@ -36,24 +47,27 @@ public class ConvertPyTorchToGgmlConversion: ModelConversion {
     self.data = data
   }
 
-  public static func validate(_ data: Data) -> Bool {
-    let paramsFile = data.directoryURL.appendingPathComponent("params.json")
-    let tokenizerFile = data.directoryURL.appendingPathComponent("tokenizer.model")
+  public static func validate(_ data: Data) -> Result<Void, Data.ValidationError> {
+    let paramsFileName = "params.json"
+    let tokenizerFileName = "tokenizer.model"
 
-    guard
-      FileManager.default.fileExists(atPath: paramsFile.path),
-      FileManager.default.fileExists(atPath: tokenizerFile.path)
-    else {
-      return false
+    let paramsFile = data.directoryURL.appendingPathComponent(paramsFileName)
+    let tokenizerFile = data.directoryURL.appendingPathComponent(tokenizerFileName)
+
+    if !FileManager.default.fileExists(atPath: paramsFile.path) {
+      return .failure(.missingParamsFile(filename: paramsFileName))
+    }
+    if !FileManager.default.fileExists(atPath: tokenizerFile.path) {
+      return .failure(.missingParamsFile(filename: tokenizerFileName))
     }
 
     for i in (0..<data.modelType.numPyTorchModelParts) {
-      if !FileManager.default.fileExists(atPath: data.directoryURL.appendingPathComponent("consolidated.0\(i).pth").path) {
-        return false
+      let checkpointFileName = "consolidated.0\(i).pth"
+      if !FileManager.default.fileExists(atPath: data.directoryURL.appendingPathComponent(checkpointFileName).path) {
+        return .failure(.missingPyTorchCheckpoint(filename: checkpointFileName))
       }
     }
-
-    return true
+    return .success(())
   }
 }
 
@@ -99,12 +113,8 @@ public class ModelConverter {
     }
   }
 
-  public static func validateData(_ data: ModelConversionData) -> Bool {
-    if let data = data as? ConvertPyTorchToGgmlConversion.Data {
-      return ConvertPyTorchToGgmlConversion.validate(data)
-    }
-
-    return false
+  public static func validateData<Data>(_ data: Data) -> Result<Void, Data.ValidationError> where Data: ModelConversionData {
+    return Data.ModelConversionType.validate(data)
   }
 
   public static func convert() {

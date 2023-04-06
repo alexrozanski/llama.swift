@@ -44,7 +44,7 @@ public class ModelConverter {
 
   public static func canRunConversion() async -> Bool {
     do {
-      return try await Process(commandString: "which python3").run().isSuccess
+      return try await Process(commandString: "which python3", printStdout: false, printStderr: false).run().isSuccess
     } catch {
       return false
     }

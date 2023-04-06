@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSUInteger, _LlamaModelType) {
   _LlamaModelTypeUnknown = 0,
   _LlamaModelType7B,
-  _LlamaModelType12B,
+  _LlamaModelType13B,
   _LlamaModelType30B,
   _LlamaModelType65B
 };

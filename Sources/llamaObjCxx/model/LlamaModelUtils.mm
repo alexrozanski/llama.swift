@@ -30,7 +30,7 @@
         *outModelType = _LlamaModelType7B;
         break;
       case ::MODEL_13B:
-        *outModelType = _LlamaModelType12B;
+        *outModelType = _LlamaModelType13B;
         break;
       case ::MODEL_30B:
         *outModelType = _LlamaModelType30B;

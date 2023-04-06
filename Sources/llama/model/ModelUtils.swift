@@ -19,8 +19,8 @@ public class ModelUtils {
       return .unknown
     case .type7B:
       return .size7B
-    case .type12B:
-      return .size12B
+    case .type13B:
+      return .size13B
     case .type30B:
       return .size30B
     case .type65B:

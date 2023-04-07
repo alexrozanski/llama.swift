@@ -29,10 +29,14 @@ let package = Package(
       dependencies: [],
       path: "Sources/llamaObjCxx",
       publicHeadersPath: "headers",
+      cSettings: [.unsafeFlags(["-Wno-shorten-64-to-32"]), .define("GGML_USE_ACCELERATE")],
       cxxSettings: [
         .headerSearchPath("cpp"),
         .headerSearchPath("session/operations"),
         .headerSearchPath("internal")
+      ],
+      linkerSettings: [
+        .linkedFramework("Accelerate")
       ])
   ],
   cLanguageStandard: .gnu11,

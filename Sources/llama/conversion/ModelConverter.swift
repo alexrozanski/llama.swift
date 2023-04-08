@@ -8,36 +8,6 @@
 import Foundation
 import Coquille
 
-public enum ModelConversionOperation {
-  case convertPyTorchToGgml
-}
-
-public struct ModelConversionFile {
-  public let url: URL
-  public let found: Bool
-}
-
-public protocol ModelConversionData<ModelConversionType, ValidationError> where ModelConversionType: ModelConversion<Self, ValidationError>, ValidationError: Error {
-  associatedtype ValidationError
-  associatedtype ModelConversionType
-}
-
-public protocol ModelConversion<DataType, ValidationError> where DataType: ModelConversionData<Self, ValidationError> {
-  associatedtype DataType
-  associatedtype ValidationError
-
-  static func requiredFiles(for data: DataType) -> [URL]
-  static func validate(_ data: DataType, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<DataType>, ValidationError>
-}
-
-public struct ValidatedModelConversionData<DataType> where DataType: ModelConversionData {
-  public let data: DataType
-
-  internal init(data: DataType) {
-    self.data = data
-  }
-}
-
 public struct CommandConnectors {
   public typealias CommandConnector = (String) -> Void
   public typealias StdoutConnector = (String) -> Void
@@ -59,28 +29,7 @@ public struct CommandConnectors {
 }
 
 public class ModelConverter {
-  public enum Status {
-    case success
-    case failure(exitCode: Int32)
-
-    public var isSuccess: Bool {
-      switch self {
-      case .success:
-        return true
-      case .failure:
-        return false
-      }
-    }
-
-    public var exitCode: Int32 {
-      switch self {
-      case .success: return 0
-      case .failure(exitCode: let exitCode): return exitCode
-      }
-    }
-  }
-
-  private struct PythonScriptFile {
+  struct PythonScriptFile {
     let name: String
     let `extension` = "py"
 
@@ -89,7 +38,7 @@ public class ModelConverter {
     }
   }
 
-  private enum Script {
+  enum Script {
     case convertPyTorchToGgml
     case convertGPT4AllToGgml
     case convertUnversionedGgmlToGgml
@@ -126,27 +75,29 @@ public class ModelConverter {
     }
   }
 
+  public init() {}
+
   // MARK: - Validation
 
-  public static func validateData<DataType>(_ data: DataType, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<DataType>, DataType.ValidationError> where DataType: ModelConversionData {
-    return DataType.ModelConversionType.validate(data, requiredFiles: &requiredFiles)
+  public func validateConversionData(_ data: ConvertPyTorchToGgmlConversionData, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>, ConvertPyTorchToGgmlConversionData.ValidationError> {
+    return ConvertPyTorchToGgmlConversion.validate(data, requiredFiles: &requiredFiles)
   }
 
   // MARK: - Conversion
 
-  public static func canRunConversion() async throws -> Bool {
+  public func canRunConversion() async throws -> Bool {
     return try await canRunConversion(nil).isSuccess
   }
 
-  public static func canRunConversion(_ connectors: CommandConnectors? = nil) async throws -> Status {
+  public func canRunConversion(_ connectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
     return try await run("which python3", commandConnectors: connectors)
   }
 
-  public static func installDependencies(_ connectors: CommandConnectors? = nil) async throws -> Status {
+  public func installDependencies(_ connectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
     return try await run(Coquille.Process.Command("python3", arguments: ["-u", "-m", "pip", "install"] + Script.convertPyTorchToGgml.deps), commandConnectors: connectors)
   }
 
-  public static func checkInstalledDependencies(_ connectors: CommandConnectors? = nil) async throws -> Status {
+  public func checkInstalledDependencies(_ connectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
     for dep in Script.convertPyTorchToGgml.deps {
       let status = try await run(Coquille.Process.Command("python3", arguments: ["-u", "-m", "pip", "show", dep]), commandConnectors: connectors)
       if !status.isSuccess {
@@ -156,52 +107,28 @@ public class ModelConverter {
     return .success
   }
 
-  public static func convertPyTorchModels(
-    with data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversion.Data>,
+  public func convert(
+    with data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
     commandConnectors: CommandConnectors? = nil
-  ) async throws -> Status {
-    try await run(script: .dummy, commandConnectors: commandConnectors)
+  ) async throws -> ModelConversionStatus {
+    try await ConvertPyTorchToGgmlConversion(data: data).run(from: self, commandConnectors: commandConnectors)
   }
 
-  // MARK: - Private
+  // MARK: - Internal
 
-  private static func run(_ command: Coquille.Process.Command, commandConnectors: CommandConnectors? = nil) async throws -> Status {
+  func run(_ command: Coquille.Process.Command, commandConnectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
     commandConnectors?.command?([[command.name], command.arguments].flatMap { $0 }.joined(separator: " "))
-    return try await Process(command: command, stdout: commandConnectors?.stdout, stderr: commandConnectors?.stderr).run().toModelConverterStatus()
+    return try await Process(command: command, stdout: commandConnectors?.stdout, stderr: commandConnectors?.stderr).run().toModelConversionStatus()
   }
 
-  private static func run(_ commandString: String, commandConnectors: CommandConnectors? = nil) async throws -> Status {
+  func run(_ commandString: String, commandConnectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
     commandConnectors?.command?(commandString)
-    return try await Process(commandString: commandString, stdout: commandConnectors?.stdout, stderr: commandConnectors?.stderr).run().toModelConverterStatus()
-  }
-
-  private static func run(script: Script, commandConnectors: CommandConnectors? = nil) async throws -> Status {
-    guard let url = script.url else { return .failure(exitCode: -1) }
-
-    let temporaryDirectoryURL: URL
-    if #available(macOS 13.0, iOS 16.0, *) {
-      temporaryDirectoryURL = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
-    } else {
-      temporaryDirectoryURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-    }
-    try FileManager.default.createDirectory(at: temporaryDirectoryURL, withIntermediateDirectories: true)
-
-    let scriptFileURL: URL
-    if #available(macOS 13.0, iOS 16.0, *) {
-      scriptFileURL = temporaryDirectoryURL.appending(path: script.scriptFile.filename, directoryHint: .notDirectory)
-    } else {
-      scriptFileURL = temporaryDirectoryURL.appendingPathComponent(script.scriptFile.filename, isDirectory: false)
-    }
-
-    let contents = try String(contentsOf: url)
-    try contents.write(to: scriptFileURL, atomically: true, encoding: .utf8)
-
-    return try await run(Coquille.Process.Command("python3", arguments: ["-u", scriptFileURL.path]), commandConnectors: commandConnectors)
+    return try await Process(commandString: commandString, stdout: commandConnectors?.stdout, stderr: commandConnectors?.stderr).run().toModelConversionStatus()
   }
 }
 
-private extension Coquille.Process.Status {
-  func toModelConverterStatus() -> ModelConverter.Status {
+fileprivate extension Coquille.Process.Status {
+  func toModelConversionStatus() -> ModelConversionStatus {
     switch self {
     case .success:
       return .success

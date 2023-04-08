@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Coquille
 
 private let paramsFileName = "params.json"
 private let tokenizerFileName = "tokenizer.model"
@@ -14,36 +15,33 @@ private func checkpointFileName(i: Int) -> String {
   return "consolidated.0\(i).pth"
 }
 
-public final class ConvertPyTorchToGgmlConversion: ModelConversion {
+public struct ConvertPyTorchToGgmlConversionData: ModelConversionData {
   public enum ValidationError: Error {
     case missingFiles(filenames: [String])
   }
 
-  public struct Data: ModelConversionData {
-    public typealias ModelConversionType = ConvertPyTorchToGgmlConversion
-    public typealias ValidationError = ConvertPyTorchToGgmlConversion.ValidationError
+  public let modelType: ModelType
+  public let directoryURL: URL
 
-    public let modelType: ModelType
-    public let directoryURL: URL
-
-    public init(modelType: ModelType, directoryURL: URL) {
-      self.modelType = modelType
-      self.directoryURL = directoryURL
-    }
+  public init(modelType: ModelType, directoryURL: URL) {
+    self.modelType = modelType
+    self.directoryURL = directoryURL
   }
+}
 
-  let data: Data
-  init(data: Data) {
+final class ConvertPyTorchToGgmlConversion: ModelConversion {
+  let data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
+  init(data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>) {
     self.data = data
   }
 
-  public static func requiredFiles(for data: Data) -> [URL] {
+  static func requiredFiles(for data: ConvertPyTorchToGgmlConversionData) -> [URL] {
     let checkpointFiles = (0..<data.modelType.numPyTorchModelParts).map { checkpointFileName(i: $0) }
     let expectedFiles = [paramsFileName, tokenizerFileName] + checkpointFiles
     return expectedFiles.map { data.directoryURL.appendingPathComponent($0) }
   }
 
-  public static func validate(_ data: Data, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<Data>, Data.ValidationError> {
+  static func validate(_ data: ConvertPyTorchToGgmlConversionData, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>, ConvertPyTorchToGgmlConversionData.ValidationError> {
     let paramsFile = data.directoryURL.appendingPathComponent(paramsFileName)
     let tokenizerFile = data.directoryURL.appendingPathComponent(tokenizerFileName)
 
@@ -79,5 +77,30 @@ public final class ConvertPyTorchToGgmlConversion: ModelConversion {
     } else {
       return .success(ValidatedModelConversionData(data: data))
     }
+  }
+
+  func run(from modelConverter: ModelConverter, commandConnectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
+    let script = ModelConverter.Script.convertPyTorchToGgml
+    guard let url = script.url else { return .failure(exitCode: -1) }
+
+    let temporaryDirectoryURL: URL
+    if #available(macOS 13.0, iOS 16.0, *) {
+      temporaryDirectoryURL = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    } else {
+      temporaryDirectoryURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+    }
+    try FileManager.default.createDirectory(at: temporaryDirectoryURL, withIntermediateDirectories: true)
+
+    let scriptFileURL: URL
+    if #available(macOS 13.0, iOS 16.0, *) {
+      scriptFileURL = temporaryDirectoryURL.appending(path: script.scriptFile.filename, directoryHint: .notDirectory)
+    } else {
+      scriptFileURL = temporaryDirectoryURL.appendingPathComponent(script.scriptFile.filename, isDirectory: false)
+    }
+
+    let contents = try String(contentsOf: url)
+    try contents.write(to: scriptFileURL, atomically: true, encoding: .utf8)
+
+    return try await modelConverter.run(Coquille.Process.Command("python3", arguments: ["-u", scriptFileURL.path]), commandConnectors: commandConnectors)
   }
 }

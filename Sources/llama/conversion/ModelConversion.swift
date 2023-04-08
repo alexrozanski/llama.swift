@@ -37,14 +37,22 @@ public protocol ModelConversionData<ValidationError> where ValidationError: Erro
   associatedtype ValidationError
 }
 
-protocol ModelConversion<DataType, ValidationError> where DataType: ModelConversionData<ValidationError> {
+protocol ModelConversion<DataType, ValidationError, ResultType> where DataType: ModelConversionData<ValidationError> {
   associatedtype DataType
   associatedtype ValidationError
+  associatedtype ResultType
 
   static func requiredFiles(for data: DataType) -> [URL]
-  static func validate(_ data: DataType, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<DataType>, ValidationError>
+  static func validate(
+    _ data: DataType,
+    requiredFiles: inout [ModelConversionFile]?
+  ) -> Result<ValidatedModelConversionData<DataType>, ValidationError>
 
-  func run(from modelConverter: ModelConverter, commandConnectors: CommandConnectors?) async throws -> ModelConversionStatus
+  func run(
+    from modelConverter: ModelConverter,
+    result: inout ResultType?,
+    commandConnectors: CommandConnectors?
+  ) async throws -> ModelConversionStatus
 
   func cleanUp()
 }

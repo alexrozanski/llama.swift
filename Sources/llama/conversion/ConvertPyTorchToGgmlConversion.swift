@@ -29,6 +29,10 @@ public struct ConvertPyTorchToGgmlConversionData: ModelConversionData {
   }
 }
 
+public struct ConvertPyTorchToGgmlConversionResult {
+  let outputFileURL: URL
+}
+
 final class ConvertPyTorchToGgmlConversion: ModelConversion {
   let data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
   init(data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>) {
@@ -43,7 +47,10 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
 
   // MARK: - Validation
 
-  static func validate(_ data: ConvertPyTorchToGgmlConversionData, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>, ConvertPyTorchToGgmlConversionData.ValidationError> {
+  static func validate(
+    _ data: ConvertPyTorchToGgmlConversionData,
+    requiredFiles: inout [ModelConversionFile]?
+  ) -> Result<ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>, ConvertPyTorchToGgmlConversionData.ValidationError> {
     let paramsFile = data.directoryURL.appendingPathComponent(paramsFileName)
     let tokenizerFile = data.directoryURL.appendingPathComponent(tokenizerFileName)
 
@@ -83,7 +90,11 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
 
   // MARK: - Conversion
 
-  func run(from modelConverter: ModelConverter, commandConnectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
+  func run(
+    from modelConverter: ModelConverter,
+    result: inout ConvertPyTorchToGgmlConversionResult?,
+    commandConnectors: CommandConnectors? = nil
+  ) async throws -> ModelConversionStatus {
     let script = ModelConverter.Script.dummy
     guard let url = script.url else { return .failure(exitCode: -1) }
 
@@ -105,6 +116,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     let contents = try String(contentsOf: url)
     try contents.write(to: scriptFileURL, atomically: true, encoding: .utf8)
 
+    let inputDirectoryURL = data.validated.directoryURL
     let command = Coquille.Process.Command(
       "python3",
       arguments: [
@@ -113,6 +125,16 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
         data.validated.directoryURL.path
       ]
     )
+
+    let resultFilename = "ggml-model-1.bin"
+    let resultFileURL: URL
+    if #available(macOS 13.0, iOS 16.0, *) {
+      resultFileURL = inputDirectoryURL.appending(path: resultFilename, directoryHint: .isDirectory)
+    } else {
+      resultFileURL = inputDirectoryURL.appendingPathComponent(resultFilename, isDirectory: true)
+    }
+    result = ConvertPyTorchToGgmlConversionResult(outputFileURL: resultFileURL)
+
     return try await modelConverter.run(command, commandConnectors: commandConnectors)
   }
 

@@ -109,13 +109,14 @@ public class ModelConverter {
 
   public func convert(
     with data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
+    result: inout ConvertPyTorchToGgmlConversionResult?,
     commandConnectors: CommandConnectors? = nil
   ) async throws -> ModelConversionStatus {
     let conversion = ConvertPyTorchToGgmlConversion(data: data)
     defer {
       conversion.cleanUp()
     }
-    return try await conversion.run(from: self, commandConnectors: commandConnectors)
+    return try await conversion.run(from: self, result: &result, commandConnectors: commandConnectors)
   }
 
   // MARK: - Internal

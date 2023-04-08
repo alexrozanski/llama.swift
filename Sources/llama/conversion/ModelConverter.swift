@@ -111,7 +111,11 @@ public class ModelConverter {
     with data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
     commandConnectors: CommandConnectors? = nil
   ) async throws -> ModelConversionStatus {
-    try await ConvertPyTorchToGgmlConversion(data: data).run(from: self, commandConnectors: commandConnectors)
+    let conversion = ConvertPyTorchToGgmlConversion(data: data)
+    defer {
+      conversion.cleanUp()
+    }
+    return try await conversion.run(from: self, commandConnectors: commandConnectors)
   }
 
   // MARK: - Internal

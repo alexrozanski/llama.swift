@@ -107,4 +107,6 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
 
     return try await modelConverter.run(Coquille.Process.Command("python3", arguments: ["-u", scriptFileURL.path]), commandConnectors: commandConnectors)
   }
+
+  func cleanUp() {}
 }

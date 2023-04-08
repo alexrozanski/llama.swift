@@ -45,6 +45,8 @@ protocol ModelConversion<DataType, ValidationError> where DataType: ModelConvers
   static func validate(_ data: DataType, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<DataType>, ValidationError>
 
   func run(from modelConverter: ModelConverter, commandConnectors: CommandConnectors?) async throws -> ModelConversionStatus
+
+  func cleanUp()
 }
 
 public struct ValidatedModelConversionData<DataType> where DataType: ModelConversionData {

@@ -156,8 +156,11 @@ public class ModelConverter {
     return .success
   }
 
-  public static func convertPyTorchModels(with data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversion.Data>) async throws -> Status {
-    try await run(script: .dummy)
+  public static func convertPyTorchModels(
+    with data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversion.Data>,
+    commandConnectors: CommandConnectors? = nil
+  ) async throws -> Status {
+    try await run(script: .dummy, commandConnectors: commandConnectors)
   }
 
   // MARK: - Private

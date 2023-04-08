@@ -22,7 +22,8 @@ let package = Package(
       resources: [
         .copy("resources/convert-gpt4all-to-ggml.py"),
         .copy("resources/convert-pth-to-ggml.py"),
-        .copy("resources/convert-unversioned-ggml-to-ggml.py")
+        .copy("resources/convert-unversioned-ggml-to-ggml.py"),
+        .copy("resources/dummy.py")
       ]),
     .target(
       name: "llamaObjCxx",

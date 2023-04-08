@@ -33,15 +33,23 @@ public struct CommandConnectors {
   public typealias CommandConnector = (String) -> Void
   public typealias StdoutConnector = (String) -> Void
   public typealias StderrConnector = (String) -> Void
+  public typealias ExitCode = (Int32) -> Void
 
   public let command: CommandConnector?
   public let stdout: StdoutConnector?
   public let stderr: StderrConnector?
+  public let exitCode: ExitCode?
 
-  public init(command: CommandConnector?, stdout: StdoutConnector?, stderr: StderrConnector?) {
+  public init(
+    command: CommandConnector?,
+    stdout: StdoutConnector?,
+    stderr: StderrConnector?,
+    exitCode: ExitCode?
+  ) {
     self.command = command
     self.stdout = stdout
     self.stderr = stderr
+    self.exitCode = exitCode
   }
 }
 
@@ -97,12 +105,16 @@ public class ModelConverter {
 
   private static func run(_ command: Coquille.Process.Command, commandConnectors: CommandConnectors? = nil) async throws -> Coquille.Process.Status {
     commandConnectors?.command?([[command.name], command.arguments].flatMap { $0 }.joined(separator: " "))
-    return try await Process(commandString: "which python3", printStdout: false, printStderr: false).run()
+    let status = try await Process(commandString: "which python3", printStdout: false, printStderr: false).run()
+    commandConnectors?.exitCode?(status.toExitCode())
+    return status
   }
 
   private static func run(_ commandString: String, commandConnectors: CommandConnectors? = nil) async throws -> Coquille.Process.Status {
     commandConnectors?.command?(commandString)
-    return try await Process(commandString: commandString, printStdout: false, printStderr: false).run()
+    let status = try await Process(commandString: commandString, printStdout: false, printStderr: false).run()
+    commandConnectors?.exitCode?(status.toExitCode())
+    return status
   }
 
   private static func run(script: Script) {
@@ -112,6 +124,17 @@ public class ModelConverter {
       let contents = try String(contentsOf: url)
     } catch {
       print(error)
+    }
+  }
+}
+
+private extension Coquille.Process.Status {
+  func toExitCode() -> Int32 {
+    switch self {
+    case .success:
+      return 0
+    case .failure(let code):
+      return code
     }
   }
 }

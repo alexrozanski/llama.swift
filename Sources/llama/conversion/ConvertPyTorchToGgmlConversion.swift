@@ -77,7 +77,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     if !missingFilenames.isEmpty {
       return .failure(.missingFiles(filenames: missingFilenames))
     } else {
-      return .success(ValidatedModelConversionData(data: data))
+      return .success(ValidatedModelConversionData(validated: data))
     }
   }
 
@@ -105,7 +105,15 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     let contents = try String(contentsOf: url)
     try contents.write(to: scriptFileURL, atomically: true, encoding: .utf8)
 
-    return try await modelConverter.run(Coquille.Process.Command("python3", arguments: ["-u", scriptFileURL.path]), commandConnectors: commandConnectors)
+    let command = Coquille.Process.Command(
+      "python3",
+      arguments: [
+        "-u",
+        scriptFileURL.path,
+        data.validated.directoryURL.path
+      ]
+    )
+    return try await modelConverter.run(command, commandConnectors: commandConnectors)
   }
 
   func cleanUp() {}

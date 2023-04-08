@@ -50,9 +50,9 @@ protocol ModelConversion<DataType, ValidationError> where DataType: ModelConvers
 }
 
 public struct ValidatedModelConversionData<DataType> where DataType: ModelConversionData {
-  public let data: DataType
+  public let validated: DataType
 
-  internal init(data: DataType) {
-    self.data = data
+  internal init(validated: DataType) {
+    self.validated = validated
   }
 }

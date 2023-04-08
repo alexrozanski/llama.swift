@@ -30,7 +30,7 @@ public struct ConvertPyTorchToGgmlConversionData: ModelConversionData {
 }
 
 public struct ConvertPyTorchToGgmlConversionResult {
-  let outputFileURL: URL
+  public let outputFileURL: URL
 }
 
 final class ConvertPyTorchToGgmlConversion: ModelConversion {
@@ -126,6 +126,11 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
       ]
     )
 
+    let convertStatus = try await modelConverter.run(command, commandConnectors: commandConnectors)
+    if !convertStatus.isSuccess {
+      return convertStatus
+    }
+
     let resultFilename = "ggml-model-1.bin"
     let resultFileURL: URL
     if #available(macOS 13.0, iOS 16.0, *) {
@@ -133,9 +138,15 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     } else {
       resultFileURL = inputDirectoryURL.appendingPathComponent(resultFilename, isDirectory: true)
     }
+
+    let fileExistsStatus = try await modelConverter.run(Process.Command("test", arguments: ["-f", resultFileURL.path]), commandConnectors: commandConnectors)
+    if !fileExistsStatus.isSuccess {
+      return fileExistsStatus
+    }
+
     result = ConvertPyTorchToGgmlConversionResult(outputFileURL: resultFileURL)
 
-    return try await modelConverter.run(command, commandConnectors: commandConnectors)
+    return .success
   }
 
   func cleanUp() {}

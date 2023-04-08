@@ -87,12 +87,12 @@ public class ModelConverter {
     }
   }
 
-  public static func canRunConversion(_ connectors: CommandConnectors? = nil) async -> Bool {
-    do {
-      return try await run("which python3", commandConnectors: connectors).isSuccess
-    } catch {
-      return false
-    }
+  public static func canRunConversion(_ connectors: CommandConnectors? = nil) async throws -> Bool {
+    return try await run("which python3", commandConnectors: connectors).isSuccess
+  }
+
+  public static func installDependencies(_ connectors: CommandConnectors? = nil) async throws -> Bool {
+    return try await run(Coquille.Process.Command("python3", arguments: ["-u", "-m", "pip", "install"] + Script.convertPyTorchToGgml.deps), commandConnectors: connectors).isSuccess
   }
 
   public static func validateData<Data>(_ data: Data, requiredFiles: inout [ModelConversionFile]?) -> Result<Void, Data.ValidationError> where Data: ModelConversionData {
@@ -105,14 +105,14 @@ public class ModelConverter {
 
   private static func run(_ command: Coquille.Process.Command, commandConnectors: CommandConnectors? = nil) async throws -> Coquille.Process.Status {
     commandConnectors?.command?([[command.name], command.arguments].flatMap { $0 }.joined(separator: " "))
-    let status = try await Process(commandString: "which python3", printStdout: false, printStderr: false).run()
+    let status = try await Process(command: command, stdout: commandConnectors?.stdout, stderr: commandConnectors?.stderr).run()
     commandConnectors?.exitCode?(status.toExitCode())
     return status
   }
 
   private static func run(_ commandString: String, commandConnectors: CommandConnectors? = nil) async throws -> Coquille.Process.Status {
     commandConnectors?.command?(commandString)
-    let status = try await Process(commandString: commandString, printStdout: false, printStderr: false).run()
+    let status = try await Process(commandString: commandString, stdout: commandConnectors?.stdout, stderr: commandConnectors?.stderr).run()
     commandConnectors?.exitCode?(status.toExitCode())
     return status
   }

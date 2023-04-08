@@ -95,6 +95,16 @@ public class ModelConverter {
     return try await run(Coquille.Process.Command("python3", arguments: ["-u", "-m", "pip", "install"] + Script.convertPyTorchToGgml.deps), commandConnectors: connectors).isSuccess
   }
 
+  public static func checkInstalledDependencies(_ connectors: CommandConnectors? = nil) async throws -> Bool {
+    for dep in Script.convertPyTorchToGgml.deps {
+      if !(try await run(Coquille.Process.Command("python3", arguments: ["-u", "-m", "pip", "show", dep]), commandConnectors: connectors)).isSuccess {
+        return false
+      }
+    }
+
+    return true
+  }
+
   public static func validateData<Data>(_ data: Data, requiredFiles: inout [ModelConversionFile]?) -> Result<Void, Data.ValidationError> where Data: ModelConversionData {
     return Data.ModelConversionType.validate(data, requiredFiles: &requiredFiles)
   }

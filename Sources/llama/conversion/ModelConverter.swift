@@ -29,6 +29,22 @@ public protocol ModelConversionData<ModelConversionType, ValidationError> where 
   associatedtype ModelConversionType
 }
 
+public struct CommandConnectors {
+  public typealias CommandConnector = (String) -> Void
+  public typealias StdoutConnector = (String) -> Void
+  public typealias StderrConnector = (String) -> Void
+
+  public let command: CommandConnector?
+  public let stdout: StdoutConnector?
+  public let stderr: StderrConnector?
+
+  public init(command: CommandConnector?, stdout: StdoutConnector?, stderr: StderrConnector?) {
+    self.command = command
+    self.stdout = stdout
+    self.stderr = stderr
+  }
+}
+
 public class ModelConverter {
   private enum Script {
     case convertPyTorchToGgml
@@ -63,9 +79,9 @@ public class ModelConverter {
     }
   }
 
-  public static func canRunConversion() async -> Bool {
+  public static func canRunConversion(_ connectors: CommandConnectors? = nil) async -> Bool {
     do {
-      return try await Process(commandString: "which python3", printStdout: false, printStderr: false).run().isSuccess
+      return try await run("which python3", commandConnectors: connectors).isSuccess
     } catch {
       return false
     }
@@ -77,6 +93,16 @@ public class ModelConverter {
 
   public static func convert() {
     run(script: .dummy)
+  }
+
+  private static func run(_ command: Coquille.Process.Command, commandConnectors: CommandConnectors? = nil) async throws -> Coquille.Process.Status {
+    commandConnectors?.command?([[command.name], command.arguments].flatMap { $0 }.joined(separator: " "))
+    return try await Process(commandString: "which python3", printStdout: false, printStderr: false).run()
+  }
+
+  private static func run(_ commandString: String, commandConnectors: CommandConnectors? = nil) async throws -> Coquille.Process.Status {
+    commandConnectors?.command?(commandString)
+    return try await Process(commandString: commandString, printStdout: false, printStderr: false).run()
   }
 
   private static func run(script: Script) {

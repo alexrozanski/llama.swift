@@ -41,6 +41,8 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     return expectedFiles.map { data.directoryURL.appendingPathComponent($0) }
   }
 
+  // MARK: - Validation
+
   static func validate(_ data: ConvertPyTorchToGgmlConversionData, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>, ConvertPyTorchToGgmlConversionData.ValidationError> {
     let paramsFile = data.directoryURL.appendingPathComponent(paramsFileName)
     let tokenizerFile = data.directoryURL.appendingPathComponent(tokenizerFileName)
@@ -79,8 +81,10 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     }
   }
 
+  // MARK: - Conversion
+
   func run(from modelConverter: ModelConverter, commandConnectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
-    let script = ModelConverter.Script.convertPyTorchToGgml
+    let script = ModelConverter.Script.dummy
     guard let url = script.url else { return .failure(exitCode: -1) }
 
     let temporaryDirectoryURL: URL

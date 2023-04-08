@@ -14,13 +14,14 @@ private func checkpointFileName(i: Int) -> String {
   return "consolidated.0\(i).pth"
 }
 
-public class ConvertPyTorchToGgmlConversion: ModelConversion {
+public final class ConvertPyTorchToGgmlConversion: ModelConversion {
+  public enum ValidationError: Error {
+    case missingFiles(filenames: [String])
+  }
+
   public struct Data: ModelConversionData {
     public typealias ModelConversionType = ConvertPyTorchToGgmlConversion
-
-    public enum ValidationError: Error {
-      case missingFiles(filenames: [String])
-    }
+    public typealias ValidationError = ConvertPyTorchToGgmlConversion.ValidationError
 
     public let modelType: ModelType
     public let directoryURL: URL
@@ -42,7 +43,7 @@ public class ConvertPyTorchToGgmlConversion: ModelConversion {
     return expectedFiles.map { data.directoryURL.appendingPathComponent($0) }
   }
 
-  public static func validate(_ data: Data, requiredFiles: inout [ModelConversionFile]?) -> Result<Void, Data.ValidationError> {
+  public static func validate(_ data: Data, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<Data>, Data.ValidationError> {
     let paramsFile = data.directoryURL.appendingPathComponent(paramsFileName)
     let tokenizerFile = data.directoryURL.appendingPathComponent(tokenizerFileName)
 
@@ -76,7 +77,7 @@ public class ConvertPyTorchToGgmlConversion: ModelConversion {
     if !missingFilenames.isEmpty {
       return .failure(.missingFiles(filenames: missingFilenames))
     } else {
-      return .success(())
+      return .success(ValidatedModelConversionData(data: data))
     }
   }
 }

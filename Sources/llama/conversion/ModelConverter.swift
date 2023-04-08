@@ -8,7 +8,7 @@
 import Foundation
 import Coquille
 
-public enum ModelConversionType {
+public enum ModelConversionOperation {
   case convertPyTorchToGgml
 }
 
@@ -17,16 +17,25 @@ public struct ModelConversionFile {
   public let found: Bool
 }
 
-public protocol ModelConversion<DataType> where DataType: ModelConversionData {
-  associatedtype DataType
-
-  static func requiredFiles(for data: DataType) -> [URL]
-  static func validate(_ data: DataType, requiredFiles: inout [ModelConversionFile]?) -> Result<Void, DataType.ValidationError>
-}
-
-public protocol ModelConversionData<ModelConversionType, ValidationError> where ModelConversionType: ModelConversion<Self>, ValidationError: Error {
+public protocol ModelConversionData<ModelConversionType, ValidationError> where ModelConversionType: ModelConversion<Self, ValidationError>, ValidationError: Error {
   associatedtype ValidationError
   associatedtype ModelConversionType
+}
+
+public protocol ModelConversion<DataType, ValidationError> where DataType: ModelConversionData<Self, ValidationError> {
+  associatedtype DataType
+  associatedtype ValidationError
+
+  static func requiredFiles(for data: DataType) -> [URL]
+  static func validate(_ data: DataType, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<DataType>, ValidationError>
+}
+
+public struct ValidatedModelConversionData<DataType> where DataType: ModelConversionData {
+  public let data: DataType
+
+  internal init(data: DataType) {
+    self.data = data
+  }
 }
 
 public struct CommandConnectors {
@@ -119,8 +128,8 @@ public class ModelConverter {
 
   // MARK: - Validation
 
-  public static func validateData<Data>(_ data: Data, requiredFiles: inout [ModelConversionFile]?) -> Result<Void, Data.ValidationError> where Data: ModelConversionData {
-    return Data.ModelConversionType.validate(data, requiredFiles: &requiredFiles)
+  public static func validateData<DataType>(_ data: DataType, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<DataType>, DataType.ValidationError> where DataType: ModelConversionData {
+    return DataType.ModelConversionType.validate(data, requiredFiles: &requiredFiles)
   }
 
   // MARK: - Conversion
@@ -147,7 +156,7 @@ public class ModelConverter {
     return .success
   }
 
-  public static func convertPyTorchModels(with data: any ModelConversion<ConvertPyTorchToGgmlConversion.Data>) async throws -> Status {
+  public static func convertPyTorchModels(with data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversion.Data>) async throws -> Status {
     try await run(script: .dummy)
   }
 

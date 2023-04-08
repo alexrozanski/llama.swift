@@ -71,23 +71,36 @@ public class ModelConverter {
     }
   }
 
+  private struct PythonScriptFile {
+    let name: String
+    let `extension` = "py"
+
+    var filename: String {
+      return "\(name).\(`extension`)"
+    }
+  }
+
   private enum Script {
     case convertPyTorchToGgml
     case convertGPT4AllToGgml
     case convertUnversionedGgmlToGgml
     case dummy
 
-    var url: URL? {
+    var scriptFile: PythonScriptFile {
       switch self {
       case .convertPyTorchToGgml:
-        return Bundle.module.url(forResource: "convert-pth-to-ggml", withExtension: "py")
+        return PythonScriptFile(name:"convert-pth-to-ggml")
       case .convertGPT4AllToGgml:
-        return Bundle.module.url(forResource: "convert-gpt4all-to-ggml", withExtension: "py")
+        return PythonScriptFile(name:"convert-gpt4all-to-ggml")
       case .convertUnversionedGgmlToGgml:
-        return Bundle.module.url(forResource: "convert-unversioned-ggml-to-ggml", withExtension: "py")
+        return PythonScriptFile(name:"convert-unversioned-ggml-to-ggml")
       case .dummy:
-        return Bundle.module.url(forResource: "dummy", withExtension: "py")
+        return PythonScriptFile(name:"dummy")
       }
+    }
+
+    var url: URL? {
+      return Bundle.module.url(forResource: scriptFile.name, withExtension: scriptFile.extension)
     }
 
     var deps: [String] {
@@ -134,8 +147,8 @@ public class ModelConverter {
     return .success
   }
 
-  public static func convert() {
-    run(script: .dummy)
+  public static func convertPyTorchModels(with data: any ModelConversion<ConvertPyTorchToGgmlConversion.Data>) async throws -> Status {
+    try await run(script: .dummy)
   }
 
   // MARK: - Private
@@ -150,14 +163,28 @@ public class ModelConverter {
     return try await Process(commandString: commandString, stdout: commandConnectors?.stdout, stderr: commandConnectors?.stderr).run().toModelConverterStatus()
   }
 
-  private static func run(script: Script) {
-    guard let url = script.url else { return }
+  private static func run(script: Script, commandConnectors: CommandConnectors? = nil) async throws -> Status {
+    guard let url = script.url else { return .failure(exitCode: -1) }
 
-    do {
-      let contents = try String(contentsOf: url)
-    } catch {
-      print(error)
+    let temporaryDirectoryURL: URL
+    if #available(macOS 13.0, iOS 16.0, *) {
+      temporaryDirectoryURL = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    } else {
+      temporaryDirectoryURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
     }
+    try FileManager.default.createDirectory(at: temporaryDirectoryURL, withIntermediateDirectories: true)
+
+    let scriptFileURL: URL
+    if #available(macOS 13.0, iOS 16.0, *) {
+      scriptFileURL = temporaryDirectoryURL.appending(path: script.scriptFile.filename, directoryHint: .notDirectory)
+    } else {
+      scriptFileURL = temporaryDirectoryURL.appendingPathComponent(script.scriptFile.filename, isDirectory: false)
+    }
+
+    let contents = try String(contentsOf: url)
+    try contents.write(to: scriptFileURL, atomically: true, encoding: .utf8)
+
+    return try await run(Coquille.Process.Command("python3", arguments: ["-u", scriptFileURL.path]), commandConnectors: commandConnectors)
   }
 }
 

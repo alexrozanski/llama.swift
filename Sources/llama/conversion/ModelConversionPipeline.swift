@@ -27,7 +27,7 @@ public class ModelConversionPipeline<StepType, InputType, ResultType> {
     return pipeline.steps
   }
 
-  @Published private(set) var state: State = .notRunning
+  @Published public private(set) var state: State = .notRunning
   let pipeline: any ChainedConversionStep<StepType, InputType, ResultType>
 
   init(pipeline: any ChainedConversionStep<StepType, InputType, ResultType>) {

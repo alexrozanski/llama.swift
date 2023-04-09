@@ -97,7 +97,7 @@ public class ModelConverter {
       ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
       ConvertPyTorchToGgmlConversionResult
     > {
-      return ConvertPyTorchToGgmlConversion(data: data).makeConversionPipeline()
+      return ConvertPyTorchToGgmlConversion().makeConversionPipeline()
     }
 
   // MARK: - Quantization

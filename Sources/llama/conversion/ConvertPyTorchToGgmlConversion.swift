@@ -42,11 +42,6 @@ public struct ConvertPyTorchToGgmlConversionResult {
 }
 
 final class ConvertPyTorchToGgmlConversion: ModelConversion {
-  let data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
-  init(data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>) {
-    self.data = data
-  }
-
   static func requiredFiles(for data: ConvertPyTorchToGgmlConversionData) -> [URL] {
     let checkpointFiles = (0..<data.modelType.numPyTorchModelParts).map { checkpointFileName(i: $0) }
     let expectedFiles = [paramsFileName, tokenizerFileName] + checkpointFiles

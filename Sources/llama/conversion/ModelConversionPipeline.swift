@@ -23,7 +23,7 @@ public class ModelConversionPipeline<StepType, InputType, ResultType> {
     }
   }
 
-  var steps: [ModelConversionStep<StepType, Any, Any>] {
+  public var steps: [ModelConversionStep<StepType, Any, Any>] {
     return pipeline.steps
   }
 

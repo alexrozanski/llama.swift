@@ -15,6 +15,7 @@ protocol ChainedConversionStep<StepType, InputType, OutputType> {
   var steps: [AnyConversionStep<StepType>] { get }
 
   func execute(with input: InputType) async throws -> Result<ModelConversionStatus<OutputType>, Error>
+  func cleanUp() async throws
 }
 
 func chainFront<StepType, NewInputType, InputType, OutputType>(
@@ -36,6 +37,10 @@ class UnconnectedConversionStep<StepType, InputType, OutputType>: ChainedConvers
 
   func execute(with input: InputType) async throws -> Result<ModelConversionStatus<OutputType>, Error> {
     return try await step.execute(with: input)
+  }
+
+  func cleanUp() async throws {
+    return try await step.cleanUp()
   }
 }
 
@@ -64,6 +69,22 @@ class ConnectedConversionStep<StepType, InputType, IO, OutputType>: ChainedConve
       }
     case .failure(let error):
       return .failure(error)
+    }
+  }
+
+  func cleanUp() async throws {
+    // wrap these in do {} blocks otherwise one failing to clean up will prevent the rest of the
+    // chain from cleaning up.
+    do {
+      try await input.cleanUp()
+    } catch {
+      print("WARNING: failed to clean up conversion step", input.type)
+    }
+
+    do {
+      try await output.cleanUp()
+    } catch {
+      print("WARNING: failed to clean up conversion step", input.type)
     }
   }
 }

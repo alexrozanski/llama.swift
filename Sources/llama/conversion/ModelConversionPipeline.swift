@@ -34,6 +34,17 @@ public class ModelConversionPipeline<StepType, InputType, ResultType> {
     self.pipeline = pipeline
   }
 
+  deinit {
+    // Hold `pipeline` while cleaning up otherwise this will be deallocated.
+    Task.init { [pipeline] in
+      do {
+        try await pipeline.cleanUp()
+      } catch {
+        print("WARNING: Failed to clean up after conversion!")
+      }
+    }
+  }
+
   public var canStart: Bool {
     switch state {
     case .notRunning: return true

@@ -115,12 +115,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
               chainFront(
                 makeConvertFromPyTorchToGgmlStep(),
                 UnconnectedConversionStep(
-                  step: ModelConversionStep(
-                    type: .quantizeModel,
-                    executionHandler: { _,_,_,_ in
-                        .success(result: ConvertPyTorchToGgmlConversionResult(outputFileURL: URL(fileURLWithPath: "")))
-                    }
-                  )
+                  step: makeQuantizeStep()
                 )
               )
             )
@@ -134,12 +129,12 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
     ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
   > {
-    return ModelConversionStep(type: .checkEnvironment) { input, command, stdout, stderr in
+    return ModelConversionStep(type: .checkEnvironment, executionHandler: { input, command, stdout, stderr in
       return try await ModelConversionUtils.checkConversionEnvironment(
         input: input,
         connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )
-    }
+    }, cleanUpHandler: { _ in return true })
   }
 
   private func makeInstallDependenciesStep() -> ModelConversionStep<
@@ -147,13 +142,16 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
     ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
   > {
-    return ModelConversionStep(type: .installDependencies) { input, command, stdout, stderr in
+    return ModelConversionStep(type: .installDependencies, executionHandler: { input, command, stdout, stderr in
       return try await ModelConversionUtils.installPythonDependencies(
         input: input,
         dependencies: ModelConverter.Script.convertPyTorchToGgml.deps,
         connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )
-    }
+    }, cleanUpHandler: { _ in
+      // Shouldn't remove these as they may have been installed anyway.
+      return true
+    })
   }
 
   private func makeCheckDependenciesStep() -> ModelConversionStep<
@@ -161,13 +159,13 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
     ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
   > {
-    return ModelConversionStep(type: .checkDependencies) { input, command, stdout, stderr in
+    return ModelConversionStep(type: .checkDependencies, executionHandler: { input, command, stdout, stderr in
       return try await ModelConversionUtils.checkInstalledPythonDependencies(
         input: input,
         dependencies: ModelConverter.Script.convertPyTorchToGgml.deps,
         connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )
-    }
+    }, cleanUpHandler: { _ in return true })
   }
 
   private func makeConvertFromPyTorchToGgmlStep() -> ModelConversionStep<
@@ -175,7 +173,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
     URL
   > {
-    return ModelConversionStep(type: .convertModel) { input, command, stdout, stderr in
+    return ModelConversionStep(type: .convertModel, executionHandler: { input, command, stdout, stderr in
       let script = ModelConverter.Script.dummy
       guard let url = script.url else { return .failure(exitCode: 1) }
 
@@ -230,6 +228,28 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
       }
 
       return .success(result: resultFileURL)
-    }
+    }, cleanUpHandler: { unQuantizedGgmlFileURL in
+      // Since this is quantized to a new file by the quantize step it is fine to do this
+      try FileManager.default.removeItem(at: unQuantizedGgmlFileURL)
+      return true
+    })
+  }
+
+  private func makeQuantizeStep() -> ModelConversionStep<
+    ConvertPyTorchToGgmlConversionStep,
+    URL,
+    ConvertPyTorchToGgmlConversionResult
+  > {
+    return ModelConversionStep(
+      type: .quantizeModel,
+      executionHandler: { convertedModelURL, _, _, _ in
+        let fileURL = URL(fileURLWithPath: (convertedModelURL.path as NSString).deletingLastPathComponent).appendingPathComponent("ggml-model-q4_0-dummy.bin")
+        try String(" ").write(to: fileURL, atomically: true, encoding: .utf8)
+        return .success(result: ConvertPyTorchToGgmlConversionResult(outputFileURL: fileURL))
+      },
+      cleanUpHandler: { _ in
+        return true
+      }
+    )
   }
 }

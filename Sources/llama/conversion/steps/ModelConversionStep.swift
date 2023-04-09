@@ -70,6 +70,8 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
     _ stderr: @escaping (String) -> Void
   ) async throws -> ModelConversionStatus<ResultType>
 
+  typealias CleanUpHandler = (ResultType) async throws -> Bool
+
   public enum OutputType {
     case command
     case stdout
@@ -120,12 +122,19 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
   public let type: ConversionStep
   let executionHandler: ExecutionHandler
 
+  // This should clean up any intermediate files. Any resulting output files as part of the conversion pipeline should
+  // be kept and passed along -- the caller is responsible of doing something with these.
+  let cleanUpHandler: CleanUpHandler
+
   private var subscriptions = Set<AnyCancellable>()
   private var timerSubscription: AnyCancellable?
 
-  init(type: ConversionStep, executionHandler: @escaping ExecutionHandler) {
+  private var cleanedUp = false
+
+  init(type: ConversionStep, executionHandler: @escaping ExecutionHandler, cleanUpHandler: @escaping CleanUpHandler) {
     self.type = type
     self.executionHandler = executionHandler
+    self.cleanUpHandler = cleanUpHandler
 
     $state.sink { [weak self] newState in
       guard let self else { return }
@@ -189,6 +198,30 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
 
     sendOutput(string: "Skipped step", outputType: .stdout)
     state = .skipped
+  }
+
+  func cleanUp() async throws {
+    guard !cleanedUp else { return }
+
+    print("Cleaning up...")
+
+    switch state {
+    case .notStarted, .skipped, .running:
+      break
+    case .finished(result: let conversionResult):
+      switch conversionResult {
+      case .success(let executionResult):
+        switch executionResult {
+        case .success(result: let result):
+          cleanedUp = try await cleanUpHandler(result)
+          print("Success")
+        case .failure:
+          break
+        }
+      case .failure:
+        break
+      }
+    }
   }
 
   private func sendOutput(string: String, outputType: OutputType) {

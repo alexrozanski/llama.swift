@@ -120,11 +120,11 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
   public let stderrOutput = PassthroughSubject<String, Never>()
 
   public let type: ConversionStep
-  let executionHandler: ExecutionHandler
+  private let executionHandler: ExecutionHandler
 
   // This should clean up any intermediate files. Any resulting output files as part of the conversion pipeline should
   // be kept and passed along -- the caller is responsible of doing something with these.
-  let cleanUpHandler: CleanUpHandler
+  private let cleanUpHandler: CleanUpHandler
 
   private var subscriptions = Set<AnyCancellable>()
   private var timerSubscription: AnyCancellable?

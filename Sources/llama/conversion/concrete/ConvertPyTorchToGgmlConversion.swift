@@ -39,6 +39,10 @@ public enum ConvertPyTorchToGgmlConversionStep: CaseIterable {
 
 public struct ConvertPyTorchToGgmlConversionResult {
   public let outputFileURL: URL
+
+  public func cleanUp() throws {
+    try FileManager.default.removeItem(at: outputFileURL)
+  }
 }
 
 final class ConvertPyTorchToGgmlConversion: ModelConversion {

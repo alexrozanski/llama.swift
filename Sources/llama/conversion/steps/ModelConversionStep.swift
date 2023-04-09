@@ -10,6 +10,8 @@ import Combine
 
 public class AnyConversionStep<ConversionStep> {
   @Published public var state: ModelConversionStep<ConversionStep, Void, Any>.State = .notStarted
+  @Published private(set) public var startDate: Date?
+  @Published private(set) public var runUntilDate: Date?
 
   private var _type: () -> ConversionStep
   private var _commandOutput: () -> PassthroughSubject<String, Never>
@@ -54,6 +56,9 @@ public class AnyConversionStep<ConversionStep> {
         }
       }
     }.store(in: &subscriptions)
+
+    wrapped.$startDate.sink { [weak self] newStartDate in self?.startDate = newStartDate }.store(in: &subscriptions)
+    wrapped.$runUntilDate.sink { [weak self] newRunUntilDate in self?.runUntilDate = newRunUntilDate }.store(in: &subscriptions)
   }
 }
 
@@ -101,7 +106,12 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
     }
   }
 
+  private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+
   @Published private(set) var state: State = .notStarted
+  @Published private(set) var startDate: Date?
+  // Either the end date or the current date the step has been running until
+  @Published private(set) var runUntilDate: Date?
 
   public let commandOutput = PassthroughSubject<String, Never>()
   public let stdoutOutput = PassthroughSubject<String, Never>()
@@ -110,9 +120,27 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
   public let type: ConversionStep
   let executionHandler: ExecutionHandler
 
+  private var subscriptions = Set<AnyCancellable>()
+  private var timerSubscription: AnyCancellable?
+
   init(type: ConversionStep, executionHandler: @escaping ExecutionHandler) {
     self.type = type
     self.executionHandler = executionHandler
+
+    $state.sink { [weak self] newState in
+      guard let self else { return }
+
+      switch newState {
+      case .notStarted:
+        self.timerSubscription = nil
+      case .skipped, .finished:
+        self.timerSubscription = nil
+        self.runUntilDate = Date()
+      case .running:
+        self.startDate = Date()
+        self.timerSubscription = self.timer.map { $0 as Date? }.assign(to: \.runUntilDate, on: self)
+      }
+    }.store(in: &subscriptions)
   }
 
   func execute(with input: InputType) async throws -> Result<ModelConversionStatus<ResultType>, Error> {

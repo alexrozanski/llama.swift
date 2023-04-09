@@ -12,6 +12,8 @@ protocol ChainedConversionStep<StepType, InputType, OutputType> {
   associatedtype InputType
   associatedtype OutputType
 
+  var steps: [ModelConversionStep<StepType, Any, Any>] { get }
+
   func execute(with input: InputType) async throws -> Result<ModelConversionStatus<OutputType>, Error>
 }
 
@@ -28,6 +30,10 @@ class UnconnectedConversionStep<StepType, InputType, OutputType>: ChainedConvers
     self.step = step
   }
 
+  var steps: [ModelConversionStep<StepType, Any, Any>] {
+    return [step as! ModelConversionStep<StepType, Any, Any>]
+  }
+
   func execute(with input: InputType) async throws -> Result<ModelConversionStatus<OutputType>, Error> {
     return try await step.execute(with: input)
   }
@@ -36,6 +42,10 @@ class UnconnectedConversionStep<StepType, InputType, OutputType>: ChainedConvers
 class ConnectedConversionStep<StepType, InputType, IO, OutputType>: ChainedConversionStep {
   let input: ModelConversionStep<StepType, InputType, IO>
   let output: any ChainedConversionStep<StepType, IO, OutputType>
+
+  var steps: [ModelConversionStep<StepType, Any, Any>] {
+    return [input as! ModelConversionStep<StepType, Any, Any>] + output.steps
+  }
 
   init(input: ModelConversionStep<StepType, InputType, IO>, output: any ChainedConversionStep<StepType, IO, OutputType>) {
     self.input = input

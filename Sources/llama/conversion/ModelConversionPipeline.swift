@@ -23,6 +23,10 @@ public class ModelConversionPipeline<StepType, InputType, ResultType> {
     }
   }
 
+  var steps: [ModelConversionStep<StepType, Any, Any>] {
+    return pipeline.steps
+  }
+
   @Published private(set) var state: State = .notRunning
   let pipeline: any ChainedConversionStep<StepType, InputType, ResultType>
 
@@ -61,26 +65,4 @@ public class ModelConversionPipeline<StepType, InputType, ResultType> {
   }
 
   public func stop() {}
-
-//  private func run(with input: InputType, step: ModelConversionStep<StepType, Any, Any>) async throws {
-//    var skipRemaining = false
-//
-//    for step in steps {
-//      guard !skipRemaining else {
-//        step.skip()
-//        continue
-//      }
-//
-//      let result = try await step.execute(with: input)
-//      switch result {
-//      case .success:
-//        break
-//      case .failure:
-//        skipRemaining = true
-//        await MainActor.run {
-//          state = .failed
-//        }
-//      }
-//    }
-//  }
 }

@@ -134,8 +134,11 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
     ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
   > {
-    return ModelConversionStep(type: .installDependencies) { input, command, stdout, stderr in
-      return try await ModelConversionUtils.checkConversionEnvironment(input: input)
+    return ModelConversionStep(type: .checkEnvironment) { input, command, stdout, stderr in
+      return try await ModelConversionUtils.checkConversionEnvironment(
+        input: input,
+        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+      )
     }
   }
 
@@ -147,7 +150,8 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     return ModelConversionStep(type: .installDependencies) { input, command, stdout, stderr in
       return try await ModelConversionUtils.installPythonDependencies(
         input: input,
-        dependencies: ModelConverter.Script.convertPyTorchToGgml.deps
+        dependencies: ModelConverter.Script.convertPyTorchToGgml.deps,
+        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )
     }
   }
@@ -160,7 +164,8 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     return ModelConversionStep(type: .checkDependencies) { input, command, stdout, stderr in
       return try await ModelConversionUtils.checkInstalledPythonDependencies(
         input: input,
-        dependencies: ModelConverter.Script.convertPyTorchToGgml.deps
+        dependencies: ModelConverter.Script.convertPyTorchToGgml.deps,
+        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )
     }
   }

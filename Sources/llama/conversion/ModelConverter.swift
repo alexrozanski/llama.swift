@@ -9,26 +9,6 @@ import Foundation
 import Coquille
 import llamaObjCxx
 
-public struct CommandConnectors {
-  public typealias CommandConnector = (String) -> Void
-  public typealias StdoutConnector = (String) -> Void
-  public typealias StderrConnector = (String) -> Void
-
-  public let command: CommandConnector?
-  public let stdout: StdoutConnector?
-  public let stderr: StderrConnector?
-
-  public init(
-    command: CommandConnector?,
-    stdout: StdoutConnector?,
-    stderr: StderrConnector?
-  ) {
-    self.command = command
-    self.stdout = stdout
-    self.stderr = stderr
-  }
-}
-
 public class ModelConverter {
   struct PythonScriptFile {
     let name: String

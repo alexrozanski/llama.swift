@@ -87,37 +87,7 @@ public class ModelConverter {
   // MARK: - Conversion
 
   public func canRunConversion() async throws -> Bool {
-    return try await canRunConversion(nil).isSuccess
-  }
-
-  public func canRunConversion(_ connectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
-    return try await run("which python3", commandConnectors: connectors)
-  }
-
-  public func installDependencies(_ connectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
-    return try await run(Coquille.Process.Command("python3", arguments: ["-u", "-m", "pip", "install"] + Script.convertPyTorchToGgml.deps), commandConnectors: connectors)
-  }
-
-  public func checkInstalledDependencies(_ connectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
-    for dep in Script.convertPyTorchToGgml.deps {
-      let status = try await run(Coquille.Process.Command("python3", arguments: ["-u", "-m", "pip", "show", dep]), commandConnectors: connectors)
-      if !status.isSuccess {
-        return status
-      }
-    }
-    return .success
-  }
-
-  public func convert(
-    with data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
-    result: inout ConvertPyTorchToGgmlConversionResult?,
-    commandConnectors: CommandConnectors? = nil
-  ) async throws -> ModelConversionStatus {
-    let conversion = ConvertPyTorchToGgmlConversion(data: data)
-    defer {
-      conversion.cleanUp()
-    }
-    return try await conversion.run(from: self, result: &result, commandConnectors: commandConnectors)
+    return try await ModelConversionUtils.checkConversionEnvironment(input: ()).isSuccess
   }
 
   // MARK: - Quantization
@@ -129,29 +99,6 @@ public class ModelConverter {
       } catch {
         continuation.resume(throwing: error)
       }
-    }
-  }
-
-  // MARK: - Internal
-
-  func run(_ command: Coquille.Process.Command, commandConnectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
-    commandConnectors?.command?([[command.name], command.arguments].flatMap { $0 }.joined(separator: " "))
-    return try await Process(command: command, stdout: commandConnectors?.stdout, stderr: commandConnectors?.stderr).run().toModelConversionStatus()
-  }
-
-  func run(_ commandString: String, commandConnectors: CommandConnectors? = nil) async throws -> ModelConversionStatus {
-    commandConnectors?.command?(commandString)
-    return try await Process(commandString: commandString, stdout: commandConnectors?.stdout, stderr: commandConnectors?.stderr).run().toModelConversionStatus()
-  }
-}
-
-fileprivate extension Coquille.Process.Status {
-  func toModelConversionStatus() -> ModelConversionStatus {
-    switch self {
-    case .success:
-      return .success
-    case .failure(let code):
-      return .failure(exitCode: code)
     }
   }
 }

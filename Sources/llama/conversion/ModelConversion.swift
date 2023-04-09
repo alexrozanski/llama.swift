@@ -12,8 +12,8 @@ public struct ModelConversionFile {
   public let found: Bool
 }
 
-public enum ModelConversionStatus {
-  case success
+public enum ModelConversionStatus<ResultType> {
+  case success(result: ResultType)
   case failure(exitCode: Int32)
 
   public var isSuccess: Bool {
@@ -37,24 +37,24 @@ public protocol ModelConversionData<ValidationError> where ValidationError: Erro
   associatedtype ValidationError
 }
 
-protocol ModelConversion<DataType, ValidationError, ResultType> where DataType: ModelConversionData<ValidationError> {
+protocol ModelConversion<DataType, ConversionStep, ValidationError, ResultType> where DataType: ModelConversionData<ValidationError> {
   associatedtype DataType
+  associatedtype ConversionStep
   associatedtype ValidationError
   associatedtype ResultType
 
+  // Steps
+  static var conversionSteps: [ConversionStep] { get }
+
+  // Validation
   static func requiredFiles(for data: DataType) -> [URL]
   static func validate(
     _ data: DataType,
     requiredFiles: inout [ModelConversionFile]?
   ) -> Result<ValidatedModelConversionData<DataType>, ValidationError>
 
-  func run(
-    from modelConverter: ModelConverter,
-    result: inout ResultType?,
-    commandConnectors: CommandConnectors?
-  ) async throws -> ModelConversionStatus
-
-  func cleanUp()
+  // Pipeline
+  func makeConversionPipeline() -> ModelConversionPipeline<ConversionStep, ValidatedModelConversionData<DataType>, ResultType>
 }
 
 public struct ValidatedModelConversionData<DataType> where DataType: ModelConversionData {

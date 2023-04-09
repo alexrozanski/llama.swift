@@ -29,6 +29,14 @@ public struct ConvertPyTorchToGgmlConversionData: ModelConversionData {
   }
 }
 
+public enum ConvertPyTorchToGgmlConversionStep: CaseIterable {
+  case checkEnvironment
+  case installDependencies
+  case checkDependencies
+  case convertModel
+  case quantizeModel
+}
+
 public struct ConvertPyTorchToGgmlConversionResult {
   public let outputFileURL: URL
 }
@@ -43,6 +51,12 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     let checkpointFiles = (0..<data.modelType.numPyTorchModelParts).map { checkpointFileName(i: $0) }
     let expectedFiles = [paramsFileName, tokenizerFileName] + checkpointFiles
     return expectedFiles.map { data.directoryURL.appendingPathComponent($0) }
+  }
+
+  // MARK: - Steps
+
+  static var conversionSteps: [ConvertPyTorchToGgmlConversionStep] {
+    return ConvertPyTorchToGgmlConversionStep.allCases
   }
 
   // MARK: - Validation
@@ -90,64 +104,132 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
 
   // MARK: - Conversion
 
-  func run(
-    from modelConverter: ModelConverter,
-    result: inout ConvertPyTorchToGgmlConversionResult?,
-    commandConnectors: CommandConnectors? = nil
-  ) async throws -> ModelConversionStatus {
-    let script = ModelConverter.Script.dummy
-    guard let url = script.url else { return .failure(exitCode: -1) }
-
-    let temporaryDirectoryURL: URL
-    if #available(macOS 13.0, iOS 16.0, *) {
-      temporaryDirectoryURL = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
-    } else {
-      temporaryDirectoryURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-    }
-    try FileManager.default.createDirectory(at: temporaryDirectoryURL, withIntermediateDirectories: true)
-
-    let scriptFileURL: URL
-    if #available(macOS 13.0, iOS 16.0, *) {
-      scriptFileURL = temporaryDirectoryURL.appending(path: script.scriptFile.filename, directoryHint: .notDirectory)
-    } else {
-      scriptFileURL = temporaryDirectoryURL.appendingPathComponent(script.scriptFile.filename, isDirectory: false)
-    }
-
-    let contents = try String(contentsOf: url)
-    try contents.write(to: scriptFileURL, atomically: true, encoding: .utf8)
-
-    let inputDirectoryURL = data.validated.directoryURL
-    let command = Coquille.Process.Command(
-      "python3",
-      arguments: [
-        "-u",
-        scriptFileURL.path,
-        data.validated.directoryURL.path
-      ]
+  func makeConversionPipeline() -> ModelConversionPipeline<
+    ConvertPyTorchToGgmlConversionStep,
+    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
+    ConvertPyTorchToGgmlConversionResult
+  > {
+    return ModelConversionPipeline(
+      pipeline:
+        chainFront(
+          makeCheckEnvironmentStep(),
+          chainFront(
+            makeInstallDependenciesStep(),
+            chainFront(
+              makeCheckDependenciesStep(),
+              chainFront(
+                makeConvertFromPyTorchToGgmlStep(),
+                UnconnectedConversionStep(
+                  step: ModelConversionStep(
+                    type: .quantizeModel,
+                    executionHandler: { _,_,_,_ in
+                        .success(result: ConvertPyTorchToGgmlConversionResult(outputFileURL: URL(fileURLWithPath: "")))
+                    }
+                  )
+                )
+              )
+            )
+          )
+        )
     )
-
-    let convertStatus = try await modelConverter.run(command, commandConnectors: commandConnectors)
-    if !convertStatus.isSuccess {
-      return convertStatus
-    }
-
-    let resultFilename = "ggml-model-1.bin"
-    let resultFileURL: URL
-    if #available(macOS 13.0, iOS 16.0, *) {
-      resultFileURL = inputDirectoryURL.appending(path: resultFilename, directoryHint: .isDirectory)
-    } else {
-      resultFileURL = inputDirectoryURL.appendingPathComponent(resultFilename, isDirectory: true)
-    }
-
-    let fileExistsStatus = try await modelConverter.run(Process.Command("test", arguments: ["-f", resultFileURL.path]), commandConnectors: commandConnectors)
-    if !fileExistsStatus.isSuccess {
-      return fileExistsStatus
-    }
-
-    result = ConvertPyTorchToGgmlConversionResult(outputFileURL: resultFileURL)
-
-    return .success
   }
 
-  func cleanUp() {}
+  private func makeCheckEnvironmentStep() -> ModelConversionStep<
+    ConvertPyTorchToGgmlConversionStep,
+    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
+    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
+  > {
+    return ModelConversionStep(type: .installDependencies) { input, command, stdout, stderr in
+      return try await ModelConversionUtils.checkConversionEnvironment(input: input)
+    }
+  }
+
+  private func makeInstallDependenciesStep() -> ModelConversionStep<
+    ConvertPyTorchToGgmlConversionStep,
+    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
+    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
+  > {
+    return ModelConversionStep(type: .installDependencies) { input, command, stdout, stderr in
+      return try await ModelConversionUtils.installPythonDependencies(
+        input: input,
+        dependencies: ModelConverter.Script.convertPyTorchToGgml.deps
+      )
+    }
+  }
+
+  private func makeCheckDependenciesStep() -> ModelConversionStep<
+    ConvertPyTorchToGgmlConversionStep,
+    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
+    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
+  > {
+    return ModelConversionStep(type: .checkDependencies) { input, command, stdout, stderr in
+      return try await ModelConversionUtils.checkInstalledPythonDependencies(
+        input: input,
+        dependencies: ModelConverter.Script.convertPyTorchToGgml.deps
+      )
+    }
+  }
+
+  private func makeConvertFromPyTorchToGgmlStep() -> ModelConversionStep<
+    ConvertPyTorchToGgmlConversionStep,
+    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
+    URL
+  > {
+    return ModelConversionStep(type: .convertModel) { input, command, stdout, stderr in
+      let script = ModelConverter.Script.dummy
+      guard let url = script.url else { return .failure(exitCode: 1) }
+
+      let temporaryDirectoryURL: URL
+      if #available(macOS 13.0, iOS 16.0, *) {
+        temporaryDirectoryURL = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
+      } else {
+        temporaryDirectoryURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+      }
+      try FileManager.default.createDirectory(at: temporaryDirectoryURL, withIntermediateDirectories: true)
+
+      let scriptFileURL: URL
+      if #available(macOS 13.0, iOS 16.0, *) {
+        scriptFileURL = temporaryDirectoryURL.appending(path: script.scriptFile.filename, directoryHint: .notDirectory)
+      } else {
+        scriptFileURL = temporaryDirectoryURL.appendingPathComponent(script.scriptFile.filename, isDirectory: false)
+      }
+
+      let contents = try String(contentsOf: url)
+      try contents.write(to: scriptFileURL, atomically: true, encoding: .utf8)
+
+      let inputDirectoryURL = input.validated.directoryURL
+      let convertStatus = try await ModelConversionUtils.run(
+        Coquille.Process.Command(
+          "python3",
+          arguments: [
+            "-u",
+            scriptFileURL.path,
+            input.validated.directoryURL.path
+          ]
+        ),
+        commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+      )
+      if !convertStatus.isSuccess {
+        return .failure(exitCode: convertStatus.exitCode)
+      }
+
+      let resultFilename = "ggml-model-1.bin"
+      let resultFileURL: URL
+      if #available(macOS 13.0, iOS 16.0, *) {
+        resultFileURL = inputDirectoryURL.appending(path: resultFilename, directoryHint: .isDirectory)
+      } else {
+        resultFileURL = inputDirectoryURL.appendingPathComponent(resultFilename, isDirectory: true)
+      }
+
+      let fileExistsStatus = try await ModelConversionUtils.run(
+        Process.Command("test", arguments: ["-f", resultFileURL.path]),
+        commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+      )
+      if !fileExistsStatus.isSuccess {
+        return .failure(exitCode: convertStatus.exitCode)
+      }
+
+      return .success(result: resultFileURL)
+    }
+  }
 }

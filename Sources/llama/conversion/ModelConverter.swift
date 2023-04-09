@@ -7,6 +7,7 @@
 
 import Foundation
 import Coquille
+import llamaObjCxx
 
 public struct CommandConnectors {
   public typealias CommandConnector = (String) -> Void
@@ -117,6 +118,18 @@ public class ModelConverter {
       conversion.cleanUp()
     }
     return try await conversion.run(from: self, result: &result, commandConnectors: commandConnectors)
+  }
+
+  // MARK: - Quantization
+
+  public func quantizeModel(from sourceFileURL: URL, to destinationFileURL: URL) async throws {
+    return try await withCheckedThrowingContinuation { continuation in
+      do {
+        try _LlamaModelUtils.quantizeModel(withSourceFileURL: sourceFileURL, destFileURL: destinationFileURL, quantizationType: .Q4_0)
+      } catch {
+        continuation.resume(throwing: error)
+      }
+    }
   }
 
   // MARK: - Internal

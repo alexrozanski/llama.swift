@@ -95,10 +95,11 @@ extern "C" {
 
     // TODO: not great API - very likely to change
     // Returns 0 on success
-    LLAMA_API int llama_model_quantize(
+    LLAMA_API BOOL llama_model_quantize(
             const char * fname_inp,
             const char * fname_out,
-                   int   itype);
+                   int   itype,
+              NSError ** outError);
 
     // Returns the KV cache that will contain the context for the
     // ongoing prediction with the model.

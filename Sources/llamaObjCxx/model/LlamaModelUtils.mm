@@ -8,6 +8,7 @@
 #import "LlamaModelUtils.h"
 
 #import "llama.hh"
+#import "LlamaErrorInternal.h"
 
 @implementation _LlamaModelUtils
 
@@ -41,6 +42,44 @@
       default:
         break;
     }
+  }
+
+  return YES;
+}
+
++ (BOOL)quantizeModelWithSourceFileURL:(NSURL *)fileURL
+                           destFileURL:(NSURL *)destFileURL
+                      quantizationType:(_LlamaQuantizationType)quantizationType
+                              outError:(NSError **)outError
+{
+  if (!fileURL) {
+    if (outError) {
+      *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidInputArguments, @"Missing source file path"));
+    }
+    return NO;
+  }
+
+  if (!destFileURL) {
+    if (outError) {
+      *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidInputArguments, @"Missing destination file path"));
+    }
+    return NO;
+  }
+
+  const std::string fname_inp([fileURL.path cStringUsingEncoding:NSUTF8StringEncoding]);
+  const std::string fname_out([destFileURL.path cStringUsingEncoding:NSUTF8StringEncoding]);
+
+  int itype = 2;
+  switch (quantizationType) {
+  case _LlamaQuantizationTypeQ4_1:
+    itype = 3;
+  case _LlamaQuantizationTypeUnknown:
+  case _LlamaQuantizationTypeQ4_0:
+    break;
+  }
+
+  if (!llama_model_quantize(fname_inp.c_str(), fname_out.c_str(), itype, outError)) {
+    return NO;
   }
 
   return YES;

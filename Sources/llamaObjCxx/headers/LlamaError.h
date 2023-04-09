@@ -19,6 +19,10 @@ typedef NS_ENUM(NSInteger, _LlamaErrorCode) {
   _LlamaErrorCodeFailedToLoadModel = -101,
   _LlamaErrorCodeFailedToPredict = -102,
   _LlamaErrorCodeFailedToLoadSessionContext = -103,
+  _LlamaErrorCodeFailedToQuantize = -104,
+
+  // General error codes
+  _LlamaErrorCodeInvalidInputArguments = -500,
 
   // Model internal error codes
   _LlamaErrorCodeFailedToOpenModelFile = -1000,
@@ -32,6 +36,7 @@ typedef NS_ENUM(NSInteger, _LlamaErrorCode) {
   // General failure error codes
   _LlamaErrorCodeGeneralInternalLoadFailure = -10001,
   _LlamaErrorCodeGeneralInternalPredictionFailure = -10002,
+  _LlamaErrorCodeGeneralInternalQuantizationFailure = -10004,
 };
 
 NS_ASSUME_NONNULL_END

@@ -18,6 +18,7 @@ NSError *__nonnull makeLlamaErrorWithUnderlyingError(_LlamaErrorCode errorCode, 
 
 NSError *__nonnull makeFailedToLoadModelErrorWithUnderlyingError(NSError *__nullable underlyingError);
 NSError *__nonnull makeFailedToPredictErrorWithUnderlyingError(NSError *__nullable underlyingError);
+NSError *__nonnull makeFailedToQuantizeErrorWithUnderlyingError(NSError *__nullable underlyingError);
 
 #ifdef  __cplusplus
 }

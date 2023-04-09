@@ -1472,34 +1472,45 @@ static llama_vocab::id llama_sample_top_p_top_k(
 //
 
 // TODO: reuse code from the llama_model_load() somehow
-static bool llama_model_quantize_internal(const std::string & fname_inp, const std::string & fname_out, int itype) {
+static BOOL llama_model_quantize_internal(const std::string & fname_inp, const std::string & fname_out, int itype, NSError **outError) {
     ggml_type type = GGML_TYPE_Q4_1;
 
     switch (itype) {
         case 2: type = GGML_TYPE_Q4_0; break;
         case 3: type = GGML_TYPE_Q4_1; break;
-        default: fprintf(stderr, "%s: invalid quantization type %d\n", __func__, itype); return 1;
+        default: {
+            if (outError) {
+                *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalQuantizationFailure, [NSString stringWithFormat:@"invalid quantization type %d", itype]));
+            }
+            return NO;
+        }
     };
 
     if (type != GGML_TYPE_Q4_0 && type != GGML_TYPE_Q4_1) {
-        fprintf(stderr, "%s: invalid quantization type %d\n", __func__, type);
-        return false;
+        if (outError) {
+            *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalQuantizationFailure, [NSString stringWithFormat:@"invalid quantization type %d", type]));
+        }
+        return NO;
     }
 
     llama_vocab vocab;
 
-    printf("%s: loading model from '%s'\n", __func__, fname_inp.c_str());
+//    printf("%s: loading model from '%s'\n", __func__, fname_inp.c_str());
 
     auto finp = std::ifstream(fname_inp, std::ios::binary);
     if (!finp) {
-        fprintf(stderr, "%s: failed to open '%s' for reading\n", __func__, fname_inp.c_str());
-        return false;
+        if (outError) {
+            *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalQuantizationFailure, [NSString stringWithFormat:@"failed to open '%s' for reading", fname_inp.c_str()]));
+        }
+        return NO;
     }
 
     auto fout = std::ofstream(fname_out, std::ios::binary);
     if (!fout) {
-        fprintf(stderr, "%s: failed to open '%s' for writing\n", __func__, fname_out.c_str());
-        return false;
+        if (outError) {
+            *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalQuantizationFailure, [NSString stringWithFormat:@"failed to open '%s' for writing", fname_out.c_str()]));
+        }
+        return NO;
     }
 
     // verify magic
@@ -1507,12 +1518,16 @@ static bool llama_model_quantize_internal(const std::string & fname_inp, const s
         uint32_t magic;
         finp.read((char *) &magic, sizeof(magic));
         if (magic == LLAMA_FILE_MAGIC_UNVERSIONED) {
-            fprintf(stderr, "%s: invalid model file '%s' (too old, regenerate your model files!)\n",
-                    __func__, fname_inp.c_str());
-            return false;
+            if (outError) {
+                *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalQuantizationFailure, [NSString stringWithFormat:@"invalid model file '%s' (too old, regenerate your model files!)", fname_inp.c_str()]));
+            }
+            return NO;
         }
         if (magic != LLAMA_FILE_MAGIC) {
-            return report_bad_magic(fname_inp.c_str(), magic, LLAMA_FILE_MAGIC);
+            if (outError) {
+                *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidModelUnversioned, [NSString stringWithFormat:@"invalid model file '%s' (too old)", fname_inp.c_str()]));
+            }
+            return false;
         }
 
         fout.write((char *) &magic, sizeof(magic));
@@ -1521,9 +1536,10 @@ static bool llama_model_quantize_internal(const std::string & fname_inp, const s
         finp.read((char *) &format_version, sizeof(format_version));
 
         if (format_version != LLAMA_FILE_VERSION) {
-            fprintf(stderr, "%s: invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)\n",
-                    __func__, fname_inp.c_str(), format_version, LLAMA_FILE_VERSION);
-            return false;
+            if (outError) {
+                *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalQuantizationFailure, [NSString stringWithFormat:@"invalid model file '%s' (unsupported format version %" PRIu32 ", expected %d)", fname_inp.c_str(), format_version, LLAMA_FILE_VERSION]));
+            }
+            return NO;
         }
 
         fout.write((char *) &format_version, sizeof(format_version));
@@ -1565,9 +1581,10 @@ static bool llama_model_quantize_internal(const std::string & fname_inp, const s
         const int32_t n_vocab = hparams.n_vocab;
 
         if (n_vocab != hparams.n_vocab) {
-            fprintf(stderr, "%s: invalid model file '%s' (bad vocab size %d != %d)\n",
-                    __func__, fname_inp.c_str(), n_vocab, hparams.n_vocab);
-            return false;
+            if (outError) {
+                *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalQuantizationFailure, [NSString stringWithFormat:@"invalid model file '%s' (bad vocab size %d != %d)", fname_inp.c_str(), n_vocab, hparams.n_vocab]));
+            }
+            return NO;
         }
 
         std::vector<char> word(32);
@@ -1659,8 +1676,10 @@ static bool llama_model_quantize_internal(const std::string & fname_inp, const s
 
             if (quantize) {
                 if (ftype != 0 && ftype != 1) {
-                    fprintf(stderr, "%s: unsupported ftype %d for integer quantization\n", __func__, ftype);
-                    return false;
+                    if (outError) {
+                        *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalQuantizationFailure, [NSString stringWithFormat:@"unsupported ftype %d for integer quantization", ftype]));
+                    }
+                    return NO;
                 }
 
                 if (ftype == 1) {
@@ -1716,8 +1735,10 @@ static bool llama_model_quantize_internal(const std::string & fname_inp, const s
                         } break;
                     default:
                         {
-                            fprintf(stderr, "%s: unsupported quantization type %d\n", __func__, type);
-                            return false;
+                            if (outError) {
+                                *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalQuantizationFailure, [NSString stringWithFormat:@"unsupported quantization type %d", type]));
+                            }
+                            return NO;
                         }
                 }
 
@@ -1857,16 +1878,12 @@ void llama_free(struct llama_context * ctx) {
     delete ctx;
 }
 
-int llama_model_quantize(
+BOOL llama_model_quantize(
         const char * fname_inp,
         const char * fname_out,
-               int   itype) {
-    if (!llama_model_quantize_internal(fname_inp, fname_out, itype)) {
-        fprintf(stderr, "%s: failed to quantize\n", __func__);
-        return 1;
-    }
-
-    return 0;
+               int   itype,
+          NSError ** outError) {
+    return llama_model_quantize_internal(fname_inp, fname_out, itype, outError);
 }
 
 // Returns the KV cache that will contain the context for the

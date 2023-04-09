@@ -35,3 +35,8 @@ NSError *makeFailedToPredictErrorWithUnderlyingError(NSError *underlyingError)
 {
   return makeLlamaErrorWithUnderlyingError(_LlamaErrorCodeFailedToPredict, @"Failed to run prediction", underlyingError);
 }
+
+NSError *makeFailedToQuantizeErrorWithUnderlyingError(NSError *__nullable underlyingError)
+{
+  return makeLlamaErrorWithUnderlyingError(_LlamaErrorCodeFailedToQuantize, @"Failed to quantize model", underlyingError);
+}

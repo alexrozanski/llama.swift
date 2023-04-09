@@ -203,8 +203,6 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
   func cleanUp() async throws {
     guard !cleanedUp else { return }
 
-    print("Cleaning up...")
-
     switch state {
     case .notStarted, .skipped, .running:
       break
@@ -214,7 +212,6 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
         switch executionResult {
         case .success(result: let result):
           cleanedUp = try await cleanUpHandler(result)
-          print("Success")
         case .failure:
           break
         }

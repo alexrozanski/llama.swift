@@ -75,6 +75,7 @@ endif
 ifeq ($(UNAME_M),$(filter $(UNAME_M),x86_64 i686))
 	# Use all CPU extensions that are available:
 	CFLAGS += -march=native -mtune=native
+	CXXFLAGS += -march=native -mtune=native
 endif
 ifneq ($(filter ppc64%,$(UNAME_M)),)
 	POWER9_M := $(shell grep "POWER9" /proc/cpuinfo)
@@ -158,10 +159,6 @@ clean:
 
 quantize: quantize.mm ggml.o llama.o LlamaErrorInternal.o LlamaError.o
 	$(CXX) $(OBJCFLAGS) quantize.mm ggml.o llama.o LlamaErrorInternal.o LLamaError.o -o quantize $(LDFLAGS)
-
-embedding: examples/embedding/embedding.cpp ggml.o llama.o common.o
-	$(CXX) $(CXXFLAGS) examples/embedding/embedding.cpp ggml.o llama.o common.o -o embedding $(LDFLAGS)
-
 #
 # Tests
 #

@@ -558,6 +558,16 @@ struct ggml_tensor * ggml_view_2d(
         size_t                nb1, // row stride in bytes
         size_t                offset);
 
+struct ggml_tensor * ggml_view_3d(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * a,
+        int64_t               ne0,
+        int64_t               ne1,
+        int64_t               ne2,
+        size_t                nb1, // row   stride in bytes
+        size_t                nb2, // slice stride in bytes
+        size_t                offset);
+
 struct ggml_tensor * ggml_permute(
         struct ggml_context * ctx,
         struct ggml_tensor  * a,
@@ -772,6 +782,30 @@ int ggml_cpu_has_wasm_simd(void);
 int ggml_cpu_has_blas(void);
 int ggml_cpu_has_sse3(void);
 int ggml_cpu_has_vsx(void);
+
+
+//
+// Internal types and functions exposed for tests and benchmarks
+//
+
+#ifdef  __cplusplus
+// restrict not standard in C++
+#define GGML_RESTRICT
+#else
+#define GGML_RESTRICT restrict
+#endif
+typedef void (*dequantize_row_q_t)(const void * GGML_RESTRICT x, float * GGML_RESTRICT y, int k);
+typedef void (*quantize_row_q_t)(const float * GGML_RESTRICT x, void * GGML_RESTRICT y, int k);
+typedef void (*vec_dot_q_t)(const int n, float * GGML_RESTRICT s, const void * GGML_RESTRICT x, const void * GGML_RESTRICT y);
+
+typedef struct {
+    dequantize_row_q_t dequantize_row_q;
+    quantize_row_q_t   quantize_row_q;
+    quantize_row_q_t   quantize_row_q_reference;
+    vec_dot_q_t        vec_dot_q;
+} quantize_fns_t;
+
+quantize_fns_t ggml_internal_get_quantize_fn(size_t i);
 
 #ifdef  __cplusplus
 }

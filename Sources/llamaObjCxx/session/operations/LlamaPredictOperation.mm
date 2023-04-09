@@ -56,7 +56,7 @@
 - (void)main
 {
   [self _postEvent:[_LlamaPredictionEvent started]];
-  
+
   if ([self _runPrediction]) {
     [self _postEvent:[_LlamaPredictionEvent updatedSessionContext:[LlamaOperationUtils currentSessionContextWithLlamaContext:_context]]];
     [self _postEvent:self.isCancelled ? [_LlamaPredictionEvent cancelled] : [_LlamaPredictionEvent completed]];
@@ -259,7 +259,7 @@
     }
 
     // end of text token
-    if (runState->embd.back() == llama_token_eos()) {
+    if (!runState->embd.empty() && runState->embd.back() == llama_token_eos()) {
       return YES;
     }
 

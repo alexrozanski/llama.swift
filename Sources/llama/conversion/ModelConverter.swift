@@ -70,11 +70,9 @@ public class ModelConverter {
     return try await ModelConversionUtils.checkConversionEnvironment(input: ()).isSuccess
   }
 
-    public func makeConversionPipeline(
-      with data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
-    ) -> ModelConversionPipeline<
+    public func makeConversionPipeline() -> ModelConversionPipeline<
       ConvertPyTorchToGgmlConversionStep,
-      ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
+      ConvertPyTorchToGgmlConversionPipelineInput,
       ConvertPyTorchToGgmlConversionResult
     > {
       return ConvertPyTorchToGgmlConversion().makeConversionPipeline()

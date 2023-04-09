@@ -40,6 +40,7 @@ public protocol ModelConversionData<ValidationError> where ValidationError: Erro
 protocol ModelConversion<DataType, ConversionStep, ValidationError, ResultType> where DataType: ModelConversionData<ValidationError> {
   associatedtype DataType
   associatedtype ConversionStep
+  associatedtype ConversionPipelineInputType
   associatedtype ValidationError
   associatedtype ResultType
 
@@ -54,7 +55,7 @@ protocol ModelConversion<DataType, ConversionStep, ValidationError, ResultType> 
   ) -> Result<ValidatedModelConversionData<DataType>, ValidationError>
 
   // Pipeline
-  func makeConversionPipeline() -> ModelConversionPipeline<ConversionStep, ValidatedModelConversionData<DataType>, ResultType>
+  func makeConversionPipeline() -> ModelConversionPipeline<ConversionStep, ConversionPipelineInputType, ResultType>
 }
 
 public struct ValidatedModelConversionData<DataType> where DataType: ModelConversionData {

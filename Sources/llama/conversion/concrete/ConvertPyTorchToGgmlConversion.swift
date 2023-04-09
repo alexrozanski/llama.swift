@@ -45,6 +45,26 @@ public struct ConvertPyTorchToGgmlConversionResult {
   }
 }
 
+public struct ConvertPyTorchToGgmlConversionPipelineInput {
+  public enum ConversionBehavior {
+    case alongsideInputFile
+    // Symlinks model to `directory` before converting, then leaves converted file(s) inside this directory.
+    case inOtherDirectory(_ directory: URL)
+  }
+
+  public let data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
+  public let conversionBehavior: ConversionBehavior
+
+  public init(data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>, conversionBehavior: ConversionBehavior) {
+    self.data = data
+    self.conversionBehavior = conversionBehavior
+  }
+}
+
+fileprivate struct ConvertPyTorchToGgmlConversionConfiguredEnvironment {
+  let directoryURL: URL
+}
+
 final class ConvertPyTorchToGgmlConversion: ModelConversion {
   static func requiredFiles(for data: ConvertPyTorchToGgmlConversionData) -> [URL] {
     let checkpointFiles = (0..<data.modelType.numPyTorchModelParts).map { checkpointFileName(i: $0) }
@@ -64,31 +84,16 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     _ data: ConvertPyTorchToGgmlConversionData,
     requiredFiles: inout [ModelConversionFile]?
   ) -> Result<ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>, ConvertPyTorchToGgmlConversionData.ValidationError> {
-    let paramsFile = data.directoryURL.appendingPathComponent(paramsFileName)
-    let tokenizerFile = data.directoryURL.appendingPathComponent(tokenizerFileName)
+    let requiredFileURLs = requiredFileURLs(for: data.modelType, in: data.directoryURL)
 
     var missingFilenames: [String] = []
     var requiredFileState = [ModelConversionFile]()
 
-    let foundParams = FileManager.default.fileExists(atPath: paramsFile.path)
-    requiredFileState.append(ModelConversionFile(url: paramsFile, found: foundParams))
-    if !foundParams {
-      missingFilenames.append(paramsFileName)
-    }
-
-    let foundTokenizerFile = FileManager.default.fileExists(atPath: tokenizerFile.path)
-    requiredFileState.append(ModelConversionFile(url: tokenizerFile, found: foundParams))
-    if !foundTokenizerFile {
-      missingFilenames.append(tokenizerFileName)
-    }
-
-    for i in (0..<data.modelType.numPyTorchModelParts) {
-      let checkpointFileName = checkpointFileName(i: i)
-      let checkpointFile = data.directoryURL.appendingPathComponent(checkpointFileName)
-      let foundCheckpointFile = FileManager.default.fileExists(atPath: checkpointFile.path)
-      requiredFileState.append(ModelConversionFile(url: checkpointFile, found: foundCheckpointFile))
-      if !foundCheckpointFile {
-        missingFilenames.append(checkpointFileName)
+    for fileURL in requiredFileURLs {
+      let foundFile = FileManager.default.fileExists(atPath: fileURL.path)
+      requiredFileState.append(ModelConversionFile(url: fileURL, found: foundFile))
+      if !foundFile {
+        missingFilenames.append(fileURL.lastPathComponent)
       }
     }
 
@@ -105,7 +110,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
 
   func makeConversionPipeline() -> ModelConversionPipeline<
     ConvertPyTorchToGgmlConversionStep,
-    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
+    ConvertPyTorchToGgmlConversionPipelineInput,
     ConvertPyTorchToGgmlConversionResult
   > {
     return ModelConversionPipeline(
@@ -113,7 +118,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
         chainFront(
           makeCheckEnvironmentStep(),
           chainFront(
-            makeInstallDependenciesStep(),
+            makeSetupEnvironmentStep(),
             chainFront(
               makeCheckDependenciesStep(),
               chainFront(
@@ -128,10 +133,12 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     )
   }
 
+  // MARK: - Conversion Steps
+
   private func makeCheckEnvironmentStep() -> ModelConversionStep<
     ConvertPyTorchToGgmlConversionStep,
-    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
-    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
+    ConvertPyTorchToGgmlConversionPipelineInput,
+    ConvertPyTorchToGgmlConversionPipelineInput
   > {
     return ModelConversionStep(type: .checkEnvironment, executionHandler: { input, command, stdout, stderr in
       return try await ModelConversionUtils.checkConversionEnvironment(
@@ -141,14 +148,32 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     }, cleanUpHandler: { _ in return true })
   }
 
-  private func makeInstallDependenciesStep() -> ModelConversionStep<
+  private func makeSetupEnvironmentStep() -> ModelConversionStep<
     ConvertPyTorchToGgmlConversionStep,
-    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
-    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
+    ConvertPyTorchToGgmlConversionPipelineInput,
+    ConvertPyTorchToGgmlConversionConfiguredEnvironment
   > {
     return ModelConversionStep(type: .installDependencies, executionHandler: { input, command, stdout, stderr in
+      let validated = input.data.validated
+      let directoryURL: URL
+      switch input.conversionBehavior {
+      case .alongsideInputFile:
+        directoryURL = validated.directoryURL
+      case .inOtherDirectory(let otherDirectoryURL):
+        for fileURL in ConvertPyTorchToGgmlConversion.requiredFileURLs(for: validated.modelType, in: validated.directoryURL) {
+          let filename = fileURL.lastPathComponent
+          let destinationFile = otherDirectoryURL.appendingPathComponent(filename)
+          let status = try await ModelConversionUtils.run(Process.Command("ln", arguments: ["-s", fileURL.path, destinationFile.path]))
+          if !status.isSuccess {
+            return .failure(exitCode: status.exitCode)
+          }
+        }
+        directoryURL = otherDirectoryURL
+      }
+
+      let environment = ConvertPyTorchToGgmlConversionConfiguredEnvironment(directoryURL: directoryURL)
       return try await ModelConversionUtils.installPythonDependencies(
-        input: input,
+        input: environment,
         dependencies: ModelConverter.Script.convertPyTorchToGgml.deps,
         connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )
@@ -160,8 +185,8 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
 
   private func makeCheckDependenciesStep() -> ModelConversionStep<
     ConvertPyTorchToGgmlConversionStep,
-    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
-    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
+    ConvertPyTorchToGgmlConversionConfiguredEnvironment,
+    ConvertPyTorchToGgmlConversionConfiguredEnvironment
   > {
     return ModelConversionStep(type: .checkDependencies, executionHandler: { input, command, stdout, stderr in
       return try await ModelConversionUtils.checkInstalledPythonDependencies(
@@ -174,7 +199,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
 
   private func makeConvertFromPyTorchToGgmlStep() -> ModelConversionStep<
     ConvertPyTorchToGgmlConversionStep,
-    ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
+    ConvertPyTorchToGgmlConversionConfiguredEnvironment,
     URL
   > {
     return ModelConversionStep(type: .convertModel, executionHandler: { input, command, stdout, stderr in
@@ -199,14 +224,14 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
       let contents = try String(contentsOf: url)
       try contents.write(to: scriptFileURL, atomically: true, encoding: .utf8)
 
-      let inputDirectoryURL = input.validated.directoryURL
+      let inputDirectoryURL = input.directoryURL
       let convertStatus = try await ModelConversionUtils.run(
         Coquille.Process.Command(
           "python3",
           arguments: [
             "-u",
             scriptFileURL.path,
-            input.validated.directoryURL.path
+            input.directoryURL.path
           ]
         ),
         commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
@@ -255,5 +280,25 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
         return true
       }
     )
+  }
+
+  // MARK: -
+
+  static private func requiredFileURLs(for modelType: ModelType, in directory: URL) -> [URL] {
+    let paramsFile = directory.appendingPathComponent(paramsFileName)
+    let tokenizerFile = directory.appendingPathComponent(tokenizerFileName)
+
+    var requiredFileURLs = [URL]()
+
+    requiredFileURLs.append(paramsFile)
+    requiredFileURLs.append(tokenizerFile)
+
+    for i in (0..<modelType.numPyTorchModelParts) {
+      let checkpointFileName = checkpointFileName(i: i)
+      let checkpointFile = directory.appendingPathComponent(checkpointFileName)
+      requiredFileURLs.append(checkpointFile)
+    }
+
+    return requiredFileURLs
   }
 }

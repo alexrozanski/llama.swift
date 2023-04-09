@@ -8,6 +8,37 @@
 import Foundation
 import Combine
 
+public class AnyConversionStep<ConversionStep> {
+  @Published public var state: ModelConversionStep<ConversionStep, Void, Any>.State = .notStarted
+
+  private var _type: () -> ConversionStep
+
+  public var type: ConversionStep {
+    return _type()
+  }
+
+  private var subscriptions = Set<AnyCancellable>()
+
+  init<InputType, ResultType>(wrapped: ModelConversionStep<ConversionStep, InputType, ResultType>) {
+    _type = { return wrapped.type }
+
+    wrapped.$state.sink { [weak self] newState in
+      switch newState {
+      case .notStarted: self?.state = .notStarted
+      case .running: self?.state = .running
+      case .skipped: self?.state = .skipped
+      case .finished(result: let result):
+        switch result {
+        case .success:
+          self?.state = .finished(result: .success(.success(result: ())))
+        case .failure(let error):
+          self?.state = .finished(result: .failure(error))
+        }
+      }
+    }.store(in: &subscriptions)
+  }
+}
+
 public class ModelConversionStep<ConversionStep, InputType, ResultType> {
   typealias ExecutionHandler = (
     _ input: InputType,

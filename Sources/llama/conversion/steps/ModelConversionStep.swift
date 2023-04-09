@@ -12,15 +12,33 @@ public class AnyConversionStep<ConversionStep> {
   @Published public var state: ModelConversionStep<ConversionStep, Void, Any>.State = .notStarted
 
   private var _type: () -> ConversionStep
+  private var _commandOutput: () -> PassthroughSubject<String, Never>
+  private var _stdoutOutput: () -> PassthroughSubject<String, Never>
+  private var _stderrOutput: () -> PassthroughSubject<String, Never>
 
   public var type: ConversionStep {
     return _type()
+  }
+
+  public var commandOutput: PassthroughSubject<String, Never> {
+    return _commandOutput()
+  }
+
+  public var stdoutOutput: PassthroughSubject<String, Never> {
+    return _stdoutOutput()
+  }
+
+  public var stderrOutput: PassthroughSubject<String, Never> {
+    return _stderrOutput()
   }
 
   private var subscriptions = Set<AnyCancellable>()
 
   init<InputType, ResultType>(wrapped: ModelConversionStep<ConversionStep, InputType, ResultType>) {
     _type = { return wrapped.type }
+    _commandOutput = { return wrapped.commandOutput }
+    _stdoutOutput = { return wrapped.stdoutOutput }
+    _stderrOutput = { return wrapped.stderrOutput }
 
     wrapped.$state.sink { [weak self] newState in
       switch newState {

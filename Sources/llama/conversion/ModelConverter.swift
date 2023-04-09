@@ -90,6 +90,16 @@ public class ModelConverter {
     return try await ModelConversionUtils.checkConversionEnvironment(input: ()).isSuccess
   }
 
+    public func makeConversionPipeline(
+      with data: ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>
+    ) -> ModelConversionPipeline<
+      ConvertPyTorchToGgmlConversionStep,
+      ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>,
+      ConvertPyTorchToGgmlConversionResult
+    > {
+      return ConvertPyTorchToGgmlConversion(data: data).makeConversionPipeline()
+    }
+
   // MARK: - Quantization
 
   public func quantizeModel(from sourceFileURL: URL, to destinationFileURL: URL) async throws {

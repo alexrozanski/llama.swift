@@ -245,7 +245,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
       // Hardcode FP16 format for now, like in llama.cpp
       let format = "1"
       let convertStatus = try await ModelConversionUtils.runPythonScript(
-        .convertPyTorchToGgml,
+        .dummy,
         arguments: [inputDirectoryURL.path, format],
         commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )

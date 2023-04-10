@@ -266,7 +266,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
         commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )
       if !fileExistsStatus.isSuccess {
-        return .failure(exitCode: convertStatus.exitCode)
+        return .failure(exitCode: fileExistsStatus.exitCode)
       }
 
       return .success(result: resultFileURL)

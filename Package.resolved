@@ -5,9 +5,9 @@
         "package": "Coquille",
         "repositoryURL": "https://github.com/alexrozanski/Coquille.git",
         "state": {
-          "branch": null,
-          "revision": "ae4dbfbf2d423092e5bb02d1565fc1a2e2407ee3",
-          "version": "0.2.0"
+          "branch": "v0.3",
+          "revision": "4250068ef7d259e0023c099be58459e5d7dbcedd",
+          "version": null
         }
       }
     ]

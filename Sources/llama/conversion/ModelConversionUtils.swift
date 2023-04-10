@@ -101,6 +101,12 @@ class ModelConversionUtils {
     return .success(result: input)
   }
 
+  static func escapeArgument(_ argument: String) -> String {
+    var escapedArgument = argument
+    escapedArgument = escapedArgument.replacingOccurrences(of: " ", with: "\\ ")
+    return escapedArgument
+  }
+
   static func runPythonScript(
     _ script: PythonScript,
     arguments: [String],

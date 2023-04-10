@@ -208,7 +208,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
       let format = "1"
       let convertStatus = try await ModelConversionUtils.runPythonScript(
         .convertPyTorchToGgml,
-        arguments: [inputDirectoryURL.path, format],
+        arguments: [ModelConversionUtils.escapeArgument(inputDirectoryURL.path), format],
         commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )
       if !convertStatus.isSuccess {

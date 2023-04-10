@@ -38,6 +38,7 @@ public class ModelConverter {
     return try await withCheckedThrowingContinuation { continuation in
       do {
         try _LlamaModelUtils.quantizeModel(withSourceFileURL: sourceFileURL, destFileURL: destinationFileURL, quantizationType: .Q4_0)
+        continuation.resume(returning: ())
       } catch {
         continuation.resume(throwing: error)
       }

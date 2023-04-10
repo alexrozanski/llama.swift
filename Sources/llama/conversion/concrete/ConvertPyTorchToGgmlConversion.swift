@@ -286,7 +286,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
       type: .quantizeModel,
       executionHandler: { convertedModelURL, command, _, _ in
         // TODO: capture stdout and stderr and print
-        command("Quantizing model...")
+        command("Quantizing model (this may take a few minutes)...")
 
         let outputBaseURL = URL(fileURLWithPath: (convertedModelURL.path as NSString).deletingLastPathComponent)
         let outputFilename = "ggml-model-q4_0.bin"

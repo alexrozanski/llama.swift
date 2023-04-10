@@ -48,7 +48,6 @@ protocol ModelConversion<DataType, ConversionStep, ValidationError, ResultType> 
   static var conversionSteps: [ConversionStep] { get }
 
   // Validation
-  static func requiredFiles(for data: DataType) -> [URL]
   static func validate(
     _ data: DataType,
     requiredFiles: inout [ModelConversionFile]?

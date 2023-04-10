@@ -271,9 +271,12 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
   > {
     return ModelConversionStep(
       type: .quantizeModel,
-      executionHandler: { convertedModelURL, _, _, _ in
+      executionHandler: { convertedModelURL, command, _, _ in
         let fileURL = URL(fileURLWithPath: (convertedModelURL.path as NSString).deletingLastPathComponent).appendingPathComponent("ggml-model-q4_0-dummy.bin")
         try String(" ").write(to: fileURL, atomically: true, encoding: .utf8)
+
+        // TODO: capture stdout and stderr and print
+        command("Quantizing model...")
         return .success(result: ConvertPyTorchToGgmlConversionResult(outputFileURL: fileURL))
       },
       cleanUpHandler: { _ in
@@ -300,5 +303,12 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     }
 
     return requiredFileURLs
+  }
+}
+
+extension FileHandle: TextOutputStream {
+  public func write(_ string: String) {
+    let data = Data(string.utf8)
+    self.write(data)
   }
 }

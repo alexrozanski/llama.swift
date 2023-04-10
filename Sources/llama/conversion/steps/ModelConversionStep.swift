@@ -47,12 +47,18 @@ public class AnyConversionStep<ConversionStep> {
       case .notStarted: self?.state = .notStarted
       case .running: self?.state = .running
       case .skipped: self?.state = .skipped
-      case .finished(result: let result):
-        switch result {
-        case .success:
-          self?.state = .finished(result: .success(.success(result: ())))
-        case .failure(let error):
-          self?.state = .finished(result: .failure(error))
+      case .finished(result: let conversionResult):
+        // TODO: fix this spaghetti
+        switch conversionResult {
+        case .success(let conversionStatus):
+          switch conversionStatus {
+          case .success:
+            self?.state = .finished(result: .success(.success(result: ())))
+          case .failure(exitCode: let exitCode):
+            self?.state = .finished(result: .success(.failure(exitCode: exitCode)))
+          }
+      case .failure(let error):
+        self?.state = .finished(result: .failure(error))
         }
       }
     }.store(in: &subscriptions)

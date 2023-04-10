@@ -31,7 +31,7 @@ public struct ConvertPyTorchToGgmlConversionData: ModelConversionData {
 
 public enum ConvertPyTorchToGgmlConversionStep: CaseIterable {
   case checkEnvironment
-  case installDependencies
+  case setUpEnvironment
   case checkDependencies
   case convertModel
   case quantizeModel
@@ -66,13 +66,6 @@ fileprivate struct ConvertPyTorchToGgmlConversionConfiguredEnvironment {
 }
 
 final class ConvertPyTorchToGgmlConversion: ModelConversion {
-  static func requiredFiles(for data: ConvertPyTorchToGgmlConversionData) -> [URL] {
-    let checkpointFiles = (0..<data.modelType.numPyTorchModelParts).map { checkpointFileName(i: $0) }
-    let expectedFilesInDirectory = [paramsFileName] + checkpointFiles
-    let expectedFilesInParentDirectory = [tokenizerFileName]
-    return expectedFilesInDirectory.map { data.directoryURL.appendingPathComponent($0) } + expectedFilesInParentDirectory.map { data.directoryURL.deletingLastPathComponent().appendingPathComponent($0) }
-  }
-
   // MARK: - Steps
 
   static var conversionSteps: [ConvertPyTorchToGgmlConversionStep] {
@@ -80,6 +73,31 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
   }
 
   // MARK: - Validation
+
+  static func requiredFiles(for data: ConvertPyTorchToGgmlConversionData) -> [URL] {
+    return requiredFilesWithLocations(for: data).map { $0.url }
+  }
+
+  private struct FileLocation {
+    enum Location {
+      case modelDirectory
+      case parentDirectory
+    }
+
+    let url: URL
+    let location: Location
+  }
+
+  private static func requiredFilesWithLocations(for data: ConvertPyTorchToGgmlConversionData) -> [FileLocation] {
+    let checkpointFiles = (0..<data.modelType.numPyTorchModelParts).map { checkpointFileName(i: $0) }
+    let expectedFilesInDirectory = [paramsFileName] + checkpointFiles
+    let expectedFilesInParentDirectory = [tokenizerFileName]
+    return expectedFilesInDirectory.map {
+      FileLocation(url: data.directoryURL.appendingPathComponent($0), location: .modelDirectory)
+    } + expectedFilesInParentDirectory.map {
+      FileLocation(url: data.directoryURL.deletingLastPathComponent().appendingPathComponent($0), location: .parentDirectory)
+    }
+  }
 
   static func validate(
     _ data: ConvertPyTorchToGgmlConversionData,
@@ -154,22 +172,41 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     ConvertPyTorchToGgmlConversionPipelineInput,
     ConvertPyTorchToGgmlConversionConfiguredEnvironment
   > {
-    return ModelConversionStep(type: .installDependencies, executionHandler: { input, command, stdout, stderr in
+    return ModelConversionStep(type: .setUpEnvironment, executionHandler: { input, command, stdout, stderr in
       let validated = input.data.validated
       let directoryURL: URL
       switch input.conversionBehavior {
       case .alongsideInputFile:
         directoryURL = validated.directoryURL
       case .inOtherDirectory(let otherDirectoryURL):
-        for fileURL in ConvertPyTorchToGgmlConversion.requiredFiles(for: validated) {
-          let filename = fileURL.lastPathComponent
-          let destinationFile = otherDirectoryURL.appendingPathComponent(filename)
-          let status = try await ModelConversionUtils.run(Process.Command("ln", arguments: ["-s", fileURL.path, destinationFile.path]))
-          if !status.isSuccess {
-            return .failure(exitCode: status.exitCode)
+        for fileLocation in ConvertPyTorchToGgmlConversion.requiredFilesWithLocations(for: validated) {
+          let filename = fileLocation.url.lastPathComponent
+          let destinationDirectory: URL
+          switch fileLocation.location {
+          case .modelDirectory:
+            destinationDirectory = otherDirectoryURL.appendingPathComponent(validated.modelType.subdirectoryName, isDirectory: true)
+          case .parentDirectory:
+            destinationDirectory = otherDirectoryURL
+          }
+
+          let mkdirStatus = try await ModelConversionUtils.run(
+            Process.Command("mkdir", arguments: ["-p", destinationDirectory.path]),
+            commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+          )
+          if !mkdirStatus.isSuccess {
+            return .failure(exitCode: mkdirStatus.exitCode)
+          }
+
+          let destinationFile = destinationDirectory.appendingPathComponent(filename)
+          let lnStatus = try await ModelConversionUtils.run(
+            Process.Command("ln", arguments: ["-s", fileLocation.url.path, destinationFile.path]),
+            commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+          )
+          if !lnStatus.isSuccess {
+            return .failure(exitCode: lnStatus.exitCode)
           }
         }
-        directoryURL = otherDirectoryURL
+        directoryURL = otherDirectoryURL.appendingPathComponent(validated.modelType.subdirectoryName, isDirectory: true)
       }
 
       let environment = ConvertPyTorchToGgmlConversionConfiguredEnvironment(directoryURL: directoryURL)
@@ -270,9 +307,14 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
   }
 }
 
-extension FileHandle: TextOutputStream {
-  public func write(_ string: String) {
-    let data = Data(string.utf8)
-    self.write(data)
+fileprivate extension ModelType {
+  var subdirectoryName: String {
+    switch self {
+    case .unknown: return ""
+    case .size7B: return "7B"
+    case .size13B: return "13B"
+    case .size30B: return "30B"
+    case .size65B: return "65B"
+    }
   }
 }

@@ -174,7 +174,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
       let environment = ConvertPyTorchToGgmlConversionConfiguredEnvironment(directoryURL: directoryURL)
       return try await ModelConversionUtils.installPythonDependencies(
         input: environment,
-        dependencies: ModelConverter.Script.convertPyTorchToGgml.deps,
+        dependencies: PythonScript.convertPyTorchToGgml.deps,
         connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )
     }, cleanUpHandler: { _ in
@@ -191,7 +191,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     return ModelConversionStep(type: .checkDependencies, executionHandler: { input, command, stdout, stderr in
       return try await ModelConversionUtils.checkInstalledPythonDependencies(
         input: input,
-        dependencies: ModelConverter.Script.convertPyTorchToGgml.deps,
+        dependencies: PythonScript.convertPyTorchToGgml.deps,
         connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )
     }, cleanUpHandler: { _ in return true })
@@ -203,44 +203,19 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     URL
   > {
     return ModelConversionStep(type: .convertModel, executionHandler: { input, command, stdout, stderr in
-      let script = ModelConverter.Script.dummy
-      guard let url = script.url else { return .failure(exitCode: 1) }
-
-      let temporaryDirectoryURL: URL
-      if #available(macOS 13.0, iOS 16.0, *) {
-        temporaryDirectoryURL = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
-      } else {
-        temporaryDirectoryURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-      }
-      try FileManager.default.createDirectory(at: temporaryDirectoryURL, withIntermediateDirectories: true)
-
-      let scriptFileURL: URL
-      if #available(macOS 13.0, iOS 16.0, *) {
-        scriptFileURL = temporaryDirectoryURL.appending(path: script.scriptFile.filename, directoryHint: .notDirectory)
-      } else {
-        scriptFileURL = temporaryDirectoryURL.appendingPathComponent(script.scriptFile.filename, isDirectory: false)
-      }
-
-      let contents = try String(contentsOf: url)
-      try contents.write(to: scriptFileURL, atomically: true, encoding: .utf8)
-
       let inputDirectoryURL = input.directoryURL
-      let convertStatus = try await ModelConversionUtils.run(
-        Coquille.Process.Command(
-          "python3",
-          arguments: [
-            "-u",
-            scriptFileURL.path,
-            input.directoryURL.path
-          ]
-        ),
+      // Hardcode FP16 format for now, like in llama.cpp
+      let format = "1"
+      let convertStatus = try await ModelConversionUtils.runPythonScript(
+        .convertPyTorchToGgml,
+        arguments: [inputDirectoryURL.path, format],
         commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
       )
       if !convertStatus.isSuccess {
         return .failure(exitCode: convertStatus.exitCode)
       }
 
-      let resultFilename = "ggml-model-1.bin"
+      let resultFilename = "ggml-model-f16.bin"
       let resultFileURL: URL
       if #available(macOS 13.0, iOS 16.0, *) {
         resultFileURL = inputDirectoryURL.appending(path: resultFilename, directoryHint: .isDirectory)
@@ -272,12 +247,20 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     return ModelConversionStep(
       type: .quantizeModel,
       executionHandler: { convertedModelURL, command, _, _ in
-        let fileURL = URL(fileURLWithPath: (convertedModelURL.path as NSString).deletingLastPathComponent).appendingPathComponent("ggml-model-q4_0-dummy.bin")
-        try String(" ").write(to: fileURL, atomically: true, encoding: .utf8)
-
         // TODO: capture stdout and stderr and print
         command("Quantizing model...")
-        return .success(result: ConvertPyTorchToGgmlConversionResult(outputFileURL: fileURL))
+
+        let outputBaseURL = URL(fileURLWithPath: (convertedModelURL.path as NSString).deletingLastPathComponent)
+        let outputFilename = "ggml-model-q4_0.bin"
+        let outputURL: URL
+        if #available(macOS 13.0, iOS 16.0, *) {
+          outputURL = outputBaseURL.appending(path: outputFilename, directoryHint: .notDirectory)
+        } else {
+          outputURL = outputBaseURL.appendingPathComponent(outputFilename, isDirectory: false)
+        }
+        try await ModelConverter().quantizeModel(from: convertedModelURL, to: outputURL)
+
+        return .success(result: ConvertPyTorchToGgmlConversionResult(outputFileURL: outputURL))
       },
       cleanUpHandler: { _ in
         return true

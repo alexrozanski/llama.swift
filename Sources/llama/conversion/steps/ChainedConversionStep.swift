@@ -15,6 +15,8 @@ protocol ChainedConversionStep<StepType, InputType, OutputType> {
   var steps: [AnyConversionStep<StepType>] { get }
 
   func execute(with input: InputType) async throws -> Result<ModelConversionStatus<OutputType>, Error>
+  func skip()
+
   func cleanUp() async throws
 }
 
@@ -37,6 +39,10 @@ class UnconnectedConversionStep<StepType, InputType, OutputType>: ChainedConvers
 
   func execute(with input: InputType) async throws -> Result<ModelConversionStatus<OutputType>, Error> {
     return try await step.execute(with: input)
+  }
+
+  func skip() {
+    step.skip()
   }
 
   func cleanUp() async throws {
@@ -65,11 +71,17 @@ class ConnectedConversionStep<StepType, InputType, IO, OutputType>: ChainedConve
       case .success(result: let result):
         return try await output.execute(with: result)
       case .failure(exitCode: let exitCode):
+        output.skip()
         return .success(.failure(exitCode: exitCode))
       }
     case .failure(let error):
       return .failure(error)
     }
+  }
+
+  func skip() {
+    input.skip()
+    output.skip()
   }
 
   func cleanUp() async throws {

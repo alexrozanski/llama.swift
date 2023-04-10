@@ -45,8 +45,9 @@ public class AnyConversionStep<ConversionStep> {
     wrapped.$state.sink { [weak self] newState in
       switch newState {
       case .notStarted: self?.state = .notStarted
-      case .running: self?.state = .running
       case .skipped: self?.state = .skipped
+      case .running: self?.state = .running
+      case .cancelled: self?.state = .cancelled
       case .finished(result: let conversionResult):
         // TODO: fix this spaghetti
         switch conversionResult {
@@ -56,6 +57,8 @@ public class AnyConversionStep<ConversionStep> {
             self?.state = .finished(result: .success(.success(result: ())))
           case .failure(exitCode: let exitCode):
             self?.state = .finished(result: .success(.failure(exitCode: exitCode)))
+          case .cancelled:
+            self?.state = .cancelled
           }
       case .failure(let error):
         self?.state = .finished(result: .failure(error))
@@ -73,10 +76,11 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
     _ input: InputType,
     _ command: @escaping (String) -> Void,
     _ stdout: @escaping (String) -> Void,
-    _ stderr: @escaping (String) -> Void
+    _ stderr: @escaping (String) -> Void,
+    _ cancel: CurrentValueSubject<Bool, Never>
   ) async throws -> ModelConversionStatus<ResultType>
 
-  typealias CleanUpHandler = (ResultType) async throws -> Bool
+  typealias CleanUpHandler = (ResultType?) async throws -> Bool
 
   public enum OutputType {
     case command
@@ -97,19 +101,34 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
     case notStarted
     case skipped
     case running
+    case cancelled
     case finished(result: Result<ModelConversionStatus<ResultType>, Error>)
 
     public var canStart: Bool {
       switch self {
       case .notStarted: return true
-      case .skipped, .running, .finished: return false
+      case .skipped, .running, .cancelled, .finished: return false
+      }
+    }
+
+    public var isRunning: Bool {
+      switch self {
+      case .notStarted, .skipped, .cancelled, .finished: return false
+      case .running: return true
+      }
+    }
+
+    public var isCancelled: Bool {
+      switch self {
+      case .notStarted, .skipped, .running, .finished: return false
+      case .cancelled: return true
       }
     }
 
     public var isFinished: Bool {
       switch self {
       case .notStarted, .running: return false
-      case .skipped, .finished: return true
+      case .skipped, .cancelled, .finished: return true
       }
     }
   }
@@ -135,6 +154,7 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
   private var subscriptions = Set<AnyCancellable>()
   private var timerSubscription: AnyCancellable?
 
+  private var cancellationSubject: CurrentValueSubject<Bool, Never>?
   private var cleanedUp = false
 
   init(type: ConversionStep, executionHandler: @escaping ExecutionHandler, cleanUpHandler: @escaping CleanUpHandler) {
@@ -148,7 +168,7 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
       switch newState {
       case .notStarted:
         self.timerSubscription = nil
-      case .skipped, .finished:
+      case .skipped, .cancelled, .finished:
         self.timerSubscription = nil
         self.runUntilDate = Date()
       case .running:
@@ -172,12 +192,16 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
     }
 
     let stderr = makeAppend(prefix: nil, outputType: .stderr)
+    let cancellationSubject = CurrentValueSubject<Bool, Never>(false)
+    self.cancellationSubject = cancellationSubject
+
     do {
       let status = try await executionHandler(
         input,
         makeAppend(prefix: "> ", outputType: .command),
         makeAppend(prefix: nil, outputType: .stdout),
-        stderr
+        stderr,
+        cancellationSubject
       )
       let result = Result<ModelConversionStatus<ResultType>, Error>.success(status)
       await MainActor.run {
@@ -199,6 +223,15 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
     }
   }
 
+  func cancel() {
+    guard state.isRunning else { return }
+
+    cancellationSubject?.send(true)
+    sendOutput(string: "\n\nCancelled", outputType: .stdout)
+
+    state = .cancelled
+  }
+
   func skip() {
     guard state.canStart else { return }
 
@@ -212,14 +245,16 @@ public class ModelConversionStep<ConversionStep, InputType, ResultType> {
     switch state {
     case .notStarted, .skipped, .running:
       break
+    case .cancelled:
+      cleanedUp = try await cleanUpHandler(nil)
     case .finished(result: let conversionResult):
       switch conversionResult {
       case .success(let executionResult):
         switch executionResult {
         case .success(result: let result):
           cleanedUp = try await cleanUpHandler(result)
-        case .failure:
-          break
+        case .failure, .cancelled:
+          cleanedUp = try await cleanUpHandler(nil)
         }
       case .failure:
         break

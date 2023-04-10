@@ -21,7 +21,7 @@ public class ModelConverter {
   // MARK: - Conversion
 
   public func canRunConversion() async throws -> Bool {
-    return try await ModelConversionUtils.checkConversionEnvironment(input: ()).isSuccess
+    return try await ModelConversionUtils.checkConversionEnvironment(input: (), connectors: makeEmptyConnectors()).isSuccess
   }
 
     public func makeConversionPipeline() -> ModelConversionPipeline<

@@ -12,12 +12,13 @@ public class ModelConversionPipeline<StepType, InputType, ResultType> {
   public enum State {
     case notRunning
     case running
+    case cancelled
     case failed
     case finished(result: ResultType)
 
     public var isRunning: Bool {
       switch self {
-      case .notRunning, .failed, .finished: return false
+      case .notRunning, .failed, .cancelled, .finished: return false
       case .running: return true
       }
     }
@@ -48,7 +49,7 @@ public class ModelConversionPipeline<StepType, InputType, ResultType> {
   public var canStart: Bool {
     switch state {
     case .notRunning: return true
-    case .running, .failed, .finished: return false
+    case .running, .failed, .cancelled, .finished: return false
     }
   }
 
@@ -68,6 +69,8 @@ public class ModelConversionPipeline<StepType, InputType, ResultType> {
           state = .finished(result: result)
         case .failure:
           state = .failed
+        case .cancelled:
+          state = .cancelled
         }
       case .failure:
         state = .failed
@@ -75,5 +78,8 @@ public class ModelConversionPipeline<StepType, InputType, ResultType> {
     }
   }
 
-  public func stop() {}
+  public func stop() {
+    pipeline.cancel()
+    state = .cancelled
+  }
 }

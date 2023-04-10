@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 import Coquille
 
 struct PythonScriptFile {
@@ -59,21 +60,23 @@ class ModelConversionUtils {
 
   static func checkConversionEnvironment<Input>(
     input: Input,
-    connectors: CommandConnectors? = nil
+    connectors: CommandConnectors
   ) async throws -> ModelConversionStatus<Input> {
-    let status = try await ModelConversionUtils.run("which python3", commandConnectors: connectors)
+    let status = try await ModelConversionUtils.run(Coquille.Process.Command("which", arguments: ["python3"]), commandConnectors: connectors)
     switch status {
     case .success:
       return .success(result: input)
     case .failure(exitCode: let exitCode):
       return .failure(exitCode: exitCode)
+    case .cancelled:
+      return .cancelled
     }
   }
 
   static func installPythonDependencies<Input>(
     input: Input,
     dependencies: [String],
-    connectors: CommandConnectors? = nil
+    connectors: CommandConnectors
   ) async throws -> ModelConversionStatus<Input> {
     let status = try await run(Coquille.Process.Command("python3", arguments: ["-u", "-m", "pip", "install"] + dependencies), commandConnectors: connectors)
     switch status {
@@ -81,21 +84,29 @@ class ModelConversionUtils {
       return .success(result: input)
     case .failure(exitCode: let exitCode):
       return .failure(exitCode: exitCode)
+    case .cancelled:
+      return .cancelled
     }
   }
 
   static func checkInstalledPythonDependencies<Input>(
     input: Input,
     dependencies: [String],
-    connectors: CommandConnectors? = nil
+    connectors: CommandConnectors
   ) async throws -> ModelConversionStatus<Input> {
     for dependency in dependencies {
+      if connectors.cancel.value {
+        return .cancelled
+      }
+
       let status = try await run(Coquille.Process.Command("python3", arguments: ["-u", "-m", "pip", "show", dependency]), commandConnectors: connectors)
       switch status {
       case .success:
         break
       case .failure(exitCode: let exitCode):
         return .failure(exitCode: exitCode)
+      case .cancelled:
+        return .cancelled
       }
     }
     return .success(result: input)
@@ -104,7 +115,7 @@ class ModelConversionUtils {
   static func runPythonScript(
     _ script: PythonScript,
     arguments: [String],
-    commandConnectors: CommandConnectors? = nil
+    commandConnectors: CommandConnectors
   ) async throws -> ModelConversionStatus<Void> {
     guard let url = script.url else { return .failure(exitCode: 1) }
 
@@ -138,14 +149,24 @@ class ModelConversionUtils {
     )
   }
 
-  static func run(_ command: Coquille.Process.Command, commandConnectors: CommandConnectors? = nil) async throws -> ModelConversionStatus<Void> {
-    commandConnectors?.command?([[command.name], command.arguments].flatMap { $0 }.joined(separator: " "))
-    return try await Process(command: command, stdout: commandConnectors?.stdout, stderr: commandConnectors?.stderr).run().toModelConversionStatus()
-  }
+  static func run(_ command: Coquille.Process.Command, commandConnectors: CommandConnectors) async throws -> ModelConversionStatus<Void> {
+    return try await withCheckedThrowingContinuation { continuation in
+      commandConnectors.command?([[command.name], command.arguments].flatMap { $0 }.joined(separator: " "))
 
-  static func run(_ commandString: String, commandConnectors: CommandConnectors? = nil) async throws -> ModelConversionStatus<Void> {
-    commandConnectors?.command?(commandString)
-    return try await Process(commandString: commandString, stdout: commandConnectors?.stdout, stderr: commandConnectors?.stderr).run().toModelConversionStatus()
+      var cancellable: AnyCancellable?
+      let process = Process(command: command, stdout: commandConnectors.stdout, stderr: commandConnectors.stderr)
+      let processCancellable = process.run { status in
+        withExtendedLifetime(cancellable) {
+          continuation.resume(returning: status.toModelConversionStatus())
+        }
+      }
+
+      cancellable = commandConnectors.cancel.sink { isCancelled in
+        if isCancelled {
+          processCancellable.cancel()
+        }
+      }
+    }
   }
 }
 

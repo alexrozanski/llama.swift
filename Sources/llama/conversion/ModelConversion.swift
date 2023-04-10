@@ -15,12 +15,13 @@ public struct ModelConversionFile {
 public enum ModelConversionStatus<ResultType> {
   case success(result: ResultType)
   case failure(exitCode: Int32)
+  case cancelled
 
   public var isSuccess: Bool {
     switch self {
     case .success:
       return true
-    case .failure:
+    case .failure, .cancelled:
       return false
     }
   }
@@ -29,6 +30,7 @@ public enum ModelConversionStatus<ResultType> {
     switch self {
     case .success: return 0
     case .failure(exitCode: let exitCode): return exitCode
+    case .cancelled: return 1
     }
   }
 }

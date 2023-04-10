@@ -159,10 +159,10 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     ConvertPyTorchToGgmlConversionPipelineInput,
     ConvertPyTorchToGgmlConversionPipelineInput
   > {
-    return ModelConversionStep(type: .checkEnvironment, executionHandler: { input, command, stdout, stderr in
+    return ModelConversionStep(type: .checkEnvironment, executionHandler: { input, command, stdout, stderr, cancel in
       return try await ModelConversionUtils.checkConversionEnvironment(
         input: input,
-        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
       )
     }, cleanUpHandler: { _ in return true })
   }
@@ -172,7 +172,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     ConvertPyTorchToGgmlConversionPipelineInput,
     ConvertPyTorchToGgmlConversionConfiguredEnvironment
   > {
-    return ModelConversionStep(type: .setUpEnvironment, executionHandler: { input, command, stdout, stderr in
+    return ModelConversionStep(type: .setUpEnvironment, executionHandler: { input, command, stdout, stderr, cancel in
       let validated = input.data.validated
       let directoryURL: URL
       switch input.conversionBehavior {
@@ -191,7 +191,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
 
           let mkdirStatus = try await ModelConversionUtils.run(
             Process.Command("mkdir", arguments: ["-p", destinationDirectory.path]),
-            commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+            commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
           )
           if !mkdirStatus.isSuccess {
             return .failure(exitCode: mkdirStatus.exitCode)
@@ -200,7 +200,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
           let destinationFile = destinationDirectory.appendingPathComponent(filename)
           let lnStatus = try await ModelConversionUtils.run(
             Process.Command("ln", arguments: ["-s", fileLocation.url.path, destinationFile.path]),
-            commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+            commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
           )
           if !lnStatus.isSuccess {
             return .failure(exitCode: lnStatus.exitCode)
@@ -213,7 +213,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
       return try await ModelConversionUtils.installPythonDependencies(
         input: environment,
         dependencies: PythonScript.convertPyTorchToGgml.deps,
-        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
       )
     }, cleanUpHandler: { _ in
       // Shouldn't remove these as they may have been installed anyway.
@@ -226,11 +226,11 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     ConvertPyTorchToGgmlConversionConfiguredEnvironment,
     ConvertPyTorchToGgmlConversionConfiguredEnvironment
   > {
-    return ModelConversionStep(type: .checkDependencies, executionHandler: { input, command, stdout, stderr in
+    return ModelConversionStep(type: .checkDependencies, executionHandler: { input, command, stdout, stderr, cancel in
       return try await ModelConversionUtils.checkInstalledPythonDependencies(
         input: input,
         dependencies: PythonScript.convertPyTorchToGgml.deps,
-        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
       )
     }, cleanUpHandler: { _ in return true })
   }
@@ -240,14 +240,14 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     ConvertPyTorchToGgmlConversionConfiguredEnvironment,
     URL
   > {
-    return ModelConversionStep(type: .convertModel, executionHandler: { input, command, stdout, stderr in
+    return ModelConversionStep(type: .convertModel, executionHandler: { input, command, stdout, stderr, cancel in
       let inputDirectoryURL = input.directoryURL
       // Hardcode FP16 format for now, like in llama.cpp
       let format = "1"
       let convertStatus = try await ModelConversionUtils.runPythonScript(
         .dummy,
         arguments: [inputDirectoryURL.path, format],
-        commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+        commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
       )
       if !convertStatus.isSuccess {
         return .failure(exitCode: convertStatus.exitCode)
@@ -263,7 +263,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
 
       let fileExistsStatus = try await ModelConversionUtils.run(
         Process.Command("test", arguments: ["-f", resultFileURL.path]),
-        commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr)
+        commandConnectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
       )
       if !fileExistsStatus.isSuccess {
         return .failure(exitCode: fileExistsStatus.exitCode)
@@ -271,8 +271,10 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
 
       return .success(result: resultFileURL)
     }, cleanUpHandler: { unQuantizedGgmlFileURL in
-      // Since this is quantized to a new file by the quantize step it is fine to do this
-      try FileManager.default.removeItem(at: unQuantizedGgmlFileURL)
+      if let unQuantizedGgmlFileURL {
+        // Since this is quantized to a new file by the quantize step it is fine to do this
+        try FileManager.default.removeItem(at: unQuantizedGgmlFileURL)
+      }
       return true
     })
   }
@@ -284,7 +286,7 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
   > {
     return ModelConversionStep(
       type: .quantizeModel,
-      executionHandler: { convertedModelURL, command, _, _ in
+      executionHandler: { convertedModelURL, command, _, _, _ in
         // TODO: capture stdout and stderr and print
         command("Quantizing model (this may take a few minutes)...")
 

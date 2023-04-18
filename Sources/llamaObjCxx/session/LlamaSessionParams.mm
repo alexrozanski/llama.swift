@@ -44,7 +44,8 @@
   params.repeatPenalty = 1.10f;
 
   params.useF16Memory = YES;
-  params.keepModelInMemory = NO;
+  params.useMmap = YES;
+  params.useMlock = NO;
 
   return params;
 }

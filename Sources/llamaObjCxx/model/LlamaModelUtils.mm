@@ -7,6 +7,8 @@
 
 #import "LlamaModelUtils.h"
 
+#include <string>
+
 #import "llama.hh"
 #import "LlamaErrorInternal.h"
 
@@ -49,7 +51,7 @@
 
 + (BOOL)quantizeModelWithSourceFileURL:(NSURL *)fileURL
                            destFileURL:(NSURL *)destFileURL
-                      quantizationType:(_LlamaQuantizationType)quantizationType
+                              fileType:(_LlamaModelFileType)fileType
                               outError:(NSError **)outError
 {
   if (!fileURL) {
@@ -69,16 +71,26 @@
   const std::string fname_inp([fileURL.path cStringUsingEncoding:NSUTF8StringEncoding]);
   const std::string fname_out([destFileURL.path cStringUsingEncoding:NSUTF8StringEncoding]);
 
-  int itype = 2;
-  switch (quantizationType) {
-  case _LlamaQuantizationTypeQ4_1:
-    itype = 3;
-  case _LlamaQuantizationTypeUnknown:
-  case _LlamaQuantizationTypeQ4_0:
-    break;
+  llama_ftype ftype;
+  switch (fileType) {
+  case _LlamaModelFileTypeUnknown:
+      if (outError) {
+        *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeInvalidInputArguments, @"Invalid input fileType"));
+      }
+      return NO;
+  case _LlamaModelFileTypeAllF32:
+      ftype = LLAMA_FTYPE_ALL_F32;
+  case _LlamaModelFileTypeMostlyF16:
+      ftype = LLAMA_FTYPE_MOSTLY_F16;
+  case _LlamaModelFileTypeMostlyQ4_0:
+      ftype = LLAMA_FTYPE_MOSTLY_Q4_0;
+  case _LlamaModelFileTypeMostlyQ4_1:
+      ftype = LLAMA_FTYPE_MOSTLY_Q4_1;
+  case _LlamaModelFileTypeMostlyQ4_1SomeF16:
+      ftype = LLAMA_FTYPE_MOSTLY_Q4_1_SOME_F16;
   }
 
-  if (!llama_model_quantize(fname_inp.c_str(), fname_out.c_str(), itype, outError)) {
+  if (!llama_model_quantize(fname_inp.c_str(), fname_out.c_str(), ftype, outError)) {
     return NO;
   }
 

@@ -40,7 +40,7 @@ LDFLAGS   = -framework Foundation
 
 # warnings
 CFLAGS   += -Wall -Wextra -Wpedantic -Wcast-qual -Wdouble-promotion -Wshadow -Wstrict-prototypes -Wpointer-arith -Wno-unused-function
-CXXFLAGS += -Wall -Wextra -Wpedantic -Wcast-qual -Wno-unused-function
+CXXFLAGS += -Wall -Wextra -Wpedantic -Wcast-qual -Wno-unused-function -Wno-multichar
 
 # OS specific
 # TODO: support Windows
@@ -143,10 +143,10 @@ default: quantize
 #
 
 ggml.o: $(CPP_PATH)/ggml.c $(CPP_PATH)/ggml.h
-	$(CC)  $(CFLAGS)   -c $(CPP_PATH)/ggml.c -o ggml.o
+	$(CC)  $(CFLAGS)   -c $< -o $@
 
-llama.o: $(CPP_PATH)/llama.mm $(CPP_PATH)/llama.hh
-	$(CXX) $(CXXFLAGS) -c $(CPP_PATH)/llama.mm -o llama.o
+llama.o: $(CPP_PATH)/llama.mm $(CPP_PATH)/ggml.h $(CPP_PATH)/llama.hh $(CPP_PATH)/llama_util.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 LlamaError.o: $(LLAMAOBJCXX_PATH)/LlamaError.m $(LLAMAOBJCXX_PATH)/headers/LlamaError.h
 	$(CXX) $(OBJCFLAGS) -c $(LLAMAOBJCXX_PATH)/LlamaError.m -o LlamaError.o
@@ -155,13 +155,18 @@ LlamaErrorInternal.o: $(LLAMAOBJCXX_PATH)/internal/LlamaErrorInternal.m $(LLAMAO
 	$(CXX) $(OBJCFLAGS) -c $(LLAMAOBJCXX_PATH)/internal/LlamaErrorInternal.m -o LlamaErrorInternal.o
 
 clean:
-	rm -vf *.o quantize
+	rm -vf *.o main quantize quantize-stats perplexity embedding benchmark-q4_0-matmult
 
-quantize: quantize.mm ggml.o llama.o LlamaErrorInternal.o LlamaError.o
-	$(CXX) $(OBJCFLAGS) quantize.mm ggml.o llama.o LlamaErrorInternal.o LLamaError.o -o quantize $(LDFLAGS)
+quantize: quantize.mm ggml.o llama.o LlamaError.o LlamaErrorInternal.o
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+
 #
 # Tests
 #
+
+benchmark: examples/benchmark/benchmark-q4_0-matmult.c ggml.o
+	$(CXX) $(CXXFLAGS) $^ -o benchmark-q4_0-matmult $(LDFLAGS)
+	./benchmark-q4_0-matmult
 
 .PHONY: tests
 tests:

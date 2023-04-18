@@ -17,10 +17,14 @@ typedef NS_ENUM(NSUInteger, _LlamaModelType) {
   _LlamaModelType65B
 };
 
-typedef NS_ENUM(NSUInteger, _LlamaQuantizationType) {
-  _LlamaQuantizationTypeUnknown = 0,
-  _LlamaQuantizationTypeQ4_0,
-  _LlamaQuantizationTypeQ4_1
+// Wraps llama_ftype
+typedef NS_ENUM(NSUInteger, _LlamaModelFileType) {
+  _LlamaModelFileTypeUnknown = 0,
+  _LlamaModelFileTypeAllF32 = 1,
+  _LlamaModelFileTypeMostlyF16 = 2,
+  _LlamaModelFileTypeMostlyQ4_0 = 3,
+  _LlamaModelFileTypeMostlyQ4_1 = 4,
+  _LlamaModelFileTypeMostlyQ4_1SomeF16 = 5
 };
 
 @interface _LlamaModelUtils : NSObject
@@ -36,7 +40,7 @@ typedef NS_ENUM(NSUInteger, _LlamaQuantizationType) {
 
 + (BOOL)quantizeModelWithSourceFileURL:(NSURL *)fileURL
                            destFileURL:(NSURL *)destFileURL
-                      quantizationType:(_LlamaQuantizationType)quantizationType
+                              fileType:(_LlamaModelFileType)quantizationType
                               outError:(NSError **)outError;
 
 

@@ -87,7 +87,8 @@
     lparams.n_parts    = _params.numberOfParts;
     lparams.seed       = _params.seed;
     lparams.f16_kv     = _params.useF16Memory;
-    lparams.use_mlock  = _params.keepModelInMemory;
+    lparams.use_mmap   = _params.useMmap;
+    lparams.use_mlock  = _params.useMlock;
 
     const char *modelPath = [_params.modelPath cStringUsingEncoding:NSUTF8StringEncoding];
     ctx = llama_init_from_file(modelPath, lparams, outError);
@@ -95,6 +96,21 @@
       return NO;
     }
   }
+
+  if (_params.loraAdapter.length > 0) {
+    std::string lora_adapter([_params.loraAdapter cStringUsingEncoding:NSUTF8StringEncoding]);
+    std::string lora_base(_params.loraBase.length > 0 ? [_params.loraBase cStringUsingEncoding:NSUTF8StringEncoding] : "");
+    int err = llama_apply_lora_from_file(ctx,
+                                          lora_adapter.c_str(),
+                                          lora_base.empty() ? NULL : lora_base.c_str(),
+                                          _params.numberOfThreads);
+    if (err != 0) {
+      if (outError) {
+        *outError = makeFailedToPredictErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeFailedToApplyLoraAdapter, [NSString stringWithFormat:@"failed to apply lora adapter"]));
+      }
+      return NO;
+    }
+}
 
   LlamaContext *context = [[LlamaContext alloc] initWithParams:_params context:ctx];
   NSString *initialPrompt = @"";

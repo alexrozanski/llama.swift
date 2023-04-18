@@ -37,7 +37,7 @@ public class ModelConverter {
   public func quantizeModel(from sourceFileURL: URL, to destinationFileURL: URL) async throws {
     return try await withCheckedThrowingContinuation { continuation in
       do {
-        try _LlamaModelUtils.quantizeModel(withSourceFileURL: sourceFileURL, destFileURL: destinationFileURL, quantizationType: .Q4_0)
+        try _LlamaModelUtils.quantizeModel(withSourceFileURL: sourceFileURL, destFileURL: destinationFileURL, fileType: .mostlyQ4_0)
         continuation.resume(returning: ())
       } catch {
         continuation.resume(throwing: error)

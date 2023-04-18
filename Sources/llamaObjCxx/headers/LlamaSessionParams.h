@@ -50,10 +50,17 @@ typedef NS_ENUM(NSUInteger, _LlamaSessionMode) {
 
 @property (nullable, copy) NSArray<NSString *> *antiprompts;
 
+// lora_adapter in gpt_params
+@property (nullable, copy) NSString *loraAdapter;
+// lora_base in gpt_params
+@property (nullable, copy) NSString *loraBase;
+
 // memory_f16 in gpt_params
 @property (nonatomic, assign) BOOL useF16Memory;
+// use_mmap in gpt_params
+@property (nonatomic, assign) BOOL useMmap;
 // use_mlock in gpt_params
-@property (nonatomic, assign) BOOL keepModelInMemory;
+@property (nonatomic, assign) BOOL useMlock;
 
 // Support for other model types
 @property (nonatomic, nullable, copy) NSString *initialPrompt;

@@ -66,6 +66,7 @@ extern "C" {
         bool f16_kv;     // use fp16 for KV cache
         bool logits_all; // the llama_eval() call computes all logits, not just the last one
         bool vocab_only; // only load the vocabulary, no weights
+        bool use_mmap;   // use mmap if possible
         bool use_mlock;  // force system to keep model in RAM
         bool embedding;  // embedding mode only
 
@@ -75,12 +76,24 @@ extern "C" {
         void * progress_callback_user_data;
     };
 
+    // model file types
+    enum llama_ftype {
+        LLAMA_FTYPE_ALL_F32     = 0,
+        LLAMA_FTYPE_MOSTLY_F16  = 1,  // except 1d tensors
+        LLAMA_FTYPE_MOSTLY_Q4_0 = 2,  // except 1d tensors
+        LLAMA_FTYPE_MOSTLY_Q4_1 = 3,  // except 1d tensors
+        LLAMA_FTYPE_MOSTLY_Q4_1_SOME_F16 = 4, // tok_embeddings.weight and output.weight are F16
+    };
+
     LLAMA_API struct llama_context_params llama_context_default_params();
 
-    LLAMA_API bool llama_get_model_type(
-            const char * path_model,
+    LLAMA_API BOOL llama_get_model_type(
+            const char * fname,
             e_model & model_type,
             NSError **outError);
+
+    LLAMA_API bool llama_mmap_supported();
+    LLAMA_API bool llama_mlock_supported();
 
     // Various functions for loading a ggml llama model.
     // Allocate (almost) all memory needed for the model.
@@ -98,8 +111,20 @@ extern "C" {
     LLAMA_API BOOL llama_model_quantize(
             const char * fname_inp,
             const char * fname_out,
-                   int   itype,
+      enum llama_ftype   ftype,
               NSError ** outError);
+
+    // Apply a LoRA adapter to a loaded model
+    // path_base_model is the path to a higher quality model to use as a base for
+    // the layers modified by the adapter. Can be NULL to use the current loaded model.
+    // The model needs to be reloaded before applying a new adapter, otherwise the adapter
+    // will be applied on top of the previous one
+    // Returns 0 on success
+    LLAMA_API int llama_apply_lora_from_file(
+            struct llama_context * ctx,
+                      const char * path_lora,
+                      const char * path_base_model,
+                             int   n_threads);
 
     // Returns the KV cache that will contain the context for the
     // ongoing prediction with the model.
@@ -184,13 +209,17 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
 
+// Internal API to be implemented by llama.cpp and used by tests/benchmarks only
+#ifdef LLAMA_API_INTERNAL
+
+#include <vector>
 #include <string>
-#include <unordered_map>
-//
-// Internal function exposed for tests and benchmarks
-//
-std::unordered_map<std::string, struct ggml_tensor *>& llama_internal_get_tensor_map(struct llama_context * ctx);
-#endif
+struct ggml_tensor;
+
+std::vector<std::pair<std::string, struct ggml_tensor *>>& llama_internal_get_tensor_map(struct llama_context * ctx);
 
 #endif
+
+#endif // LLAMA_H

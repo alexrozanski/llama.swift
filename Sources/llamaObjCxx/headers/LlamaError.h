@@ -25,13 +25,15 @@ typedef NS_ENUM(NSInteger, _LlamaErrorCode) {
   _LlamaErrorCodeInvalidInputArguments = -500,
 
   // Model internal error codes
-  _LlamaErrorCodeFailedToOpenModelFile = -1000,
-  _LlamaErrorCodeInvalidModelUnversioned = -1001,
-  _LlamaErrorCodeInvalidModelBadMagic = -1002,
-  _LlamaErrorCodeInvalidModelUnsupportedFileVersion = -1003,
+  _LlamaErrorCodeFailedToGetModelType = -1000,
+  _LlamaErrorCodeFailedToOpenModelFile = -1001,
+  _LlamaErrorCodeInvalidModelUnversioned = -1002,
+  _LlamaErrorCodeInvalidModelBadMagic = -1003,
+  _LlamaErrorCodeInvalidModelUnsupportedFileVersion = -1004,
 
   // Model prediction internal error codes
   _LlamaErrorCodePromptIsTooLong = -2000,
+  _LlamaErrorCodeFailedToApplyLoraAdapter = -2001,
 
   // General failure error codes
   _LlamaErrorCodeGeneralInternalLoadFailure = -10001,

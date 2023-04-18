@@ -58,6 +58,67 @@ enum PythonScript {
 class ModelConversionUtils {
   private init() {}
 
+  // MARK: ModelConversionStep Builders
+
+  static func makeCheckEnvironmentStep<ConversionStep, InputType>(stepType: ConversionStep) -> ModelConversionStep<
+    ConversionStep,
+    InputType,
+    InputType
+  > {
+    return ModelConversionStep(type: stepType, executionHandler: { input, command, stdout, stderr, cancel in
+      return try await ModelConversionUtils.checkConversionEnvironment(
+        input: input,
+        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
+      )
+    }, cleanUpHandler: { _ in return true })
+  }
+
+  static func makeInstallPythonDependenciesStep<ConversionStep, InputType>(
+    stepType: ConversionStep,
+    dependencies: [String]
+  ) -> ModelConversionStep<
+    ConversionStep,
+    InputType,
+    InputType
+  > {
+    return ModelConversionStep(type: stepType, executionHandler: { input, command, stdout, stderr, cancel in
+      return try await ModelConversionUtils.installPythonDependencies(
+        input: input,
+        dependencies: dependencies,
+        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
+      )
+    }, cleanUpHandler: { _ in return true })
+  }
+
+  static func makeCheckInstalledPythonDependenciesStep<ConversionStep, InputType>(
+    stepType: ConversionStep,
+    dependencies: [String]
+  ) -> ModelConversionStep<
+    ConversionStep,
+    InputType,
+    InputType
+  > {
+    return ModelConversionStep(type: stepType, executionHandler: { input, command, stdout, stderr, cancel in
+      return try await ModelConversionUtils.checkInstalledPythonDependencies(
+        input: input,
+        dependencies: dependencies,
+        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
+      )
+    }, cleanUpHandler: { _ in return true })
+  }
+
+  // MARK: - Validation Utils
+
+  static func modelConversionFiles(
+    from fileURLs: [URL]
+  ) -> [ModelConversionFile] {
+    return fileURLs.map { fileURL in
+      ModelConversionFile(url: fileURL, found: FileManager.default.fileExists(atPath: fileURL.path))
+    }
+  }
+
+  // MARK: - Conversion Utils
+
   static func checkConversionEnvironment<Input>(
     input: Input,
     connectors: CommandConnectors
@@ -148,6 +209,8 @@ class ModelConversionUtils {
       commandConnectors: commandConnectors
     )
   }
+
+  // MARK: - Running Commands
 
   static func run(_ command: Coquille.Process.Command, commandConnectors: CommandConnectors) async throws -> ModelConversionStatus<Void> {
     return try await withCheckedThrowingContinuation { continuation in

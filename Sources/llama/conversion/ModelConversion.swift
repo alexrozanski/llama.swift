@@ -39,12 +39,19 @@ public protocol ModelConversionData<ValidationError> where ValidationError: Erro
   associatedtype ValidationError
 }
 
-protocol ModelConversion<DataType, ConversionStep, ValidationError, ResultType> where DataType: ModelConversionData<ValidationError> {
-  associatedtype DataType
-  associatedtype ConversionStep
-  associatedtype ConversionPipelineInputType
-  associatedtype ValidationError
-  associatedtype ResultType
+protocol ModelConversion<
+  DataType,
+  ValidatedDataType,
+  ConversionStep,
+  ValidationError,
+  ResultType
+> where DataType: ModelConversionData<ValidationError>, ValidationError: Error {
+  associatedtype DataType // Input data type
+  associatedtype ValidatedDataType // Data type returned from validation (may be the same as DataType)
+  associatedtype ConversionStep // The conversion step type. Probably an enum
+  associatedtype ConversionPipelineInputType // The input type to the conversion pipeline. This should probably contain ValidatedDataType
+  associatedtype ValidationError // The Error type for errors returned from validation
+  associatedtype ResultType // The result type from the conversion operation
 
   // Steps
   static var conversionSteps: [ConversionStep] { get }
@@ -52,14 +59,16 @@ protocol ModelConversion<DataType, ConversionStep, ValidationError, ResultType> 
   // Validation
   static func validate(
     _ data: DataType,
-    requiredFiles: inout [ModelConversionFile]?
-  ) -> Result<ValidatedModelConversionData<DataType>, ValidationError>
+    returning outRequiredFiles: inout [ModelConversionFile]?
+  ) -> Result<ValidatedModelConversionData<ValidatedDataType>, ValidationError>
 
   // Pipeline
   func makeConversionPipeline() -> ModelConversionPipeline<ConversionStep, ConversionPipelineInputType, ResultType>
 }
 
-public struct ValidatedModelConversionData<DataType> where DataType: ModelConversionData {
+// Define an additional type that can only be constructed internally by llama.swift
+// to ensure that this data has beeen validated by validate(...).
+public struct ValidatedModelConversionData<DataType> {
   public let validated: DataType
 
   internal init(validated: DataType) {

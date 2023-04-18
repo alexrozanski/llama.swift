@@ -14,8 +14,8 @@ public class ModelConverter {
 
   // MARK: - Validation
 
-  public func validateConversionData(_ data: ConvertPyTorchToGgmlConversionData, requiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>, ConvertPyTorchToGgmlConversionData.ValidationError> {
-    return ConvertPyTorchToGgmlConversion.validate(data, requiredFiles: &requiredFiles)
+  public func validateConversionData(_ data: ConvertPyTorchToGgmlConversionData, returning outRequiredFiles: inout [ModelConversionFile]?) -> Result<ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>, ConvertPyTorchToGgmlConversionData.ValidationError> {
+    return ConvertPyTorchToGgmlConversion.validate(data, returning: &outRequiredFiles)
   }
 
   // MARK: - Conversion

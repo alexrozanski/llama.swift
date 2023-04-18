@@ -101,22 +101,12 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
 
   static func validate(
     _ data: ConvertPyTorchToGgmlConversionData,
-    requiredFiles: inout [ModelConversionFile]?
+    returning outRequiredFiles: inout [ModelConversionFile]?
   ) -> Result<ValidatedModelConversionData<ConvertPyTorchToGgmlConversionData>, ConvertPyTorchToGgmlConversionData.ValidationError> {
-    let requiredFileURLs = self.requiredFiles(for: data)
+    let requiredFiles = ModelConversionUtils.modelConversionFiles(from: requiredFiles(for: data))
 
-    var missingFilenames: [String] = []
-    var requiredFileState = [ModelConversionFile]()
-
-    for fileURL in requiredFileURLs {
-      let foundFile = FileManager.default.fileExists(atPath: fileURL.path)
-      requiredFileState.append(ModelConversionFile(url: fileURL, found: foundFile))
-      if !foundFile {
-        missingFilenames.append(fileURL.lastPathComponent)
-      }
-    }
-
-    requiredFiles = requiredFileState
+    let missingFilenames = requiredFiles.filter { !$0.found }.map { $0.url.lastPathComponent }
+    outRequiredFiles = requiredFiles
 
     if !missingFilenames.isEmpty {
       return .failure(.missingFiles(filenames: missingFilenames))
@@ -135,11 +125,11 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
     return ModelConversionPipeline(
       pipeline:
         chainFront(
-          makeCheckEnvironmentStep(),
+          ModelConversionUtils.makeCheckEnvironmentStep(stepType: .checkEnvironment),
           chainFront(
             makeSetupEnvironmentStep(),
             chainFront(
-              makeCheckDependenciesStep(),
+              ModelConversionUtils.makeCheckInstalledPythonDependenciesStep(stepType: .checkDependencies, dependencies: PythonScript.convertPyTorchToGgml.deps),
               chainFront(
                 makeConvertFromPyTorchToGgmlStep(),
                 UnconnectedConversionStep(
@@ -153,19 +143,6 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
   }
 
   // MARK: - Conversion Steps
-
-  private func makeCheckEnvironmentStep() -> ModelConversionStep<
-    ConvertPyTorchToGgmlConversionStep,
-    ConvertPyTorchToGgmlConversionPipelineInput,
-    ConvertPyTorchToGgmlConversionPipelineInput
-  > {
-    return ModelConversionStep(type: .checkEnvironment, executionHandler: { input, command, stdout, stderr, cancel in
-      return try await ModelConversionUtils.checkConversionEnvironment(
-        input: input,
-        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
-      )
-    }, cleanUpHandler: { _ in return true })
-  }
 
   private func makeSetupEnvironmentStep() -> ModelConversionStep<
     ConvertPyTorchToGgmlConversionStep,
@@ -219,20 +196,6 @@ final class ConvertPyTorchToGgmlConversion: ModelConversion {
       // Shouldn't remove these as they may have been installed anyway.
       return true
     })
-  }
-
-  private func makeCheckDependenciesStep() -> ModelConversionStep<
-    ConvertPyTorchToGgmlConversionStep,
-    ConvertPyTorchToGgmlConversionConfiguredEnvironment,
-    ConvertPyTorchToGgmlConversionConfiguredEnvironment
-  > {
-    return ModelConversionStep(type: .checkDependencies, executionHandler: { input, command, stdout, stderr, cancel in
-      return try await ModelConversionUtils.checkInstalledPythonDependencies(
-        input: input,
-        dependencies: PythonScript.convertPyTorchToGgml.deps,
-        connectors: CommandConnectors(command: command, stdout: stdout, stderr: stderr, cancel: cancel)
-      )
-    }, cleanUpHandler: { _ in return true })
   }
 
   private func makeConvertFromPyTorchToGgmlStep() -> ModelConversionStep<

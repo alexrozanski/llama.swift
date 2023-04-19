@@ -10,14 +10,14 @@ import llamaObjCxx
 
 public struct Hyperparameters {
   // The number of tokens to keep as context
-  public let contextSize: UInt?
-  public let batchSize: UInt?
-  public let lastNTokensToPenalize: UInt?
-  public let topK: UInt?
+  public fileprivate(set) var contextSize: UInt?
+  public fileprivate(set) var batchSize: UInt?
+  public fileprivate(set) var lastNTokensToPenalize: UInt?
+  public fileprivate(set) var topK: UInt?
   // Should be between 0 and 1
-  public let topP: Double?
-  public let temperature: Double?
-  public let repeatPenalty: Double?
+  public fileprivate(set) var topP: Double?
+  public fileprivate(set) var temperature: Double?
+  public fileprivate(set) var repeatPenalty: Double?
 
   public init(
     contextSize: UInt? = nil,
@@ -40,16 +40,16 @@ public struct Hyperparameters {
 
 public class SessionConfig {
   // Seed for generation
-  public let seed: Int32?
+  public private(set) var seed: Int32?
 
   // Number of threads to run prediction on.
-  public let numThreads: UInt?
+  public private(set) var numThreads: UInt?
 
   // Number of tokens to predict for each run.
-  public let numTokens: UInt
+  public private(set) var numTokens: UInt
 
   // Model configuration
-  public let hyperparameters: Hyperparameters
+  public private(set) var hyperparameters: Hyperparameters
 
   public let reversePrompt: String?
 
@@ -65,6 +65,51 @@ public class SessionConfig {
     self.numTokens = numTokens
     self.hyperparameters = hyperparameters
     self.reversePrompt = reversePrompt
+  }
+
+  public func withNumThreads(_ numThreads: UInt?) -> Self {
+    self.numThreads = numThreads
+    return self
+  }
+
+  public func withNumTokens(_ numTokens: UInt) -> Self {
+    self.numTokens = numTokens
+    return self
+  }
+
+  public func withContextSize(_ contextSize: UInt?) -> Self {
+    self.hyperparameters.contextSize = contextSize
+    return self
+  }
+
+  public func withBatchSize(_ batchSize: UInt?) -> Self {
+    self.hyperparameters.batchSize = batchSize
+    return self
+  }
+
+  public func withLastNTokensToPenalize(_ lastNTokensToPenalize: UInt?) -> Self {
+    self.hyperparameters.lastNTokensToPenalize = lastNTokensToPenalize
+    return self
+  }
+
+  public func withTopK(_ topK: UInt?) -> Self {
+    self.hyperparameters.topK = topK
+    return self
+  }
+
+  public func withTopP(_ topP: Double?) -> Self {
+    self.hyperparameters.topP = topP
+    return self
+  }
+
+  public func withTemperature(_ temperature: Double?) -> Self {
+    self.hyperparameters.temperature = temperature
+    return self
+  }
+
+  public func withRepeatPenalty(_ repeatPenalty: Double?) -> Self {
+    self.hyperparameters.repeatPenalty = repeatPenalty
+    return self
   }
 }
 

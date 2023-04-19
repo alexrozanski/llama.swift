@@ -9,7 +9,7 @@ import Foundation
 import llamaObjCxx
 
 protocol ObjCxxParamsBuilder {
-  func build() -> _LlamaSessionParams
+  func build(for modelURL: URL) -> _LlamaSessionParams
 }
 
 class BridgedPredictionCancellable: PredictionCancellable {
@@ -25,6 +25,7 @@ class BridgedPredictionCancellable: PredictionCancellable {
 }
 
 class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
+  let modelURL: URL
   let paramsBuilder: ObjCxxParamsBuilder
 
   // Synchronize state on the main queue.
@@ -57,11 +58,12 @@ class BridgedSession: NSObject, Session, _LlamaSessionDelegate {
   }
 
   private lazy var _session = _LlamaSession(
-    params: paramsBuilder.build(),
+    params: paramsBuilder.build(for: modelURL),
     delegate: self
   )
 
-  init(paramsBuilder: ObjCxxParamsBuilder) {
+  init(modelURL: URL, paramsBuilder: ObjCxxParamsBuilder) {
+    self.modelURL = modelURL
     self.paramsBuilder = paramsBuilder
   }  
 

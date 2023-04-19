@@ -17,7 +17,8 @@ public class SessionManager {
     config: LlamaSessionConfig
   ) -> Session {
     return BridgedSession(
-      paramsBuilder: LlamaSessionParamsBuilder(modelURL: modelURL, sessionConfig: config)
+      modelURL: modelURL,
+      paramsBuilder: config
     )
   }
 
@@ -26,7 +27,8 @@ public class SessionManager {
     config: AlpacaSessionConfig
   ) -> Session {
     return BridgedSession(
-      paramsBuilder: AlpacaSessionParamsBuilder(modelURL: modelURL, sessionConfig: config)
+      modelURL: modelURL,
+      paramsBuilder: config
     )
   }
 
@@ -35,7 +37,8 @@ public class SessionManager {
     config: GPT4AllSessionConfig
   ) -> Session {
     return BridgedSession(
-      paramsBuilder: GPT4AllSessionParamsBuilder(modelURL: modelURL, sessionConfig: config)
+      modelURL: modelURL,
+      paramsBuilder: config
     )
   }
 }

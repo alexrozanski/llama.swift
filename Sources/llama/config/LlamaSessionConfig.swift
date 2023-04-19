@@ -8,4 +8,8 @@
 import Foundation
 import llamaObjCxx
 
-public class LlamaSessionConfig: GeneralSessionConfig {}
+public final class LlamaSessionConfig: SessionConfig, ObjCxxParamsBuilder {
+  func build(for modelURL: URL) -> _LlamaSessionParams {
+    return SessionConfigBuilder(sessionConfig: self, mode: .regular).build(for: modelURL)
+  }
+}

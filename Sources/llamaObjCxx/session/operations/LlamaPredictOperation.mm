@@ -152,8 +152,8 @@
         auto logits = llama_get_logits(_context.ctx);
 
         id = llama_sample_top_p_top_k(_context.ctx,
-                                      runState->last_n_tokens.data() + n_ctx - params.numberOfTokensToPenalize,
-                                      params.numberOfTokensToPenalize, top_k, top_p, temp, repeat_penalty);
+                                      runState->last_n_tokens.data() + n_ctx - params.lastNTokensToPenalize,
+                                      params.lastNTokensToPenalize, top_k, top_p, temp, repeat_penalty);
 
         runState->last_n_tokens.erase(runState->last_n_tokens.begin());
         runState->last_n_tokens.push_back(id);

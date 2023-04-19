@@ -32,7 +32,7 @@
   params.seed = -1;
   params.numberOfThreads = std::min(4, (int32_t) std::thread::hardware_concurrency());
   params.numberOfTokens = 128;
-  params.numberOfTokensToPenalize = 64;
+  params.lastNTokensToPenalize = 64;
   params.numberOfParts = -1;
   params.contextSize = 512;
   params.batchSize = 8;

@@ -53,7 +53,7 @@ public class SessionConfig {
 
   public let reversePrompt: String?
 
-  required init(
+  required public init(
     seed: Int32? = nil,
     numThreads: UInt? = nil,
     numTokens: UInt,

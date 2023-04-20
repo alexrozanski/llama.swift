@@ -10,7 +10,9 @@ import llamaObjCxx
 
 public final class LlamaSessionConfig: SessionConfig, ObjCxxParamsBuilder {
   public static var `default`: Self {
-    return Self.init(numTokens: 128, hyperparameters: Hyperparameters())
+    return self.mergeIntoDefaults(
+      from: Self.init(numTokens: 128, hyperparameters: Hyperparameters())
+    )
   }
 
   func build(for modelURL: URL) -> _LlamaSessionParams {

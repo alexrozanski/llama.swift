@@ -11,14 +11,16 @@ import llamaObjCxx
 public final class AlpacaSessionConfig: SessionConfig, ObjCxxParamsBuilder {
   // Based on values in https://github.com/ggerganov/llama.cpp/blob/107980d/examples/alpaca.sh
   public static var `default`: Self {
-    return Self.init(
-      numTokens: 512,
-      hyperparameters: Hyperparameters(
-        contextSize: 2048,
-        batchSize: 256,
-        topK: 10000,
-        temperature: 0.2,
-        repeatPenalty: 1
+    return self.mergeIntoDefaults(
+      from: Self.init(
+        numTokens: 512,
+        hyperparameters: Hyperparameters(
+          contextSize: 2048,
+          batchSize: 256,
+          topK: 10000,
+          temperature: 0.2,
+          repeatPenalty: 1
+        )
       )
     )
   }

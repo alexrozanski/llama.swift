@@ -11,16 +11,18 @@ import llamaObjCxx
 public final class GPT4AllSessionConfig: SessionConfig, ObjCxxParamsBuilder {
   // Based on config in https://github.com/ggerganov/llama.cpp/blob/437e77855a54e69c86fe03bc501f63d9a3fddb0e/examples/gpt4all.sh#L10
   public static var `default`: Self {
-    return Self.init(
-      numTokens: 128,
-      hyperparameters: Hyperparameters(
-        contextSize: 2048,
-        batchSize: 8,
-        lastNTokensToPenalize: 64,
-        topK: 40,
-        topP: 0.95,
-        temperature: 0.1,
-        repeatPenalty: 1.3
+    return self.mergeIntoDefaults(
+      from: Self.init(
+        numTokens: 128,
+        hyperparameters: Hyperparameters(
+          contextSize: 2048,
+          batchSize: 8,
+          lastNTokensToPenalize: 64,
+          topK: 40,
+          topP: 0.95,
+          temperature: 0.1,
+          repeatPenalty: 1.3
+        )
       )
     )
   }

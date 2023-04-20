@@ -111,6 +111,44 @@ public class SessionConfig {
     self.hyperparameters.repeatPenalty = repeatPenalty
     return self
   }
+
+  static var genericDefaults: Self {
+    let params = _LlamaSessionParams.defaultParams(withModelPath: "", mode: .regular)
+    return Self.init(
+      seed: params.seed == -1 ? nil : params.seed,
+      numThreads: UInt(params.numberOfThreads),
+      numTokens: UInt(params.numberOfTokens),
+      hyperparameters: Hyperparameters(
+        contextSize: UInt(params.contextSize),
+        batchSize: UInt(params.batchSize),
+        lastNTokensToPenalize: UInt(params.lastNTokensToPenalize),
+        topK: UInt(params.topK),
+        topP: Double(params.topP),
+        temperature: Double(params.temp),
+        repeatPenalty: Double(params.repeatPenalty)
+      ),
+      reversePrompt: nil
+    )
+  }
+
+  static func mergeIntoDefaults(from overrides: SessionConfig) -> Self {
+    let defaults = genericDefaults
+    return Self.init(
+      seed: overrides.seed ?? defaults.seed,
+      numThreads: overrides.numThreads ?? defaults.numThreads,
+      numTokens: overrides.numTokens,
+      hyperparameters: Hyperparameters(
+        contextSize: overrides.hyperparameters.contextSize ?? defaults.hyperparameters.contextSize,
+        batchSize: overrides.hyperparameters.batchSize ?? defaults.hyperparameters.batchSize,
+        lastNTokensToPenalize: overrides.hyperparameters.lastNTokensToPenalize ?? defaults.hyperparameters.lastNTokensToPenalize,
+        topK: overrides.hyperparameters.topK ?? defaults.hyperparameters.topK,
+        topP: overrides.hyperparameters.topP ?? defaults.hyperparameters.topP,
+        temperature: overrides.hyperparameters.temperature ?? defaults.hyperparameters.temperature,
+        repeatPenalty: overrides.hyperparameters.repeatPenalty ?? defaults.hyperparameters.repeatPenalty
+      ),
+      reversePrompt: nil
+    )
+  }
 }
 
 class SessionConfigBuilder: ObjCxxParamsBuilder {

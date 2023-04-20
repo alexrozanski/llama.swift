@@ -147,6 +147,11 @@ public class SessionConfigBuilder<T> where T: SessionConfig {
     self.defaults = defaults
   }
 
+  public func withSeed(_ seed: Int32?) -> Self {
+    self.seed = seed
+    return self
+  }
+
   public func withNumThreads(_ numThreads: UInt?) -> Self {
     self.numThreads = numThreads
     return self

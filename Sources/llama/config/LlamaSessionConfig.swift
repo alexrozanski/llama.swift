@@ -9,13 +9,16 @@ import Foundation
 import llamaObjCxx
 
 public final class LlamaSessionConfig: SessionConfig, ObjCxxParamsBuilder {
-  public static var `default`: Self {
-    return self.mergeIntoDefaults(
-      from: Self.init(numTokens: 128, hyperparameters: Hyperparameters())
-    )
+  public static var `defaults`: LlamaSessionConfig {
+    return configurableDefaults.build()
+  }
+
+  public static var configurableDefaults: SessionConfigBuilder<LlamaSessionConfig> {
+    return SessionConfigBuilder(defaults: defaultSessionConfig)
+      .withNumTokens(128)
   }
 
   func build(for modelURL: URL) -> _LlamaSessionParams {
-    return SessionConfigBuilder(sessionConfig: self, mode: .regular).build(for: modelURL)
+    return SessionConfigParamsBuilder(sessionConfig: self, mode: .regular).build(for: modelURL)
   }
 }

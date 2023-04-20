@@ -9,24 +9,26 @@ import Foundation
 import llamaObjCxx
 
 public final class AlpacaSessionConfig: SessionConfig, ObjCxxParamsBuilder {
+  public static var `defaults`: AlpacaSessionConfig {
+    return configurableDefaults.build()
+  }
+
   // Based on values in https://github.com/ggerganov/llama.cpp/blob/107980d/examples/alpaca.sh
-  public static var `default`: Self {
-    return self.mergeIntoDefaults(
-      from: Self.init(
-        numTokens: 512,
-        hyperparameters: Hyperparameters(
-          contextSize: 2048,
-          batchSize: 256,
-          topK: 10000,
-          temperature: 0.2,
-          repeatPenalty: 1
-        )
-      )
-    )
+  public static var configurableDefaults: SessionConfigBuilder<AlpacaSessionConfig> {
+    return SessionConfigBuilder(defaults: defaultSessionConfig)
+      .withNumTokens(512)
+      .withHyperparameters { hyperparameters in
+        hyperparameters
+          .withContextSize(2048)
+          .withBatchSize(256)
+          .withTopK(10000)
+          .withTemperature(0.2)
+          .withRepeatPenalty(1)
+      }
   }
 
   func build(for modelURL: URL) -> _LlamaSessionParams {
-    let params = SessionConfigBuilder(sessionConfig: self, mode: .instructional).build(for: modelURL)
+    let params = SessionConfigParamsBuilder(sessionConfig: self, mode: .instructional).build(for: modelURL)
 
     params.initialPrompt = "Below is an instruction that describes a task. Write a response that appropriately completes the request."
     params.promptPrefix = "\n\n### Instruction:\n\n"

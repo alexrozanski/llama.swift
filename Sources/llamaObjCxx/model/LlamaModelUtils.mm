@@ -80,14 +80,19 @@
       return NO;
   case _LlamaModelFileTypeAllF32:
       ftype = LLAMA_FTYPE_ALL_F32;
+      break;
   case _LlamaModelFileTypeMostlyF16:
       ftype = LLAMA_FTYPE_MOSTLY_F16;
+      break;
   case _LlamaModelFileTypeMostlyQ4_0:
       ftype = LLAMA_FTYPE_MOSTLY_Q4_0;
+      break;
   case _LlamaModelFileTypeMostlyQ4_1:
       ftype = LLAMA_FTYPE_MOSTLY_Q4_1;
+      break;
   case _LlamaModelFileTypeMostlyQ4_1SomeF16:
       ftype = LLAMA_FTYPE_MOSTLY_Q4_1_SOME_F16;
+      break;
   }
 
   if (!llama_model_quantize(fname_inp.c_str(), fname_out.c_str(), ftype, outError)) {

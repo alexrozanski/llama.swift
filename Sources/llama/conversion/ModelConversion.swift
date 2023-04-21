@@ -17,6 +17,15 @@ public enum ModelConversionStatus<ResultType> {
   case failure(exitCode: Int32)
   case cancelled
 
+  public var result: ResultType? {
+    switch self {
+    case .success(result: let result):
+      return result
+    case .failure, .cancelled:
+      return nil
+    }
+  }
+
   public var isSuccess: Bool {
     switch self {
     case .success:

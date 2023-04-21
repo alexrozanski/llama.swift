@@ -48,6 +48,17 @@ enum PythonScript {
       return ["numpy", "sentencepiece", "torch"]
     }
   }
+
+  var dependentScripts: [PythonScript] {
+    switch self {
+    case .genericConvertGgml:
+      return []
+    case .convertPyTorchToGgml:
+      return [.genericConvertGgml]
+    case .convertLoraToGgml:
+      return [.genericConvertGgml]
+    }
+  }
 }
 
 class ModelConversionUtils {
@@ -173,8 +184,6 @@ class ModelConversionUtils {
     arguments: [String],
     commandConnectors: CommandConnectors
   ) async throws -> ModelConversionStatus<Void> {
-    guard let url = script.url else { return .failure(exitCode: 1) }
-
     let temporaryDirectoryURL: URL
     if #available(macOS 13.0, iOS 16.0, *) {
       temporaryDirectoryURL = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
@@ -183,26 +192,47 @@ class ModelConversionUtils {
     }
     try FileManager.default.createDirectory(at: temporaryDirectoryURL, withIntermediateDirectories: true)
 
-    let scriptFileURL: URL
-    if #available(macOS 13.0, iOS 16.0, *) {
-      scriptFileURL = temporaryDirectoryURL.appending(path: script.scriptFile.filename, directoryHint: .notDirectory)
-    } else {
-      scriptFileURL = temporaryDirectoryURL.appendingPathComponent(script.scriptFile.filename, isDirectory: false)
+    // TODO: handle recursive dependencies here if they are needed.
+    let allScripts = [script] + script.dependentScripts
+    var scriptFileURLs: [URL] = []
+    for script in allScripts {
+      let status = try writeScript(script, to: temporaryDirectoryURL)
+      guard let scriptFileURL = status.result else {
+        return .failure(exitCode: 1)
+      }
+      scriptFileURLs.append(scriptFileURL)
     }
 
-    let contents = try String(contentsOf: url)
-    try contents.write(to: scriptFileURL, atomically: true, encoding: .utf8)
+    guard scriptFileURLs.count == allScripts.count, let mainScriptFileURL = scriptFileURLs.first else {
+      return .failure(exitCode: 1)
+    }
 
     return try await ModelConversionUtils.run(
       Coquille.Process.Command(
         "python3",
         arguments: [
           "-u",
-          scriptFileURL.path
+          mainScriptFileURL.path
         ] + arguments
       ),
       commandConnectors: commandConnectors
     )
+  }
+
+  static private func writeScript(_ script: PythonScript, to scriptDirectoryURL: URL) throws -> ModelConversionStatus<URL> {
+    guard let url = script.url else { return .failure(exitCode: 1) }
+
+    let scriptFileURL: URL
+    if #available(macOS 13.0, iOS 16.0, *) {
+      scriptFileURL = scriptDirectoryURL.appending(path: script.scriptFile.filename, directoryHint: .notDirectory)
+    } else {
+      scriptFileURL = scriptDirectoryURL.appendingPathComponent(script.scriptFile.filename, isDirectory: false)
+    }
+
+    let contents = try String(contentsOf: url)
+    try contents.write(to: scriptFileURL, atomically: true, encoding: .utf8)
+
+    return .success(result: scriptFileURL)
   }
 
   // MARK: - Running Commands

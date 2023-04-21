@@ -48,6 +48,9 @@ public class SessionConfig {
   // Number of tokens to predict for each run.
   public private(set) var numTokens: UInt
 
+  // Whether to load and keep the entire model in memory.
+  public private(set) var keepModelInMemory: Bool
+
   // Model configuration
   public private(set) var hyperparameters: Hyperparameters
 
@@ -57,12 +60,14 @@ public class SessionConfig {
     seed: Int32? = nil,
     numThreads: UInt,
     numTokens: UInt,
+    keepModelInMemory: Bool,
     hyperparameters: Hyperparameters,
     reversePrompt: String?
   ) {
     self.seed = seed
     self.numThreads = numThreads
     self.numTokens = numTokens
+    self.keepModelInMemory = keepModelInMemory
     self.hyperparameters = hyperparameters
     self.reversePrompt = reversePrompt
   }
@@ -137,6 +142,7 @@ public class SessionConfigBuilder<T> where T: SessionConfig {
   public private(set) var seed: Int32??
   public private(set) var numThreads: UInt?
   public private(set) var numTokens: UInt?
+  public private(set) var keepModelInMemory: Bool?
   public private(set) var hyperparameters: HyperparametersBuilder
   public private(set) var reversePrompt: String??
 
@@ -162,6 +168,11 @@ public class SessionConfigBuilder<T> where T: SessionConfig {
     return self
   }
 
+  public func withKeepModelInMemory(_ keepModelInMemory: Bool) -> Self {
+    self.keepModelInMemory = keepModelInMemory
+    return self
+  }
+
   public func withHyperparameters(_ hyperParametersConfig: (HyperparametersBuilder) -> HyperparametersBuilder) -> Self {
     self.hyperparameters = hyperParametersConfig(hyperparameters)
     return self
@@ -177,6 +188,7 @@ public class SessionConfigBuilder<T> where T: SessionConfig {
       seed: seed ?? defaults.seed,
       numThreads: numThreads ?? defaults.numThreads,
       numTokens: numTokens ?? defaults.numTokens,
+      keepModelInMemory: keepModelInMemory ?? defaults.keepModelInMemory,
       hyperparameters: hyperparameters.build(),
       reversePrompt: reversePrompt ?? defaults.reversePrompt
     )
@@ -228,6 +240,7 @@ let defaultSessionConfig = {
     seed: params.seed == -1 ? nil : params.seed,
     numThreads: UInt(params.numberOfThreads),
     numTokens: UInt(params.numberOfTokens),
+    keepModelInMemory: params.useMlock,
     hyperparameters: Hyperparameters(
       contextSize: UInt(params.contextSize),
       batchSize: UInt(params.batchSize),

@@ -19,21 +19,18 @@ struct PythonScriptFile {
 }
 
 enum PythonScript {
+  case genericConvertGgml
   case convertPyTorchToGgml
-  case convertGPT4AllToGgml
-  case convertUnversionedGgmlToGgml
-  case dummy
+  case convertLoraToGgml
 
   var scriptFile: PythonScriptFile {
     switch self {
+    case .genericConvertGgml:
+      return PythonScriptFile(name:"convert")
     case .convertPyTorchToGgml:
       return PythonScriptFile(name:"convert-pth-to-ggml")
-    case .convertGPT4AllToGgml:
-      return PythonScriptFile(name:"convert-gpt4all-to-ggml")
-    case .convertUnversionedGgmlToGgml:
-      return PythonScriptFile(name:"convert-unversioned-ggml-to-ggml")
-    case .dummy:
-      return PythonScriptFile(name:"dummy")
+    case .convertLoraToGgml:
+      return PythonScriptFile(name:"convert-lora-to-ggml")
     }
   }
 
@@ -43,13 +40,11 @@ enum PythonScript {
 
   var deps: [String] {
     switch self {
+    case .genericConvertGgml:
+      return ["numpy", "sentencepiece"]
     case .convertPyTorchToGgml:
       return ["numpy", "sentencepiece", "torch"]
-    case .convertGPT4AllToGgml:
-      return ["sentencepiece"]
-    case .convertUnversionedGgmlToGgml:
-      return ["sentencepiece"]
-    case .dummy:
+    case .convertLoraToGgml:
       return ["numpy", "sentencepiece", "torch"]
     }
   }

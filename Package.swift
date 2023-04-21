@@ -20,10 +20,9 @@ let package = Package(
       dependencies: ["llamaObjCxx", "Coquille"],
       path: "Sources/llama",
       resources: [
-        .copy("resources/convert-gpt4all-to-ggml.py"),
+        .copy("resources/convert.py"),
         .copy("resources/convert-pth-to-ggml.py"),
-        .copy("resources/convert-unversioned-ggml-to-ggml.py"),
-        .copy("resources/dummy.py")
+        .copy("resources/convert-lora-to-ggml.py"),
       ]),
     .target(
       name: "llamaObjCxx",

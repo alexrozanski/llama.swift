@@ -12,7 +12,7 @@ let package = Package(
     .library(name: "llama", targets: ["llama"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/alexrozanski/Coquille.git", branch: "v0.3")
+    .package(url: "https://github.com/alexrozanski/Coquille.git", from: "0.3.0")
   ],
   targets: [
     .target(

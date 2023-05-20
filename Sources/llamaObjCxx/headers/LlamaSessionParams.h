@@ -28,8 +28,9 @@ typedef NS_ENUM(NSUInteger, _LlamaSessionMode) {
 @property (nonatomic, assign) int32_t numberOfThreads;
 // n_predict in gpt_params
 @property (nonatomic, assign) int32_t numberOfTokens;
-// n_parts in gpt_params
-@property (nonatomic, assign) int32_t numberOfParts;
+// n_gpu_layers in gpt_params
+@property (nonatomic, assign) int32_t numberOfLayers;
+
 // n_ctx in gpt_params
 @property (nonatomic, assign) int32_t contextSize;
 // n_batch in gpt_params

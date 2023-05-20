@@ -33,7 +33,7 @@
   params.numberOfThreads = std::min(4, (int32_t) std::thread::hardware_concurrency());
   params.numberOfTokens = 128;
   params.lastNTokensToPenalize = 64;
-  params.numberOfParts = -1;
+  params.numberOfLayers = 0;
   params.contextSize = 512;
   params.batchSize = 8;
   params.numberOfTokensToKeepFromInitialPrompt = 0;

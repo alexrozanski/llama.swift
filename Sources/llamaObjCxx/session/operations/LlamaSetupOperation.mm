@@ -83,12 +83,12 @@
   {
     auto lparams = llama_context_default_params();
 
-    lparams.n_ctx      = _params.contextSize;
-    lparams.n_parts    = _params.numberOfParts;
-    lparams.seed       = _params.seed;
-    lparams.f16_kv     = _params.useF16Memory;
-    lparams.use_mmap   = _params.useMmap;
-    lparams.use_mlock  = _params.useMlock;
+    lparams.n_ctx           = _params.contextSize;
+    lparams.n_gpu_layers    = _params.numberOfThreads;
+    lparams.seed            = _params.seed;
+    lparams.f16_kv          = _params.useF16Memory;
+    lparams.use_mmap        = _params.useMmap;
+    lparams.use_mlock       = _params.useMlock;
 
     const char *modelPath = [_params.modelPath cStringUsingEncoding:NSUTF8StringEncoding];
     ctx = llama_init_from_file(modelPath, lparams, outError);

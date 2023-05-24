@@ -33,7 +33,7 @@
   params.numberOfThreads = std::min(4, (int32_t) std::thread::hardware_concurrency());
   params.numberOfTokens = 128;
   params.lastNTokensToPenalize = 64;
-  params.numberOfParts = -1;
+  params.numberOfLayers = 0;
   params.contextSize = 512;
   params.batchSize = 8;
   params.numberOfTokensToKeepFromInitialPrompt = 0;
@@ -42,7 +42,17 @@
   params.topP = 0.95f;
   params.temp = 0.80f;
   params.repeatPenalty = 1.10f;
+  params.presencePenalty = 0.00f;
+  params.frequencyPenalty = 0.00f;
 
+  params.tfsZ = 1.00f;
+  params.typicalP = 1.00f;
+
+  params.mirostat = 0;
+  params.mirostatTau = 5.00f;
+  params.mirostatEta = 0.10f;
+
+  params.penalizeNewLines = true;
   params.useF16Memory = YES;
   params.useMmap = YES;
   params.useMlock = NO;

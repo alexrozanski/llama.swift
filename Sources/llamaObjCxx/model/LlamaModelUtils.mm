@@ -95,7 +95,7 @@
       break;
   }
 
-  if (!llama_model_quantize(fname_inp.c_str(), fname_out.c_str(), ftype, outError)) {
+  if (!llama_model_quantize(fname_inp.c_str(), fname_out.c_str(), ftype, 0, outError)) {
     return NO;
   }
 

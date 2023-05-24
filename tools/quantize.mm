@@ -38,7 +38,7 @@ int main(int argc, char ** argv) {
         const int64_t t_start_us = ggml_time_us();
 
         NSError *quantizeError = nil;
-        if (!llama_model_quantize(fname_inp.c_str(), fname_out.c_str(), ftype, &quantizeError)) {
+        if (!llama_model_quantize(fname_inp.c_str(), fname_out.c_str(), ftype, 0, &quantizeError)) {
             fprintf(stderr, "%s: failed to quantize model from '%s'\n", __func__, fname_inp.c_str());
             return 1;
         }

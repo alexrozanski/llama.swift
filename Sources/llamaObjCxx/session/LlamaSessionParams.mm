@@ -42,7 +42,17 @@
   params.topP = 0.95f;
   params.temp = 0.80f;
   params.repeatPenalty = 1.10f;
+  params.presencePenalty = 0.00f;
+  params.frequencyPenalty = 0.00f;
 
+  params.tfsZ = 1.00f;
+  params.typicalP = 1.00f;
+
+  params.mirostat = 0;
+  params.mirostatTau = 5.00f;
+  params.mirostatEta = 0.10f;
+
+  params.penalizeNewLines = true;
   params.useF16Memory = YES;
   params.useMmap = YES;
   params.useMlock = NO;

@@ -44,10 +44,24 @@ typedef NS_ENUM(NSUInteger, _LlamaSessionMode) {
 @property (nonatomic, assign) int32_t topK;
 // top_p in gpt_params
 @property (nonatomic, assign) float topP;
+// tfs_z in gpt_params
+@property (nonatomic, assign) float tfsZ;
+// typical_p in gpt_params
+@property (nonatomic, assign) float typicalP;
 // temp in gpt_params
 @property (nonatomic, assign) float temp;
 // repeat_penalty in gpt_params
 @property (nonatomic, assign) float repeatPenalty;
+// frequency_penalty in gpt_params
+@property (nonatomic, assign) float frequencyPenalty;
+// presence_penalty in gpt_params
+@property (nonatomic, assign) float presencePenalty;
+// mirostat in gpt_params
+@property (nonatomic, assign) int mirostat;
+// mirostat_tau in gpt_params
+@property (nonatomic, assign) float mirostatTau;
+// mirostat_eta in gpt_params
+@property (nonatomic, assign) float mirostatEta;
 
 @property (nullable, copy) NSArray<NSString *> *antiprompts;
 
@@ -62,6 +76,8 @@ typedef NS_ENUM(NSUInteger, _LlamaSessionMode) {
 @property (nonatomic, assign) BOOL useMmap;
 // use_mlock in gpt_params
 @property (nonatomic, assign) BOOL useMlock;
+// penalize_nl in gpt_params
+@property (nonatomic, assign) BOOL penalizeNewLines;
 
 // Support for other model types
 @property (nonatomic, nullable, copy) NSString *initialPrompt;

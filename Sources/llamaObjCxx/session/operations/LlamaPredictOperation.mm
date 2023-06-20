@@ -108,6 +108,12 @@
     return NO;
   }
 
+  // do one empty run to warm up the model
+  {
+      const std::vector<llama_token> tmp = { llama_token_bos(), };
+      llama_eval(_context.ctx, tmp.data(), tmp.size(), 0, _context.params.numberOfThreads);
+  }
+
   // run in interactive mode always so run the loop until we are finished.
   while (runState->n_remain != 0) {
     if (self.isCancelled) {
@@ -117,6 +123,15 @@
 
     // predict
     if (runState->embd.size() > 0) {
+      // Note: n_ctx - 4 here is to match the logic for commandline prompt handling via
+      // --prompt or --file which uses the same value.
+      auto max_embd_size = n_ctx - 4;
+      // Ensure the input doesn't exceed the context size by truncating embd if necessary.
+      if ((int)runState->embd.size() > max_embd_size) {
+        auto skipped_tokens = runState->embd.size() - max_embd_size;
+        runState->embd.resize(max_embd_size);
+      }
+
       // infinite text generation via context swapping
       // if we run out of context:
       // - take the n_keep first tokens from the original prompt (via n_past)
@@ -124,36 +139,138 @@
       if (runState->n_past + (int)runState->embd.size() > n_ctx) {
         const int n_left = runState->n_past - params.numberOfTokensToKeepFromInitialPrompt;
 
-        runState->n_past = params.numberOfTokensToKeepFromInitialPrompt;
+        // always keep the first token - BOS
+        runState->n_past = std::max(1, params.numberOfTokensToKeepFromInitialPrompt);
 
         // insert n_left/2 tokens at the start of embd from last_n_tokens
         runState->embd.insert(runState->embd.begin(), runState->last_n_tokens.begin() + n_ctx - n_left / 2 - runState->embd.size(), runState->last_n_tokens.end() - runState->embd.size());
+
+        // stop saving session if we run out of context
+        runState->path_session.clear();
       }
 
-      if (llama_eval(_context.ctx, runState->embd.data(), (int)runState->embd.size(), runState->n_past, params.numberOfThreads)) {
-        [self _postEvent:[_LlamaPredictionEvent failedWithError:makeFailedToPredictErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalPredictionFailure, @"failed to eval"))]];
-        return NO;
+      // try to reuse a matching prefix from the loaded session instead of re-eval (via n_past)
+      if (runState->n_session_consumed < (int)runState->session_tokens.size()) {
+        size_t i = 0;
+        for ( ; i < runState->embd.size(); i++) {
+          if (runState->embd[i] != runState->session_tokens[runState->n_session_consumed]) {
+            runState->session_tokens.resize(runState->n_session_consumed);
+            break;
+          }
+
+          runState->n_past++;
+          runState->n_session_consumed++;
+
+          if (runState->n_session_consumed >= (int)runState->session_tokens.size()) {
+            ++i;
+            break;
+          }
+        }
+        if (i > 0) {
+          runState->embd.erase(runState->embd.begin(), runState->embd.begin() + i);
+        }
+      }
+
+      // evaluate tokens in batches
+      // embd is typically prepared beforehand to fit within a batch, but not always
+      for (int i = 0; i < (int)runState->embd.size(); i += _context.params.batchSize) {
+        int n_eval = (int)runState->embd.size() - i;
+        if (n_eval > _context.params.batchSize) {
+          n_eval = _context.params.batchSize;
+        }
+        if (llama_eval(_context.ctx, &runState->embd[i], n_eval, runState->n_past, _context.params.numberOfThreads)) {
+          [self _postEvent:[_LlamaPredictionEvent failedWithError:makeFailedToPredictErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalPredictionFailure, @"failed to eval"))]];
+          return NO;
+        }
+        runState->n_past += n_eval;
+      }
+
+      if (runState->embd.size() > 0 && !runState->path_session.empty()) {
+        runState->session_tokens.insert(runState->session_tokens.end(), runState->embd.begin(), runState->embd.end());
+        runState->n_session_consumed = runState->session_tokens.size();
       }
     }
 
-    runState->n_past += runState->embd.size();
     runState->embd.clear();
 
     if ((int)runState->embd_inp.size() <= runState->n_consumed && !needsToInjectPrompt) {
       // out of user input, sample next token
-      const float top_k = params.topK;
-      const float top_p = params.topP;
-      const float temp = params.temp;
-      const float repeat_penalty = params.repeatPenalty;
+      const float   temp            = params.temp;
+      const int32_t top_k           = params.topK <= 0 ? llama_n_vocab(_context.ctx) : params.topK;
+      const float   top_p           = params.topP;
+      const float   tfs_z           = 1.0f;
+      const float   typical_p       = 1.0;
+      const int32_t repeat_last_n   = params.lastNTokensToPenalize < 0 ? n_ctx : params.lastNTokensToPenalize;
+      const float   repeat_penalty  = params.repeatPenalty;
+      const float   alpha_presence  = 0.0f;
+      const float   alpha_frequency = 0.0f;
+      const int     mirostat        = 0;
+      const float   mirostat_tau    = 5.00f;
+      const float   mirostat_eta    = 0.10f;
+      const bool    penalize_nl     = true;
+
+      // optionally save the session on first sample (for faster prompt loading next time)
+      if (!runState->path_session.empty() && runState->need_to_save_session) {
+        runState->need_to_save_session = false;
+        llama_save_session_file(_context.ctx, runState->path_session.c_str(), runState->session_tokens.data(), runState->session_tokens.size());
+      }
 
       llama_token id = 0;
 
       {
-        auto logits = llama_get_logits(_context.ctx);
+        auto logits  = llama_get_logits(_context.ctx);
+        auto n_vocab = llama_n_vocab(_context.ctx);
 
-        id = llama_sample_top_p_top_k(_context.ctx,
-                                      runState->last_n_tokens.data() + n_ctx - params.lastNTokensToPenalize,
-                                      params.lastNTokensToPenalize, top_k, top_p, temp, repeat_penalty);
+        // Apply params.logit_bias map
+//        for (auto it = params.logit_bias.begin(); it != params.logit_bias.end(); it++) {
+//          logits[it->first] += it->second;
+//        }
+
+        std::vector<llama_token_data> candidates;
+        candidates.reserve(n_vocab);
+        for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
+          candidates.emplace_back(llama_token_data{token_id, logits[token_id], 0.0f});
+        }
+
+        llama_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
+
+        // Apply penalties
+        float nl_logit = logits[llama_token_nl()];
+        auto last_n_repeat = std::min(std::min((int)runState->last_n_tokens.size(), repeat_last_n), n_ctx);
+        llama_sample_repetition_penalty(_context.ctx, &candidates_p,
+                                        runState->last_n_tokens.data() + runState->last_n_tokens.size() - last_n_repeat,
+                                        last_n_repeat, repeat_penalty);
+        llama_sample_frequency_and_presence_penalties(_context.ctx, &candidates_p,
+                                                      runState->last_n_tokens.data() + runState->last_n_tokens.size() - last_n_repeat,
+                                                      last_n_repeat, alpha_frequency, alpha_presence);
+        if (!penalize_nl) {
+          logits[llama_token_nl()] = nl_logit;
+        }
+
+        if (temp <= 0) {
+          // Greedy sampling
+          id = llama_sample_token_greedy(_context.ctx, &candidates_p);
+        } else {
+          if (mirostat == 1) {
+            static float mirostat_mu = 2.0f * mirostat_tau;
+            const int mirostat_m = 100;
+            llama_sample_temperature(_context.ctx, &candidates_p, temp);
+            id = llama_sample_token_mirostat(_context.ctx, &candidates_p, mirostat_tau, mirostat_eta, mirostat_m, &mirostat_mu);
+          } else if (mirostat == 2) {
+            static float mirostat_mu = 2.0f * mirostat_tau;
+            llama_sample_temperature(_context.ctx, &candidates_p, temp);
+            id = llama_sample_token_mirostat_v2(_context.ctx, &candidates_p, mirostat_tau, mirostat_eta, &mirostat_mu);
+          } else {
+            // Temperature sampling
+            llama_sample_top_k(_context.ctx, &candidates_p, top_k, 1);
+            llama_sample_tail_free(_context.ctx, &candidates_p, tfs_z, 1);
+            llama_sample_typical(_context.ctx, &candidates_p, typical_p, 1);
+            llama_sample_top_p(_context.ctx, &candidates_p, top_p, 1);
+            llama_sample_temperature(_context.ctx, &candidates_p, temp);
+            id = llama_sample_token(_context.ctx, &candidates_p);
+          }
+        }
+        // printf("`%d`", candidates_p.size);
 
         runState->last_n_tokens.erase(runState->last_n_tokens.begin());
         runState->last_n_tokens.push_back(id);
@@ -225,8 +342,6 @@
       }
 
       if (runState->n_past > 0 && needsToInjectPrompt) {
-        std::string buffer;
-
         // instruct mode: insert instruction prefix
         if (hasPrefix && !runState->is_antiprompt) {
           runState->n_consumed = (int)runState->embd_inp.size();
@@ -268,6 +383,10 @@
       runState->n_remain = params.numberOfTokens;
       return YES;
     }
+  }
+
+  if (!runState->path_session.empty()) {
+    llama_save_session_file(_context.ctx, runState->path_session.c_str(), runState->session_tokens.data(), runState->session_tokens.size());
   }
 
   // should be a noop

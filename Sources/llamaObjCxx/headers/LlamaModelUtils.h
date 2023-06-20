@@ -40,7 +40,7 @@ typedef NS_ENUM(NSUInteger, _LlamaModelFileType) {
 
 + (BOOL)quantizeModelWithSourceFileURL:(NSURL *)fileURL
                            destFileURL:(NSURL *)destFileURL
-                              fileType:(_LlamaModelFileType)quantizationType
+                              fileType:(_LlamaModelFileType)fileType
                               outError:(NSError **)outError;
 
 

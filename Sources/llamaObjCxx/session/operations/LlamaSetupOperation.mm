@@ -75,7 +75,16 @@
   if (_params.contextSize > 2048) {
     NSLog(@"warning: model does not support context sizes greater than 2048 tokens (%d specified);"
           "expect poor results", _params.contextSize);
+  } else if (_params.contextSize < 8) {
+    NSLog(@"warning: minimum context size is 8, using minimum size.\n");
+    _params.contextSize = 8;
   }
+
+  if (_params.seed < 0) {
+    _params.seed = time(NULL);
+  }
+
+  llama_init_backend();
 
   llama_context * ctx;
 
@@ -83,12 +92,15 @@
   {
     auto lparams = llama_context_default_params();
 
-    lparams.n_ctx      = _params.contextSize;
-    lparams.n_parts    = _params.numberOfParts;
-    lparams.seed       = _params.seed;
-    lparams.f16_kv     = _params.useF16Memory;
-    lparams.use_mmap   = _params.useMmap;
-    lparams.use_mlock  = _params.useMlock;
+    lparams.n_ctx        = _params.contextSize;
+    lparams.n_batch      = _params.batchSize;
+//    lparams.n_gpu_layers = _params.numberOfGPULayers;
+//    lparams.main_gpu     = _params.main_gpu;
+//    lparams.low_vram     = _params.low_vram;
+    lparams.seed         = _params.seed;
+    lparams.f16_kv       = _params.useF16Memory;
+    lparams.use_mmap     = _params.useMmap;
+    lparams.use_mlock    = _params.useMlock;
 
     const char *modelPath = [_params.modelPath cStringUsingEncoding:NSUTF8StringEncoding];
     ctx = llama_init_from_file(modelPath, lparams, outError);
@@ -110,9 +122,36 @@
       }
       return NO;
     }
-}
+  }
 
   LlamaContext *context = [[LlamaContext alloc] initWithParams:_params context:ctx];
+
+  auto runState = context.runState;
+  runState->path_session = ""; //params.path_prompt_cache;
+//
+//  if (!path_session.empty()) {
+//      fprintf(stderr, "%s: attempting to load saved session from '%s'\n", __func__, path_session.c_str());
+//
+//      // fopen to check for existing session
+//      FILE * fp = std::fopen(path_session.c_str(), "rb");
+//      if (fp != NULL) {
+//          std::fclose(fp);
+//
+//          session_tokens.resize(params.n_ctx);
+//          size_t n_token_count_out = 0;
+//          if (!llama_load_session_file(ctx, path_session.c_str(), session_tokens.data(), session_tokens.capacity(), &n_token_count_out)) {
+//              fprintf(stderr, "%s: error: failed to load session file '%s'\n", __func__, path_session.c_str());
+//              return 1;
+//          }
+//          session_tokens.resize(n_token_count_out);
+//          llama_set_rng_seed(ctx, params.seed);
+//
+//          fprintf(stderr, "%s: loaded a session with prompt size of %d tokens\n", __func__, (int) session_tokens.size());
+//      } else {
+//          fprintf(stderr, "%s: session file does not exist, will create\n", __func__);
+//      }
+//  }
+
   NSString *initialPrompt = @"";
   if (context.params.initialPrompt) {
     initialPrompt = context.params.initialPrompt;
@@ -123,38 +162,53 @@
   // Add a space in front of the first character to match OG llama tokenizer behavior
   prompt.insert(0, 1, ' ');
 
-  // tokenize the initial prompt
-  if (![LlamaOperationUtils tokenizeString:prompt with:context into:context.runState->embd_inp addBeginningOfSequence:true outError:outError]) {
+  if (![LlamaOperationUtils tokenizeString:prompt with:context into:runState->embd_inp addBeginningOfSequence:true outError:outError]) {
     return NO;
   }
 
-  // Initialize the run state.
   const int n_ctx = llama_n_ctx(context.ctx);
 
-  // Remaining setup.
-  if ((int)context.runState->embd_inp.size() > n_ctx - 4) {
-    if (outError) {
-      *outError = makeFailedToPredictErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodePromptIsTooLong, [NSString stringWithFormat:@"prompt is too long (%d tokens, max %d)\n", (int)context.runState->embd_inp.size(), n_ctx - 4]));
+  // debug message about similarity of saved session, if applicable
+  size_t n_matching_session_tokens = 0;
+  if (runState->session_tokens.size()) {
+    for (llama_token id : runState->session_tokens) {
+      if (n_matching_session_tokens >= runState->embd_inp.size() || id != runState->embd_inp[n_matching_session_tokens]) {
+        break;
+      }
+      n_matching_session_tokens++;
     }
-    return NO;
+    if (prompt.empty() && n_matching_session_tokens == context.runState->embd_inp.size()) {
+      fprintf(stderr, "%s: using full prompt from session file\n", __func__);
+    } else if (n_matching_session_tokens >= context.runState->embd_inp.size()) {
+      fprintf(stderr, "%s: session file has exact match for prompt!\n", __func__);
+    } else if (n_matching_session_tokens < (context.runState->embd_inp.size() / 2)) {
+      fprintf(stderr, "%s: warning: session file has low similarity to prompt (%zu / %zu tokens); will mostly be reevaluated\n",
+              __func__, n_matching_session_tokens, context.runState->embd_inp.size());
+    } else {
+      fprintf(stderr, "%s: session file matches %zu / %zu tokens of prompt\n",
+              __func__, n_matching_session_tokens, context.runState->embd_inp.size());
+    }
   }
 
-  auto runState = context.runState;
+  // if we will use the cache for the full prompt without reaching the end of the cache, force
+  // reevaluation of the last token token to recalculate the cached logits
+  if (!runState->embd_inp.empty() && n_matching_session_tokens == runState->embd_inp.size() &&
+          runState->session_tokens.size() > runState->embd_inp.size()) {
+      runState->session_tokens.resize(runState->embd_inp.size() - 1);
+  }
 
   // number of tokens to keep when resetting context
-  if (context.params.numberOfTokensToKeepFromInitialPrompt < 0 || context.params.numberOfTokensToKeepFromInitialPrompt > (int)context.runState->embd_inp.size() || _params.isInstructional) {
-    context.params.numberOfTokensToKeepFromInitialPrompt = (int)context.runState->embd_inp.size();
+  if (_params.numberOfTokensToKeepFromInitialPrompt < 0 || _params.numberOfTokensToKeepFromInitialPrompt > (int)context.runState->embd_inp.size()) {
+    _params.numberOfTokensToKeepFromInitialPrompt = (int)context.runState->embd_inp.size();
   }
 
-  // TODO: replace with ring-buffer
-  context.runState->last_n_tokens.resize(n_ctx);
-  std::fill(context.runState->last_n_tokens.begin(), context.runState->last_n_tokens.end(), 0);
+  runState->is_antiprompt = false;
+  runState->need_to_save_session = !runState->path_session.empty() && n_matching_session_tokens < runState->embd_inp.size();
 
   runState->n_past = 0;
   runState->n_remain = context.params.numberOfTokens;
   runState->n_consumed = 0;
-
-  runState->is_antiprompt = false;
+  runState->n_session_consumed = 0;
 
   if (outContext != NULL) {
     *outContext = context;

@@ -1,14 +1,22 @@
 *.o
 *.a
+.DS_Store
+.build/
 .cache/
+.direnv/
+.envrc
+.swiftpm
+.venv
+.clang-tidy
 .vs/
 .vscode/
-.DS_Store
 
 models/*
+*.bin
 
 arm_neon.h
 compile_commands.json
+CMakeSettings.json
 
 # Xcode
 #
@@ -100,3 +108,15 @@ fastlane/test_output
 # https://github.com/johnno1962/injectionforxcode
 
 iOSInjectionProject/
+=======
+__pycache__
+
+zig-out/
+zig-cache/
+
+ppl-*.txt
+qnt-*.txt
+perf-*.txt
+
+examples/jeopardy/results.txt
+>>>>>>> master-aacdbd4

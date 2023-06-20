@@ -67,6 +67,7 @@ FTYPE_TO_DATA_TYPE: Dict[int, DataType] = \
     {ftype: dtype for (dtype, ftype) in DATA_TYPE_TO_FTYPE.items()}
 
 DATA_TYPE_TO_NUMPY: Dict[DataType, 'np.dtype[Any]'] = {
+    DT_BF16: np.dtype(np.uint16),
     DT_F16: np.dtype(np.float16),
     DT_F32: np.dtype(np.float32),
     DT_I32: np.dtype(np.int32),
@@ -120,7 +121,6 @@ def make_tensors_list() -> List[str]:
             f'layers.{i}.feed_forward.w1.weight',
             f'layers.{i}.feed_forward.w2.weight',
             f'layers.{i}.feed_forward.w3.weight',
-            f'layers.{i}.atttention_norm.weight',
             f'layers.{i}.ffn_norm.weight',
         ]
     return ret
@@ -276,6 +276,12 @@ class Tensor(metaclass=ABCMeta):
     def to_ggml(self) -> 'GGMLCompatibleTensor': ...
 
 
+def bf16_to_fp32(bf16_arr: np.ndarray) -> np.ndarray:
+    assert bf16_arr.dtype == np.uint16, f"Input array should be of dtype uint16, but got {bf16_arr.dtype}"
+    fp32_arr = bf16_arr.astype(np.uint32) << 16
+    return fp32_arr.view(np.float32)
+
+
 class UnquantizedTensor(Tensor):
     def __init__(self, ndarray: NDArray) -> None:
         assert isinstance(ndarray, np.ndarray)
@@ -284,6 +290,8 @@ class UnquantizedTensor(Tensor):
 
     def astype(self, data_type: DataType) -> Tensor:
         dtype = DATA_TYPE_TO_NUMPY[data_type]
+        if self.data_type == DT_BF16:
+            self.ndarray = bf16_to_fp32(self.ndarray)
         return UnquantizedTensor(self.ndarray.astype(dtype))
 
     def to_ggml(self) -> 'UnquantizedTensor':
@@ -504,7 +512,11 @@ class LazyTensor:
             if not isinstance(self.data_type, QuantizedDataType):
                 raise Exception(f"Can't turn an unquantized tensor into a quantized type ({data_type})")
             if self.data_type.have_g_idx:
-                sys.stderr.write("Error: Input uses the newer GPTQ-for-LLaMa format (using g_idx), which is not yet natively supported by GGML.  For now you can still convert this model by passing `--outtype f16` to dequantize, but that will result in a much larger output file for no quality benefit.\n")
+                sys.stderr.write(
+                    "Error: Input uses the newer GPTQ-for-LLaMa format (using g_idx), "
+                    "which is not yet natively supported by GGML. "
+                    "For now you can still convert this model by passing `--outtype f16` to dequantize, "
+                    "but that will result in a much larger output file for no quality benefit.\n")
                 sys.exit(1)
             assert not data_type.have_g_idx and self.data_type.have_addends and data_type.have_addends
 
@@ -686,7 +698,9 @@ class LazyUnpickler(pickle.Unpickler):
         description = f'storage data_type={data_type} path-in-zip={filename} path={self.zip_file.filename}'
         return LazyStorage(load=load, kind=pid[1], description=description)
 
-    def lazy_rebuild_tensor_v2(storage: Any, storage_offset: Any, size: Any, stride: Any,  # pyright: ignore[reportSelfClsParameterName]
+    # @staticmethod
+    def lazy_rebuild_tensor_v2(storage: Any, storage_offset: Any, size: Any, stride: Any,
+                               # pyright: ignore[reportSelfClsParameterName]
                                requires_grad: Any, backward_hooks: Any, metadata: Any = None) -> LazyTensor:
         assert isinstance(storage, LazyStorage)
 
@@ -696,12 +710,18 @@ class LazyUnpickler(pickle.Unpickler):
         description = f'pickled storage_offset={storage_offset} in {storage.description}'
         return LazyTensor(load, list(size), storage.kind.data_type, description)
 
+    # @staticmethod
+    def rebuild_from_type_v2(func, new_type, args, state):
+        return func(*args)
+
     CLASSES: Dict[Any, Any] = {
+        ('torch._tensor', '_rebuild_from_type_v2'): rebuild_from_type_v2,
         ('torch._utils', '_rebuild_tensor_v2'): lazy_rebuild_tensor_v2,
         ('torch', 'BFloat16Storage'): LazyStorageKind(DT_BF16),
         ('torch', 'HalfStorage'): LazyStorageKind(DT_F16),
         ('torch', 'FloatStorage'): LazyStorageKind(DT_F32),
         ('torch', 'IntStorage'): LazyStorageKind(DT_I32),
+        ('torch', 'Tensor'): LazyTensor,
     }
 
     def find_class(self, module: str, name: str) -> Any:
@@ -750,7 +770,7 @@ def lazy_load_safetensors_file(fp: IO[bytes], path: Path) -> ModelPlus:
             return UnquantizedTensor(np.frombuffer(buf, dtype=numpy_dtype).reshape(shape))
         description = f'safetensors begin={begin} end={end} type={data_type} path={path}'
         return LazyTensor(load, shape, data_type, description)
-    model = {name: convert(info) for (name, info) in header.items()}
+    model = {name: convert(info) for (name, info) in header.items() if name != '__metadata__'}
     return ModelPlus(model=model, paths=[path], format='safetensors', vocab=None)
 
 
@@ -797,7 +817,7 @@ def lazy_load_ggml_file(fp: io.BufferedReader, path: Path) -> ModelPlus:
     # Use mmap for the actual data to avoid race conditions with the file offset.
     off = fp.raw.tell()
     mapped = memoryview(mmap.mmap(fp.fileno(), 0, access=mmap.ACCESS_READ))
-    fp.raw.seek(off) # needed on Windows
+    fp.raw.seek(off)  # needed on Windows
 
     def read_tensor() -> None:  # this is a function so that variables captured in `load` don't change
         shape_len, name_len, ftype = struct.unpack("iii", must_read(fp, 12))
@@ -961,7 +981,7 @@ class OutputFile:
 
 def pick_output_type(model: LazyModel, output_type_str: Optional[str]) -> GGMLFileType:
     wq_type = model["layers.0.attention.wq.weight"].data_type
-    if output_type_str == "f32" or (output_type_str is None and wq_type == DT_F32):
+    if output_type_str == "f32" or (output_type_str is None and wq_type in (DT_F32, DT_BF16)):
         return GGMLFileType.AllF32
     if output_type_str == "f16" or (output_type_str is None and wq_type == DT_F16):
         return GGMLFileType.MostlyF16
@@ -1035,8 +1055,12 @@ def load_some_model(path: Path) -> ModelPlus:
     '''Load a model of any supported format.'''
     # Be extra-friendly and accept either a file or a directory:
     if path.is_dir():
-        globs = ["consolidated.00.pth", "pytorch_model-00001-of-*.bin", "*.pt"]
-        files = [file for glob in globs for file in path.glob(glob)]
+        # Check if it's a set of safetensors files first
+        files = list(path.glob("model-00001-of-*.safetensors"))
+        if not files:
+            # Try the PyTorch patterns too, with lower priority
+            globs = ["consolidated.00.pth", "pytorch_model-00001-of-*.bin", "*.pt", "pytorch_model.bin"]
+            files = [file for glob in globs for file in path.glob(glob)]
         if not files:
             # Try GGML too, but with lower priority, since if both a non-GGML
             # model and a GGML model exist in the same directory, we assume the
@@ -1075,7 +1099,9 @@ def load_vocab(path: Path) -> SentencePieceVocab:
         elif path3.exists():
             path = path3
         else:
-            raise FileNotFoundError(f"Could not find tokenizer.model in {path} or its parent; if it's in another directory, pass the directory as --vocab-dir")
+            raise FileNotFoundError(
+                f"Could not find tokenizer.model in {path} or its parent; "
+                "if it's in another directory, pass the directory as --vocab-dir")
     added_tokens_path = path.parent / "added_tokens.json"
     print(f"Loading vocab file {path}")
     return SentencePieceVocab(path, added_tokens_path if added_tokens_path.exists() else None)
@@ -1091,7 +1117,9 @@ def default_outfile(model_paths: List[Path], params: Params) -> Path:
     }[params.file_type]
     ret = model_paths[0].parent / f"ggml-model-{namestr}.bin"
     if ret in model_paths:
-        sys.stderr.write(f"Error: Default output path ({ret}) would overwrite the input.  Please explicitly specify a path using --outfile.\n")
+        sys.stderr.write(
+            f"Error: Default output path ({ret}) would overwrite the input. "
+            "Please explicitly specify a path using --outfile.\n")
         sys.exit(1)
     return ret
 
@@ -1112,7 +1140,8 @@ def main(args_in: Optional[List[str]] = None) -> None:
     parser.add_argument("--outtype", choices=["f32", "f16", "q4_1", "q4_0"], help="output format (default: based on input)")
     parser.add_argument("--vocab-dir", type=Path, help="directory containing tokenizer.model, if separate from model file")
     parser.add_argument("--outfile", type=Path, help="path to write to; default: based on input")
-    parser.add_argument("model", type=Path, help="directory containing model file, or model file itself (*.pth, *.pt, *.bin)")
+    parser.add_argument("model", type=Path,
+                        help="directory containing model file, or model file itself (*.pth, *.pt, *.bin)")
     args = parser.parse_args(args_in)
 
     vocab: Vocab

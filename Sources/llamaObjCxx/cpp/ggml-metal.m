@@ -145,7 +145,7 @@ struct ggml_metal_context * ggml_metal_init(void) {
 #define GGML_METAL_ADD_KERNEL(name) \
         ctx->function_##name = [ctx->library newFunctionWithName:@"kernel_"#name]; \
         ctx->pipeline_##name = [ctx->device newComputePipelineStateWithFunction:ctx->function_##name error:nil]; \
-        fprintf(stderr, "%s: loaded %-32s %16p\n", __func__, "kernel_"#name, (void *) ctx->pipeline_##name);
+        fprintf(stderr, "%s: loaded %-32s %16p\n", __func__, "kernel_"#name, (__bridge void *) ctx->pipeline_##name);
 
         GGML_METAL_ADD_KERNEL(add);
         GGML_METAL_ADD_KERNEL(mul);

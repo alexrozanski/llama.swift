@@ -28,6 +28,7 @@ let package = Package(
       name: "llamaObjCxx",
       dependencies: [],
       path: "Sources/llamaObjCxx",
+      exclude: ["cpp/ggml-metal.metal"],
       publicHeadersPath: "headers",
       cSettings: [.unsafeFlags(["-Wno-shorten-64-to-32"]), .define("GGML_USE_ACCELERATE")],
       cxxSettings: [

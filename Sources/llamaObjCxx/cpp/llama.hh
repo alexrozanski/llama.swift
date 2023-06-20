@@ -52,6 +52,7 @@ extern "C" {
     // available llama models
     enum e_model {
         MODEL_UNKNOWN,
+        MODEL_3B,
         MODEL_7B,
         MODEL_13B,
         MODEL_30B,
@@ -167,7 +168,7 @@ extern "C" {
     LLAMA_API BOOL llama_model_quantize(
             const char * fname_inp,
             const char * fname_out,
-            const llama_model_quantize_params * params
+            const llama_model_quantize_params * params,
             NSError ** outError);
 
     // Apply a LoRA adapter to a loaded model

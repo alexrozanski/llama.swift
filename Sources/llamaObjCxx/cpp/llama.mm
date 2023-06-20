@@ -54,16 +54,6 @@
 #define LLAMA_USE_SCRATCH
 #define LLAMA_MAX_SCRATCH_BUFFERS 16
 
-// available llama models
-enum e_model {
-    MODEL_UNKNOWN,
-    MODEL_3B,
-    MODEL_7B,
-    MODEL_13B,
-    MODEL_30B,
-    MODEL_65B,
-};
-
 static const size_t MB = 1024*1024;
 
 // computed for n_ctx == 2048
@@ -1383,11 +1373,11 @@ static BOOL llama_model_load(
         NSError **outError) {
     try {
         llama_model_load_internal(fname, lctx, n_ctx, n_batch, n_gpu_layers, main_gpu, tensor_split, low_vram, memory_type,
-                                  use_mmap, use_mlock, vocab_only, progress_callback, progress_callback_user_data);
+                                  use_mmap, use_mlock, vocab_only, progress_callback, progress_callback_user_data, outError);
         return true;
     } catch (const std::exception & err) {
         if (outError) {
-            *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithCString:err.what().c_str() encoding:NSUTF8StringEncoding]));
+            *outError = makeFailedToLoadModelErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalLoadFailure, [NSString stringWithCString:err.what() encoding:NSUTF8StringEncoding]));
         }
         return NO;
     }
@@ -2712,7 +2702,7 @@ struct llama_context * llama_init_from_file(const char * path_model, struct llam
 
     if (!llama_model_load(path_model, *ctx, params.n_ctx, params.n_batch, params.n_gpu_layers, params.main_gpu,
                 params.tensor_split, params.low_vram, memory_type, params.use_mmap, params.use_mlock,
-                params.vocab_only, params.progress_callback, params.progress_callback_user_data, &outError)) {
+                params.vocab_only, params.progress_callback, params.progress_callback_user_data, outError)) {
         // fprintf(stderr, "%s: failed to load model\n", __func__);
         llama_free(ctx);
         return nullptr;
@@ -2807,7 +2797,7 @@ BOOL llama_model_quantize(
         return YES;
     } catch (const std::exception & err) {
         if (outError) {
-            *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalQuantizationFailure, [NSString stringWithCString:err.what().c_str() encoding:NSUTF8StringEncoding]));
+            *outError = makeFailedToQuantizeErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalQuantizationFailure, [NSString stringWithCString:err.what() encoding:NSUTF8StringEncoding]));
         }
         return NO;
     }
@@ -3402,7 +3392,8 @@ int llama_eval(
            const llama_token * tokens,
                          int   n_tokens,
                          int   n_past,
-                         int   n_threads) {
+                         int   n_threads,
+               NSError **outError) {
     if (!llama_eval_internal(*ctx, tokens, n_tokens, n_past, n_threads, nullptr, outError)) {
         fprintf(stderr, "%s: failed to eval\n", __func__);
         return 1;
@@ -3430,29 +3421,6 @@ int llama_eval_export(struct llama_context * ctx, const char * fname) {
     }
 
     return 0;
-}
-
-int llama_tokenize(
-        struct llama_context * ctx,
-                  const char * text,
-                 llama_token * tokens,
-                         int   n_max_tokens,
-                        bool   add_bos,
-                     NSError **outError) {
-    auto res = llama_tokenize(ctx->vocab, text, add_bos);
-
-    if (n_max_tokens < (int) res.size()) {
-        if (outError) {
-            *outError = makeFailedToPredictErrorWithUnderlyingError(makeLlamaError(_LlamaErrorCodeGeneralInternalPredictionFailure, @"too many tokens"));
-        }
-        return -((int) res.size());
-    }
-
-    for (size_t i = 0; i < res.size(); i++) {
-        tokens[i] = res[i];
-    }
-
-    return res.size();
 }
 
 int llama_n_vocab(const struct llama_context * ctx) {

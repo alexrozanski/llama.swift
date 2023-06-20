@@ -3428,11 +3428,14 @@ int llama_tokenize(
                   const char * text,
                  llama_token * tokens,
                          int   n_max_tokens,
-                        bool   add_bos) {
+                        bool   add_bos,
+                    NSError **outError) {
     auto res = llama_tokenize(ctx->vocab, text, add_bos);
 
     if (n_max_tokens < (int) res.size()) {
-        fprintf(stderr, "%s: too many tokens\n", __func__);
+        if (outError) {
+            *outError = makeLlamaError(_LlamaErrorCodeGeneralInternalPredictionFailure, @"too many tokens");
+        }
         return -((int) res.size());
     }
 

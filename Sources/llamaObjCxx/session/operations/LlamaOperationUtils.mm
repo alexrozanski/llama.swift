@@ -21,8 +21,10 @@ addBeginningOfSequence:(bool)addBeginningOfSequence
 {
   // initialize to prompt numer of chars, since n_tokens <= n_prompt_chars
   std::vector<llama_token> res(string.size() + (int) addBeginningOfSequence);
-  const int n = llama_tokenize(context.ctx, string.c_str(), res.data(), res.size(), addBeginningOfSequence);
-  assert(n >= 0);
+  const int n = llama_tokenize(context.ctx, string.c_str(), res.data(), res.size(), addBeginningOfSequence, outError);
+  if (n < 0) {
+    return NO;
+  }
   res.resize(n);
 
   tokens = res;

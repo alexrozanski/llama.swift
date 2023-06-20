@@ -3423,6 +3423,26 @@ int llama_eval_export(struct llama_context * ctx, const char * fname) {
     return 0;
 }
 
+int llama_tokenize(
+        struct llama_context * ctx,
+                  const char * text,
+                 llama_token * tokens,
+                         int   n_max_tokens,
+                        bool   add_bos) {
+    auto res = llama_tokenize(ctx->vocab, text, add_bos);
+
+    if (n_max_tokens < (int) res.size()) {
+        fprintf(stderr, "%s: too many tokens\n", __func__);
+        return -((int) res.size());
+    }
+
+    for (size_t i = 0; i < res.size(); i++) {
+        tokens[i] = res[i];
+    }
+
+    return res.size();
+}
+
 int llama_n_vocab(const struct llama_context * ctx) {
     return ctx->vocab.id_to_token.size();
 }
